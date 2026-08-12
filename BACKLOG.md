@@ -13,6 +13,14 @@ graduate into a GitHub issue (epic/story) when picked up.
   and mapping the Entra identity to a profile (role/function). Supersedes the
   generic SSO placeholder currently on the login screen. _(Requested 2026-08-12.)_
 
+## Notifications
+
+- **In-app + email notifications** — a notification system with (a) an **in-app**
+  centre/badge (new activity, escalations assigned to me, commitments due) and
+  (b) **email** delivery via Brevo. Overlaps E7 (commitment reminders) and E8-5
+  (activity badge); this is the unifying capability + preferences. Respect RLS
+  scope in what each user is notified about. _(Requested 2026-08-12.)_
+
 ## UX
 
 - **Empty states everywhere** — design friendly, on-brand empty states for every
