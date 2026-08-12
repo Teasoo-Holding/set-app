@@ -15,8 +15,11 @@ select plan(9);
 
 -- `supabase db reset` loads seed.sql before tests run. Start from a clean
 -- slate so fixtures don't collide with seed data and counts are exact.
--- Everything is inside this transaction and rolled back at the end.
-truncate auth.users, public.taxonomy restart identity cascade;
+-- Truncating taxonomy cascades to every public table that references it
+-- (profiles, stakeholders, engagements, …). auth.* is left untouched (the
+-- test role can't reset its sequences). All rolled back at the end.
+truncate public.taxonomy cascade;
+delete from public.audit_log;
 
 -- ── Fixtures ─────────────────────────────────────────────────
 -- Two functions, four users (one per role) plus a second field user.
