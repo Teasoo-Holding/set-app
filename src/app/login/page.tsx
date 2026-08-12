@@ -95,7 +95,7 @@ export default function LoginPage({
       <div className={styles.brand}>
         <BrandMark size="md" />
         <Text as="h1" weight="semibold" size={500}>
-          Stakeholder Intelligence
+          Teasoo SET
         </Text>
       </div>
 
