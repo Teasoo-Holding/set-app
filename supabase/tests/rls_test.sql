@@ -13,6 +13,11 @@
 begin;
 select plan(9);
 
+-- `supabase db reset` loads seed.sql before tests run. Start from a clean
+-- slate so fixtures don't collide with seed data and counts are exact.
+-- Everything is inside this transaction and rolled back at the end.
+truncate auth.users, public.taxonomy restart identity cascade;
+
 -- ── Fixtures ─────────────────────────────────────────────────
 -- Two functions, four users (one per role) plus a second field user.
 insert into auth.users (id, email) values
