@@ -24,16 +24,50 @@ insert into public.taxonomy (kind, value, label, sort_order) values
   ('engagement_type', 'Event',            'Event',            6);
 
 -- ── Users (auth) + profiles ──────────────────────────────────
--- NOTE: demo auth rows with a shared placeholder password hash so the
--- accounts can sign in with magic-link/password in local dev only.
-insert into auth.users (id, email, raw_user_meta_data) values
-  ('00000000-0000-0000-0000-0000000000a1', 'zainab.obagun@example.com',  '{"full_name":"Zainab Obagun"}'),
-  ('00000000-0000-0000-0000-0000000000a2', 'chidi.okonkwo@example.com',  '{"full_name":"Chidi Okonkwo"}'),
-  ('00000000-0000-0000-0000-0000000000a3', 'amara.eze@example.com',      '{"full_name":"Amara Eze"}'),
-  ('00000000-0000-0000-0000-0000000000a4', 'tunde.bello@example.com',    '{"full_name":"Tunde Bello"}'),
-  ('00000000-0000-0000-0000-0000000000a5', 'ngozi.udo@example.com',      '{"full_name":"Ngozi Udo"}'),
-  ('00000000-0000-0000-0000-0000000000a6', 'admin@example.com',          '{"full_name":"System Admin"}')
+-- Demo auth rows. To be visible to GoTrue (Supabase Auth) and allow
+-- password sign-in, directly-inserted users need instance_id, aud, role,
+-- an email-provider app_meta, a confirmed email, and an encrypted password.
+-- The shared demo password below MUST match DEMO_LOGIN_PASSWORD. Demo only.
+insert into auth.users (
+  instance_id, id, aud, role, email, encrypted_password,
+  email_confirmed_at, raw_app_meta_data, raw_user_meta_data
+) values
+  ('00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-0000000000a1', 'authenticated', 'authenticated', 'zainab.obagun@example.com', extensions.crypt('sis-demo-2026', extensions.gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{"full_name":"Zainab Obagun"}'),
+  ('00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-0000000000a2', 'authenticated', 'authenticated', 'chidi.okonkwo@example.com', extensions.crypt('sis-demo-2026', extensions.gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{"full_name":"Chidi Okonkwo"}'),
+  ('00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-0000000000a3', 'authenticated', 'authenticated', 'amara.eze@example.com', extensions.crypt('sis-demo-2026', extensions.gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{"full_name":"Amara Eze"}'),
+  ('00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-0000000000a4', 'authenticated', 'authenticated', 'tunde.bello@example.com', extensions.crypt('sis-demo-2026', extensions.gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{"full_name":"Tunde Bello"}'),
+  ('00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-0000000000a5', 'authenticated', 'authenticated', 'ngozi.udo@example.com', extensions.crypt('sis-demo-2026', extensions.gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{"full_name":"Ngozi Udo"}'),
+  ('00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-0000000000a6', 'authenticated', 'authenticated', 'admin@example.com', extensions.crypt('sis-demo-2026', extensions.gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{"full_name":"System Admin"}')
 on conflict (id) do nothing;
+
+-- GoTrue also expects an identities row per email user for password login.
+insert into auth.identities (
+  provider_id, user_id, identity_data, provider, last_sign_in_at, created_at, updated_at
+)
+select u.id::text, u.id,
+       jsonb_build_object('sub', u.id::text, 'email', u.email),
+       'email', now(), now(), now()
+from auth.users u
+where u.email like '%@example.com'
+on conflict do nothing;
+
+-- GoTrue scans many auth.users columns into non-nullable Go types; NULLs
+-- (the default on a direct insert) cause "Database error querying schema".
+-- Normalise timestamps + token columns so password sign-in works.
+update auth.users set
+  created_at                 = coalesce(created_at, now()),
+  updated_at                 = coalesce(updated_at, now()),
+  last_sign_in_at            = coalesce(last_sign_in_at, now()),
+  confirmation_token         = coalesce(confirmation_token, ''),
+  recovery_token             = coalesce(recovery_token, ''),
+  email_change               = coalesce(email_change, ''),
+  email_change_token_new     = coalesce(email_change_token_new, ''),
+  email_change_token_current = coalesce(email_change_token_current, ''),
+  phone_change               = coalesce(phone_change, ''),
+  phone_change_token         = coalesce(phone_change_token, ''),
+  reauthentication_token     = coalesce(reauthentication_token, ''),
+  email_change_confirm_status = coalesce(email_change_confirm_status, 0)
+where email like '%@example.com';
 
 insert into public.profiles (id, full_name, email, role, function, manager_id) values
   ('00000000-0000-0000-0000-0000000000a1', 'Zainab Obagun', 'zainab.obagun@example.com', 'leadership', null,                 null),
@@ -41,7 +75,12 @@ insert into public.profiles (id, full_name, email, role, function, manager_id) v
   ('00000000-0000-0000-0000-0000000000a4', 'Tunde Bello',   'tunde.bello@example.com',   'head',       'Sales',              '00000000-0000-0000-0000-0000000000a1'),
   ('00000000-0000-0000-0000-0000000000a2', 'Chidi Okonkwo', 'chidi.okonkwo@example.com', 'field',      'Sales',              '00000000-0000-0000-0000-0000000000a4'),
   ('00000000-0000-0000-0000-0000000000a5', 'Ngozi Udo',     'ngozi.udo@example.com',     'field',      'Corporate Affairs',  '00000000-0000-0000-0000-0000000000a3'),
-  ('00000000-0000-0000-0000-0000000000a6', 'System Admin',  'admin@example.com',         'admin',      null,                 null);
+  ('00000000-0000-0000-0000-0000000000a6', 'System Admin',  'admin@example.com',         'admin',      null,                 null)
+on conflict (id) do update set
+  full_name = excluded.full_name,
+  role      = excluded.role,
+  function  = excluded.function,
+  manager_id = excluded.manager_id;
 
 -- ── Stakeholders (10) — mix of tiers, risk, sentiment ────────
 insert into public.stakeholders
