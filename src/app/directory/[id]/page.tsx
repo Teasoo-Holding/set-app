@@ -24,7 +24,7 @@ export default async function StakeholderProfilePage({
   // Not found OR out of RLS scope → 404 (the DB simply returns no row).
   if (!s) notFound();
 
-  const [{ data: engagements }, { data: commitments }, { data: escalation }] =
+  const [{ data: engagements }, { data: commitments }, { data: escalation }, { data: typeRows }] =
     await Promise.all([
       supabase
         .from("engagements")
@@ -46,7 +46,16 @@ export default async function StakeholderProfilePage({
         .eq("stakeholder_id", params.id)
         .neq("status", "resolved")
         .maybeSingle(),
+      supabase
+        .from("taxonomy")
+        .select("value")
+        .eq("kind", "engagement_type")
+        .eq("is_active", true)
+        .order("sort_order", { ascending: true }),
     ]);
+
+  const types = ((typeRows as { value: string }[] | null) ?? []).map((t) => t.value);
+  const today = new Date().toISOString().slice(0, 10);
 
   const data = s as unknown as {
     owner: { full_name: string } | null;
@@ -99,6 +108,8 @@ export default async function StakeholderProfilePage({
           next_action_date: string | null;
         } | null) ?? null
       }
+      types={types}
+      today={today}
     />
   );
 }

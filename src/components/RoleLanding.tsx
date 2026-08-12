@@ -21,9 +21,15 @@ export async function RoleLanding({
   subtitle: string;
 }) {
   const supabase = createClient();
-  const { data } = await supabase
-    .from("stakeholders")
-    .select("id, name, function, category, tier, risk, sentiment, flagged");
+  const [{ data }, { data: activityRows }] = await Promise.all([
+    supabase
+      .from("stakeholders")
+      .select("id, name, function, category, tier, risk, sentiment, flagged"),
+    supabase
+      .from("recent_activity")
+      .select("id, stakeholder_id, stakeholder_name, sentiment, engagement_type, occurred_on, note_excerpt")
+      .limit(8),
+  ]);
 
   const rows = ((data as StakeholderRow[] | null) ?? []).sort(
     (a, b) =>
@@ -38,6 +44,17 @@ export async function RoleLanding({
       title={title}
       subtitle={subtitle}
       rows={rows}
+      activity={
+        (activityRows as unknown as {
+          id: string;
+          stakeholder_id: string;
+          stakeholder_name: string;
+          sentiment: "supportive" | "neutral" | "resistant";
+          engagement_type: string;
+          occurred_on: string;
+          note_excerpt: string | null;
+        }[]) ?? []
+      }
     />
   );
 }

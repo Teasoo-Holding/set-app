@@ -13,8 +13,9 @@ import {
   Badge,
   Button,
 } from "@fluentui/react-components";
-import { ArrowLeftRegular, AddRegular, FlagFilled } from "@fluentui/react-icons";
+import { ArrowLeftRegular, FlagFilled } from "@fluentui/react-icons";
 import { AppShell } from "@/components/AppShell";
+import { LogEngagementDialog } from "@/components/LogEngagementDialog";
 import { setTier } from "@/app/actions/stakeholder";
 import type { Role } from "@/lib/roles";
 
@@ -108,12 +109,16 @@ export function ProfileView({
   engagements,
   commitments,
   escalation,
+  types,
+  today,
 }: {
   viewer: { full_name: string; role: Role; function: string | null };
   stakeholder: StakeholderProfile;
   engagements: Engagement[];
   commitments: Commitment[];
   escalation: Escalation | null;
+  types: string[];
+  today: string;
 }) {
   const styles = useStyles();
   const canEditTier =
@@ -219,9 +224,14 @@ export function ProfileView({
         <div className={styles.card}>
           <div className={styles.sectionHead}>
             <Title3>Engagement history</Title3>
-            <Button appearance="primary" icon={<AddRegular />} size="small" title="Coming with E3-1">
-              Log
-            </Button>
+            <LogEngagementDialog
+              stakeholderId={s.id}
+              stakeholderName={s.name}
+              types={types}
+              currentRisk={s.risk}
+              currentSentiment={s.sentiment}
+              today={today}
+            />
           </div>
           {engagements.length === 0 ? (
             <div className={styles.empty}>No engagements logged yet.</div>
