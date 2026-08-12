@@ -53,6 +53,11 @@ insert into public.stakeholders (id, name, category, function, tier, owner_id, r
   ('bbbbbbbb-0000-0000-0000-000000000002', 'Legal Reg B', 'Regulator', 'Legal', 1, '44444444-4444-4444-4444-444444444444', 'low', 'neutral');
 
 -- Impersonation helper: become an authenticated user with a jwt sub.
+-- The `authenticated` role must be able to USE this schema/function for the
+-- later act_as() calls (which run after the role has been switched).
+create schema if not exists tests;
+grant usage on schema tests to public;
+-- INVOKER (not definer) so the role/JWT switch persists in the caller's txn.
 create or replace function tests.act_as(uid uuid) returns void
 language plpgsql as $$
 begin
@@ -60,6 +65,7 @@ begin
   perform set_config('request.jwt.claims', json_build_object('sub', uid, 'role', 'authenticated')::text, true);
 end;
 $$;
+grant execute on function tests.act_as(uuid) to public;
 
 -- ── field (Sales) sees only Sales stakeholders ───────────────
 select tests.act_as('11111111-1111-1111-1111-111111111111');
