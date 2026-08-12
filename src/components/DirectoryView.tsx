@@ -19,6 +19,7 @@ export type DirectoryRow = {
   last_contact_at: string | null;
   notes: string | null;
   ownerName: string | null;
+  owner_id: string;
 };
 
 const CATEGORIES = ["Regulator", "Government", "Community", "Commercial"];
@@ -46,10 +47,17 @@ export function DirectoryView({
   profile,
   rows,
 }: {
-  profile: { full_name: string; role: Role; function: string | null };
+  profile: { id: string; full_name: string; role: Role; function: string | null };
   rows: DirectoryRow[];
 }) {
   const styles = useStyles();
+
+  // Who the viewer may flag — mirrors the stakeholders_update RLS policy.
+  const canFlag = (r: DirectoryRow) =>
+    profile.role === "leadership" ||
+    profile.role === "admin" ||
+    r.owner_id === profile.id ||
+    (profile.role === "head" && r.function === profile.function);
   const [query, setQuery] = React.useState("");
   const [category, setCategory] = React.useState<string>("All");
   const [tier, setTier] = React.useState<string>("All");
@@ -142,6 +150,7 @@ export function DirectoryView({
                 risk={r.risk}
                 sentiment={r.sentiment}
                 flagged={r.flagged}
+                canFlag={canFlag(r)}
                 meta={`${r.category} · ${r.ownerName ?? "Unassigned"} · Last contact ${formatDate(r.last_contact_at)}`}
               />
             ))}

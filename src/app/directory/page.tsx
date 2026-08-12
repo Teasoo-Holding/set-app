@@ -11,7 +11,7 @@ export default async function DirectoryPage() {
   const { data } = await supabase
     .from("stakeholders")
     .select(
-      "id, name, category, function, tier, risk, sentiment, flagged, last_contact_at, notes, owner:profiles!stakeholders_owner_id_fkey(full_name)",
+      "id, name, category, function, tier, risk, sentiment, flagged, last_contact_at, notes, owner_id, owner:profiles!stakeholders_owner_id_fkey(full_name)",
     );
 
   const rows: DirectoryRow[] = (
@@ -30,11 +30,12 @@ export default async function DirectoryPage() {
     last_contact_at: s.last_contact_at,
     notes: s.notes,
     ownerName: s.owner?.full_name ?? null,
+    owner_id: s.owner_id,
   }));
 
   return (
     <DirectoryView
-      profile={{ full_name: profile.full_name, role: profile.role, function: profile.function }}
+      profile={{ id: profile.id, full_name: profile.full_name, role: profile.role, function: profile.function }}
       rows={rows}
     />
   );
