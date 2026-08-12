@@ -13,6 +13,19 @@ graduate into a GitHub issue (epic/story) when picked up.
   and mapping the Entra identity to a profile (role/function). Supersedes the
   generic SSO placeholder currently on the login screen. _(Requested 2026-08-12.)_
 
+## UX
+
+- **Empty states everywhere** — design friendly, on-brand empty states for every
+  list/section (directory, profile sections, escalations, dashboards, activity)
+  with a clear next-step CTA. Users disengage from screens that look empty; never
+  show a bare "nothing here". _(Requested 2026-08-12.)_
+
+## Reporting / Export
+
+- **Download reports (PDF + CSV)** — export directory / portfolio / escalation
+  views as a formatted **PDF** report and raw **CSV**. Must respect the viewer's
+  RLS scope (export only what they can see). _(Requested 2026-08-12.)_
+
 ## Architecture
 
 - **Multi-tenant SaaS** — convert SIS so many organisations (tenants) can use
