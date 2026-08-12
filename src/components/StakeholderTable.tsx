@@ -40,6 +40,13 @@ const sentLabel = {
 
 const useStyles = makeStyles({
   wrap: { overflowX: "auto", width: "100%" },
+  // Keep columns readable on small screens: don't let text wrap/crush — the
+  // wrapper scrolls horizontally instead.
+  table: {
+    minWidth: "620px",
+    "& td": { whiteSpace: "nowrap" },
+    "& th": { whiteSpace: "nowrap" },
+  },
   name: { display: "flex", alignItems: "center", columnGap: "6px" },
   flag: { color: tokens.colorStatusDangerForeground1, fontSize: "14px" },
   empty: {
@@ -62,7 +69,7 @@ export function StakeholderTable({ rows }: { rows: StakeholderRow[] }) {
 
   return (
     <div className={styles.wrap}>
-      <Table aria-label="Stakeholders in scope" size="small">
+      <Table aria-label="Stakeholders in scope" size="small" className={styles.table}>
         <TableHeader>
           <TableRow>
             <TableHeaderCell>Name</TableHeaderCell>

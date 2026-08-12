@@ -94,8 +94,9 @@ const useStyles = makeStyles({
   line: { width: "2px", flexGrow: 1, backgroundColor: tokens.colorNeutralStroke2, marginTop: "4px" },
   entryBody: { display: "flex", flexDirection: "column", rowGap: "2px", flexGrow: 1, minWidth: 0 },
   entryTop: { display: "flex", justifyContent: "space-between", columnGap: "8px" },
-  commitRow: { display: "flex", alignItems: "center", columnGap: "10px", padding: "10px 0", borderTop: `1px solid ${tokens.colorNeutralStroke2}` },
-  commitDesc: { flexGrow: 1, minWidth: 0 },
+  commitRow: { display: "flex", alignItems: "center", columnGap: "10px", rowGap: "8px", flexWrap: "wrap", padding: "10px 0", borderTop: `1px solid ${tokens.colorNeutralStroke2}` },
+  commitDesc: { flexGrow: 1, minWidth: "150px" },
+  commitBadges: { display: "flex", alignItems: "center", columnGap: "8px", flexShrink: 0, marginLeft: "auto" },
   muted: { color: tokens.colorNeutralForeground3 },
   empty: { color: tokens.colorNeutralForeground3, padding: "8px 0" },
   tierEdit: { display: "flex", flexDirection: "column", rowGap: "6px", marginTop: "12px", paddingTop: "12px", borderTop: `1px solid ${tokens.colorNeutralStroke2}` },
@@ -205,16 +206,18 @@ export function ProfileView({
                 <span className={styles.commitDesc}>
                   <Body1>{c.description}</Body1>
                 </span>
-                {c.priority === "high" && (
-                  <Badge appearance="tint" color="danger" size="small">High</Badge>
-                )}
-                <Badge
-                  appearance="tint"
-                  color={isOverdue(c.due_date) ? "danger" : "informative"}
-                  size="small"
-                >
-                  {isOverdue(c.due_date) ? `Overdue · ${fmt(c.due_date)}` : `Due ${fmt(c.due_date)}`}
-                </Badge>
+                <span className={styles.commitBadges}>
+                  {c.priority === "high" && (
+                    <Badge appearance="tint" color="danger" size="small">High</Badge>
+                  )}
+                  <Badge
+                    appearance="tint"
+                    color={isOverdue(c.due_date) ? "danger" : "informative"}
+                    size="small"
+                  >
+                    {isOverdue(c.due_date) ? `Overdue · ${fmt(c.due_date)}` : `Due ${fmt(c.due_date)}`}
+                  </Badge>
+                </span>
               </div>
             ))
           )}

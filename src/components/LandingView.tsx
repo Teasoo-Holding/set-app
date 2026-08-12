@@ -34,6 +34,7 @@ const useStyles = makeStyles({
   actTop: { display: "flex", justifyContent: "space-between", columnGap: "8px" },
   link: { textDecoration: "none", color: tokens.colorBrandForeground1, fontWeight: tokens.fontWeightSemibold },
   muted: { color: tokens.colorNeutralForeground3 },
+  actDate: { color: tokens.colorNeutralForeground3, whiteSpace: "nowrap", flexShrink: 0 },
   empty: { color: tokens.colorNeutralForeground3, paddingTop: "8px" },
 });
 
@@ -92,7 +93,7 @@ export function LandingView({
                       </Link>
                       <Caption1 className={styles.muted}>{`  ·  ${a.engagement_type}`}</Caption1>
                     </Text>
-                    <Caption1 className={styles.muted}>{fmt(a.occurred_on)}</Caption1>
+                    <Caption1 className={styles.actDate}>{fmt(a.occurred_on)}</Caption1>
                   </div>
                   {a.note_excerpt && <Caption1 className={styles.muted}>{a.note_excerpt}</Caption1>}
                 </div>
