@@ -23,7 +23,7 @@ function fmt(iso: string): string {
 }
 
 const useStyles = makeStyles({
-  main: { maxWidth: "1040px", margin: "0 auto", padding: "32px 24px", display: "flex", flexDirection: "column", rowGap: "20px" },
+  main: { maxWidth: "1040px", margin: "0 auto", padding: "32px 24px", display: "flex", flexDirection: "column", rowGap: "20px", "@media (max-width: 640px)": { padding: "16px 12px" } },
   head: { display: "flex", flexDirection: "column", rowGap: "4px" },
   scopeCard: { padding: "20px", display: "flex", flexDirection: "column", rowGap: "6px", maxWidth: "520px" },
   count: { fontSize: "28px", color: tokens.colorBrandForeground1 },

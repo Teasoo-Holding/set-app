@@ -47,7 +47,7 @@ function formatDate(iso: string | null): string {
 }
 
 const useStyles = makeStyles({
-  main: { maxWidth: "960px", margin: "0 auto", padding: "28px 24px", display: "flex", flexDirection: "column", rowGap: "16px" },
+  main: { maxWidth: "960px", margin: "0 auto", padding: "28px 24px", display: "flex", flexDirection: "column", rowGap: "16px", "@media (max-width: 640px)": { padding: "16px 12px" } },
   header: { display: "flex", alignItems: "flex-start", columnGap: "12px" },
   headText: { display: "flex", flexDirection: "column", flexGrow: 1 },
   search: { width: "100%" },

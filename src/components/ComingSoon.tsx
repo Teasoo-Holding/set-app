@@ -5,7 +5,7 @@ import { AppShell } from "@/components/AppShell";
 import type { Role } from "@/lib/roles";
 
 const useStyles = makeStyles({
-  main: { maxWidth: "960px", margin: "0 auto", padding: "28px 24px", display: "flex", flexDirection: "column", rowGap: "8px" },
+  main: { maxWidth: "960px", margin: "0 auto", padding: "28px 24px", display: "flex", flexDirection: "column", rowGap: "8px", "@media (max-width: 640px)": { padding: "16px 12px" } },
   note: {
     marginTop: "12px",
     padding: "20px",

@@ -76,7 +76,7 @@ function isOverdue(due: string): boolean {
 }
 
 const useStyles = makeStyles({
-  main: { maxWidth: "880px", margin: "0 auto", padding: "24px", display: "flex", flexDirection: "column", rowGap: "16px" },
+  main: { maxWidth: "880px", margin: "0 auto", padding: "24px", display: "flex", flexDirection: "column", rowGap: "16px", "@media (max-width: 640px)": { padding: "16px 12px" } },
   back: { display: "inline-flex", alignItems: "center", columnGap: "6px", color: tokens.colorNeutralForeground3, textDecoration: "none", width: "fit-content", ":hover": { color: tokens.colorBrandForeground1 } },
   card: { backgroundColor: tokens.colorNeutralBackground1, border: `1px solid ${tokens.colorNeutralStroke2}`, borderRadius: tokens.borderRadiusXLarge, padding: "20px" },
   headRow: { display: "flex", alignItems: "flex-start", columnGap: "16px" },

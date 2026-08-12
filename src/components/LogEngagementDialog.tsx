@@ -24,7 +24,7 @@ import { logEngagement } from "@/app/actions/engagement";
 
 const useStyles = makeStyles({
   form: { display: "flex", flexDirection: "column", rowGap: "14px", paddingTop: "4px" },
-  row: { display: "flex", columnGap: "12px" },
+  row: { display: "flex", columnGap: "12px", rowGap: "14px", "@media (max-width: 520px)": { flexDirection: "column" } },
   half: { flex: 1, minWidth: 0 },
   optional: { color: tokens.colorNeutralForeground3, fontSize: tokens.fontSizeBase200 },
 });
