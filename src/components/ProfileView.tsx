@@ -15,6 +15,7 @@ import {
 } from "@fluentui/react-components";
 import { ArrowLeftRegular, AddRegular, FlagFilled } from "@fluentui/react-icons";
 import { AppShell } from "@/components/AppShell";
+import { setTier } from "@/app/actions/stakeholder";
 import type { Role } from "@/lib/roles";
 
 export type StakeholderProfile = {
@@ -96,6 +97,9 @@ const useStyles = makeStyles({
   commitDesc: { flexGrow: 1, minWidth: 0 },
   muted: { color: tokens.colorNeutralForeground3 },
   empty: { color: tokens.colorNeutralForeground3, padding: "8px 0" },
+  tierEdit: { display: "flex", flexDirection: "column", rowGap: "6px", marginTop: "12px", paddingTop: "12px", borderTop: `1px solid ${tokens.colorNeutralStroke2}` },
+  tierBtns: { display: "flex", columnGap: "8px" },
+  form: { margin: 0, display: "flex" },
 });
 
 export function ProfileView({
@@ -112,6 +116,8 @@ export function ProfileView({
   escalation: Escalation | null;
 }) {
   const styles = useStyles();
+  const canEditTier =
+    viewer.role === "head" || viewer.role === "leadership" || viewer.role === "admin";
 
   return (
     <AppShell profile={viewer} active="directory">
@@ -142,6 +148,28 @@ export function ProfileView({
               </div>
             </div>
           </div>
+          {canEditTier && (
+            <div className={styles.tierEdit}>
+              <Caption1 className={styles.muted}>
+                Set tier · rubric: impact · power · escalation potential · cadence
+              </Caption1>
+              <div className={styles.tierBtns}>
+                {[1, 2].map((t) => (
+                  <form key={t} action={setTier} className={styles.form}>
+                    <input type="hidden" name="id" value={s.id} />
+                    <input type="hidden" name="tier" value={t} />
+                    <Button
+                      type="submit"
+                      size="small"
+                      appearance={s.tier === t ? "primary" : "outline"}
+                    >
+                      {`Tier ${t}`}
+                    </Button>
+                  </form>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Escalation banner */}
