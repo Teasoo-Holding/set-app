@@ -35,11 +35,18 @@ insert into public.taxonomy (kind, value, label) values
   ('category', 'Regulator', 'Regulator'),
   ('engagement_type', 'Call', 'Call');
 
+-- handle_new_user() auto-creates a default profile on the auth.users inserts
+-- above, so upsert to set the intended role/function.
 insert into public.profiles (id, full_name, email, role, function) values
   ('11111111-1111-1111-1111-111111111111', 'Field Sales',  'field.sales@example.com', 'field',      'Sales'),
   ('22222222-2222-2222-2222-222222222222', 'Head Sales',   'head.sales@example.com',  'head',       'Sales'),
   ('33333333-3333-3333-3333-333333333333', 'Leadership',   'leadership@example.com',  'leadership', null),
-  ('44444444-4444-4444-4444-444444444444', 'Field Legal',  'field.legal@example.com', 'field',      'Legal');
+  ('44444444-4444-4444-4444-444444444444', 'Field Legal',  'field.legal@example.com', 'field',      'Legal')
+on conflict (id) do update set
+  full_name = excluded.full_name,
+  email     = excluded.email,
+  role      = excluded.role,
+  function  = excluded.function;
 
 insert into public.stakeholders (id, name, category, function, tier, owner_id, risk, sentiment) values
   ('aaaaaaaa-0000-0000-0000-000000000001', 'Sales Reg A', 'Regulator', 'Sales', 1, '11111111-1111-1111-1111-111111111111', 'low', 'neutral'),
