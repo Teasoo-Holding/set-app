@@ -3,27 +3,63 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 
-/**
- * E2-6 — change a stakeholder's tier. RLS (stakeholders_update) enforces who
- * may do this (owner / Head of the function / Leadership / Admin); an
- * out-of-scope caller simply updates zero rows. The change is captured by the
- * audit trigger automatically (§6.3 "tier changes logged").
- */
-export async function setTier(formData: FormData) {
-  const id = String(formData.get("id") ?? "");
-  const tier = Number(formData.get("tier"));
-  if (!id || (tier !== 1 && tier !== 2)) {
-    throw new Error("Invalid tier change.");
+const RISKS = ["low", "medium", "high"];
+const SENTIMENTS = ["supportive", "neutral", "resistant"];
+
+function revalidateStakeholder(id: string) {
+  revalidatePath(`/directory/${id}`);
+  revalidatePath("/directory");
+  for (const p of ["/home", "/dashboard", "/portfolio", "/governance"]) {
+    revalidatePath(p);
   }
+}
+
+/**
+ * E2-6 / E5-1 — update tier, risk and/or sentiment on a stakeholder. RLS
+ * (stakeholders_update) enforces who may do this (owner / Head of the function
+ * / Leadership / Admin); an out-of-scope caller updates zero rows. Changes are
+ * captured by the audit trigger, and risk/sentiment changes may trip the
+ * escalation triggers (E6).
+ */
+export async function updateStakeholder(formData: FormData) {
+  const id = String(formData.get("id") ?? "");
+  if (!id) throw new Error("Missing stakeholder id.");
+
+  const tier = Number(formData.get("tier"));
+  const risk = String(formData.get("risk") ?? "");
+  const sentiment = String(formData.get("sentiment") ?? "");
+
+  const patch: Record<string, string | number> = {};
+  if (tier === 1 || tier === 2) patch.tier = tier;
+  if (RISKS.includes(risk)) patch.risk = risk;
+  if (SENTIMENTS.includes(sentiment)) patch.sentiment = sentiment;
+
+  if (Object.keys(patch).length > 0) {
+    const supabase = createClient();
+    const { error } = await supabase.from("stakeholders").update(patch).eq("id", id);
+    if (error) throw new Error(error.message);
+  }
+  revalidateStakeholder(id);
+}
+
+/**
+ * E5-2 / E5-3 — flag or unflag a stakeholder. Flagging sets `flagged` (and an
+ * optional reason); the sync_escalation trigger opens/closes the escalation.
+ * RLS gates who may flag; the audit trigger logs it.
+ */
+export async function toggleFlag(formData: FormData) {
+  const id = String(formData.get("id") ?? "");
+  if (!id) throw new Error("Missing stakeholder id.");
+
+  const flag = String(formData.get("flag")) === "true";
+  const reason = String(formData.get("reason") ?? "").trim() || null;
 
   const supabase = createClient();
   const { error } = await supabase
     .from("stakeholders")
-    .update({ tier })
+    .update({ flagged: flag, flag_reason: flag ? reason : null })
     .eq("id", id);
-  if (error) {
-    throw new Error(error.message);
-  }
+  if (error) throw new Error(error.message);
 
-  revalidatePath(`/directory/${id}`);
+  revalidateStakeholder(id);
 }

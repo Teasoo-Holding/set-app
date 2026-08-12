@@ -16,13 +16,22 @@ export default async function StakeholderProfilePage({
   const { data: s } = await supabase
     .from("stakeholders")
     .select(
-      "id, name, category, function, tier, risk, sentiment, flagged, flag_reason, last_contact_at, notes, owner:profiles!stakeholders_owner_id_fkey(full_name)",
+      "id, name, category, function, tier, risk, sentiment, flagged, flag_reason, last_contact_at, notes, owner_id, owner:profiles!stakeholders_owner_id_fkey(full_name)",
     )
     .eq("id", params.id)
     .maybeSingle();
 
   // Not found OR out of RLS scope → 404 (the DB simply returns no row).
   if (!s) notFound();
+
+  // Who may edit this stakeholder — mirrors the stakeholders_update RLS policy.
+  const sFn = (s as { function: string }).function;
+  const sOwner = (s as { owner_id: string }).owner_id;
+  const canEdit =
+    profile.role === "leadership" ||
+    profile.role === "admin" ||
+    (profile.role === "head" && profile.function === sFn) ||
+    sOwner === profile.id;
 
   const [{ data: engagements }, { data: commitments }, { data: escalation }, { data: typeRows }] =
     await Promise.all([
@@ -110,6 +119,7 @@ export default async function StakeholderProfilePage({
       }
       types={types}
       today={today}
+      canEdit={canEdit}
     />
   );
 }

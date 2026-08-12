@@ -12,11 +12,15 @@ import {
   Avatar,
   Badge,
   Button,
+  Select,
+  Input,
+  Field,
+  Divider,
 } from "@fluentui/react-components";
-import { ArrowLeftRegular, FlagFilled } from "@fluentui/react-icons";
+import { ArrowLeftRegular, FlagFilled, FlagRegular } from "@fluentui/react-icons";
 import { AppShell } from "@/components/AppShell";
 import { LogEngagementDialog } from "@/components/LogEngagementDialog";
-import { setTier } from "@/app/actions/stakeholder";
+import { updateStakeholder, toggleFlag } from "@/app/actions/stakeholder";
 import type { Role } from "@/lib/roles";
 
 export type StakeholderProfile = {
@@ -99,9 +103,14 @@ const useStyles = makeStyles({
   commitBadges: { display: "flex", alignItems: "center", columnGap: "8px", flexShrink: 0, marginLeft: "auto" },
   muted: { color: tokens.colorNeutralForeground3 },
   empty: { color: tokens.colorNeutralForeground3, padding: "8px 0" },
-  tierEdit: { display: "flex", flexDirection: "column", rowGap: "6px", marginTop: "12px", paddingTop: "12px", borderTop: `1px solid ${tokens.colorNeutralStroke2}` },
-  tierBtns: { display: "flex", columnGap: "8px" },
   form: { margin: 0, display: "flex" },
+  manage: { backgroundColor: tokens.colorNeutralBackground1, border: `1px solid ${tokens.colorNeutralStroke2}`, borderRadius: tokens.borderRadiusXLarge, padding: "20px", display: "flex", flexDirection: "column", rowGap: "14px" },
+  manageForm: { margin: 0, display: "flex", flexDirection: "column", rowGap: "8px" },
+  manageRow: { display: "flex", alignItems: "flex-end", columnGap: "12px", rowGap: "12px", flexWrap: "wrap" },
+  field: { minWidth: "120px" },
+  flagRow: { display: "flex", alignItems: "center", justifyContent: "space-between", columnGap: "12px", rowGap: "10px", flexWrap: "wrap" },
+  flagForm: { margin: 0, display: "flex", alignItems: "flex-end", columnGap: "8px", rowGap: "8px", flexWrap: "wrap" },
+  reason: { flexGrow: 1, minWidth: "180px" },
 });
 
 export function ProfileView({
@@ -112,6 +121,7 @@ export function ProfileView({
   escalation,
   types,
   today,
+  canEdit,
 }: {
   viewer: { full_name: string; role: Role; function: string | null };
   stakeholder: StakeholderProfile;
@@ -120,10 +130,9 @@ export function ProfileView({
   escalation: Escalation | null;
   types: string[];
   today: string;
+  canEdit: boolean;
 }) {
   const styles = useStyles();
-  const canEditTier =
-    viewer.role === "head" || viewer.role === "leadership" || viewer.role === "admin";
 
   return (
     <AppShell profile={viewer} active="directory">
@@ -154,29 +163,76 @@ export function ProfileView({
               </div>
             </div>
           </div>
-          {canEditTier && (
-            <div className={styles.tierEdit}>
-              <Caption1 className={styles.muted}>
-                Set tier · rubric: impact · power · escalation potential · cadence
-              </Caption1>
-              <div className={styles.tierBtns}>
-                {[1, 2].map((t) => (
-                  <form key={t} action={setTier} className={styles.form}>
-                    <input type="hidden" name="id" value={s.id} />
-                    <input type="hidden" name="tier" value={t} />
-                    <Button
-                      type="submit"
-                      size="small"
-                      appearance={s.tier === t ? "primary" : "outline"}
-                    >
-                      {`Tier ${t}`}
-                    </Button>
-                  </form>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
+
+        {/* Manage: tier / risk / sentiment / flag (E2-6, E5-1, E5-3) */}
+        {canEdit && (
+          <div className={styles.manage}>
+            <Title3>Manage</Title3>
+            <form action={updateStakeholder} className={styles.manageForm}>
+              <input type="hidden" name="id" value={s.id} />
+              <div className={styles.manageRow}>
+                <Field label="Tier" className={styles.field}>
+                  <Select name="tier" defaultValue={String(s.tier)}>
+                    <option value="1">Tier 1</option>
+                    <option value="2">Tier 2</option>
+                  </Select>
+                </Field>
+                <Field label="Risk" className={styles.field}>
+                  <Select name="risk" defaultValue={s.risk}>
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                  </Select>
+                </Field>
+                <Field label="Sentiment" className={styles.field}>
+                  <Select name="sentiment" defaultValue={s.sentiment}>
+                    <option value="supportive">Supportive</option>
+                    <option value="neutral">Neutral</option>
+                    <option value="resistant">Resistant</option>
+                  </Select>
+                </Field>
+                <Button type="submit" appearance="primary">
+                  Save
+                </Button>
+              </div>
+              <Caption1 className={styles.muted}>
+                Tier rubric: impact · power · escalation potential · cadence. Setting High
+                risk / Resistant may open an escalation.
+              </Caption1>
+            </form>
+
+            <Divider />
+
+            {s.flagged ? (
+              <div className={styles.flagRow}>
+                <Body1>
+                  <strong>Flagged.</strong> {s.flag_reason ?? "No reason given."}
+                </Body1>
+                <form action={toggleFlag} className={styles.form}>
+                  <input type="hidden" name="id" value={s.id} />
+                  <input type="hidden" name="flag" value="false" />
+                  <Button type="submit" appearance="outline" icon={<FlagFilled />}>
+                    Unflag
+                  </Button>
+                </form>
+              </div>
+            ) : (
+              <form action={toggleFlag} className={styles.flagForm}>
+                <input type="hidden" name="id" value={s.id} />
+                <input type="hidden" name="flag" value="true" />
+                <Input
+                  className={styles.reason}
+                  name="reason"
+                  placeholder="Reason for flagging (optional)"
+                />
+                <Button type="submit" appearance="primary" icon={<FlagRegular />}>
+                  Flag
+                </Button>
+              </form>
+            )}
+          </div>
+        )}
 
         {/* Escalation banner */}
         {escalation && (
