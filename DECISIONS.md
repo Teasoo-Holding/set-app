@@ -5,6 +5,13 @@ what we decided, why, and what it affects.
 
 ---
 
+## D-005 · Branching workflow: build on `staging`, promote to `main`
+
+**2026-08-12** · New workflow: all feature work lands on the **`staging`**
+branch first (Vercel gives it a preview URL), gets tested there, and is only
+then promoted to **`main`** (production). CI runs on both branches. `main`
+stays deployable/demo-ready at all times. **Affects:** every change from here on.
+
 ## D-004 · Stay on Next.js 14.2.x (React 18) for now; defer the Next 16 jump
 
 **2026-08-11** · Two high-severity advisories remain in the prod tree
