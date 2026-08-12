@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { makeStyles, tokens, Title2, Title3, Body1, Caption1, Text, Card } from "@fluentui/react-components";
 import { AppShell } from "@/components/AppShell";
-import { StakeholderTable, type StakeholderRow } from "@/components/StakeholderTable";
+import { StakeholderCard, type StakeholderSummary } from "@/components/StakeholderCard";
 import type { Role } from "@/lib/roles";
 
 type Activity = {
@@ -35,6 +35,8 @@ const useStyles = makeStyles({
   link: { textDecoration: "none", color: tokens.colorBrandForeground1, fontWeight: tokens.fontWeightSemibold },
   muted: { color: tokens.colorNeutralForeground3 },
   actDate: { color: tokens.colorNeutralForeground3, whiteSpace: "nowrap", flexShrink: 0 },
+  section: { display: "flex", flexDirection: "column", rowGap: "8px" },
+  list: { display: "flex", flexDirection: "column", rowGap: "10px" },
   empty: { color: tokens.colorNeutralForeground3, paddingTop: "8px" },
 });
 
@@ -52,7 +54,7 @@ export function LandingView({
   func: string | null;
   title: string;
   subtitle: string;
-  rows: StakeholderRow[];
+  rows: StakeholderSummary[];
   activity: Activity[];
 }) {
   const styles = useStyles();
@@ -102,7 +104,28 @@ export function LandingView({
           )}
         </Card>
 
-        <StakeholderTable rows={rows} />
+        {/* Stakeholders (card list — responsive) */}
+        <div className={styles.section}>
+          <Title3>Your stakeholders</Title3>
+          {rows.length === 0 ? (
+            <div className={styles.empty}>No stakeholders in your scope.</div>
+          ) : (
+            <div className={styles.list}>
+              {rows.map((r) => (
+                <StakeholderCard
+                  key={r.id}
+                  id={r.id}
+                  name={r.name}
+                  tier={r.tier}
+                  risk={r.risk}
+                  sentiment={r.sentiment}
+                  flagged={r.flagged}
+                  meta={`${r.function} · ${r.category}`}
+                />
+              ))}
+            </div>
+          )}
+        </div>
       </main>
     </AppShell>
   );

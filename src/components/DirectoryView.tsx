@@ -1,22 +1,10 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
-import {
-  makeStyles,
-  tokens,
-  Title2,
-  Caption1,
-  Text,
-  Body1,
-  Button,
-  SearchBox,
-  Select,
-  Avatar,
-  Badge,
-} from "@fluentui/react-components";
-import { AddRegular, FlagFilled } from "@fluentui/react-icons";
+import { makeStyles, tokens, Title2, Caption1, Text, Button, SearchBox, Select } from "@fluentui/react-components";
+import { AddRegular } from "@fluentui/react-icons";
 import { AppShell } from "@/components/AppShell";
+import { StakeholderCard } from "@/components/StakeholderCard";
 import type { Role } from "@/lib/roles";
 
 export type DirectoryRow = {
@@ -35,10 +23,6 @@ export type DirectoryRow = {
 
 const CATEGORIES = ["Regulator", "Government", "Community", "Commercial"];
 const RISK_RANK = { high: 3, medium: 2, low: 1 } as const;
-const riskColor = { high: "danger", medium: "warning", low: "success" } as const;
-const riskLabel = { high: "High risk", medium: "Medium risk", low: "Low risk" } as const;
-const sentColor = { supportive: "success", neutral: "warning", resistant: "danger" } as const;
-const sentLabel = { supportive: "Supportive", neutral: "Neutral", resistant: "Resistant" } as const;
 
 function formatDate(iso: string | null): string {
   if (!iso) return "—";
@@ -55,30 +39,6 @@ const useStyles = makeStyles({
   chipSpacer: { flexGrow: 1 },
   sortWrap: { display: "flex", alignItems: "center", columnGap: "8px" },
   list: { display: "flex", flexDirection: "column", rowGap: "10px", marginTop: "4px" },
-  card: {
-    display: "flex",
-    alignItems: "center",
-    columnGap: "16px",
-    padding: "14px 18px",
-    backgroundColor: tokens.colorNeutralBackground1,
-    border: `1px solid ${tokens.colorNeutralStroke2}`,
-    borderRadius: tokens.borderRadiusXLarge,
-    cursor: "pointer",
-    textDecoration: "none",
-    color: "inherit",
-    transitionProperty: "box-shadow, border-color",
-    transitionDuration: tokens.durationNormal,
-    ":hover": {
-      boxShadow: tokens.shadow8,
-      border: `1px solid ${tokens.colorBrandStroke1}`,
-    },
-  },
-  cardMid: { display: "flex", flexDirection: "column", rowGap: "3px", flexGrow: 1, minWidth: 0 },
-  nameRow: { display: "flex", alignItems: "center", columnGap: "8px", flexWrap: "wrap" },
-  name: { fontSize: tokens.fontSizeBase400, lineHeight: tokens.lineHeightBase400 },
-  meta: { color: tokens.colorNeutralForeground3 },
-  pills: { display: "flex", flexDirection: "column", alignItems: "flex-end", rowGap: "6px", flexShrink: 0 },
-  flagBadge: { display: "inline-flex", alignItems: "center", columnGap: "4px" },
   empty: { padding: "40px", textAlign: "center", color: tokens.colorNeutralForeground3 },
 });
 
@@ -174,37 +134,16 @@ export function DirectoryView({
         ) : (
           <div className={styles.list}>
             {filtered.map((r) => (
-              <Link key={r.id} href={`/directory/${r.id}`} className={styles.card}>
-                <Avatar name={r.name} color="colorful" size={40} shape="square" />
-                <div className={styles.cardMid}>
-                  <div className={styles.nameRow}>
-                    <Text weight="semibold" className={styles.name}>
-                      {r.name}
-                    </Text>
-                    <Badge appearance="tint" color="informative" size="small">
-                      {`Tier ${r.tier}`}
-                    </Badge>
-                    {r.flagged && (
-                      <Badge appearance="tint" color="danger" size="small">
-                        <span className={styles.flagBadge}>
-                          <FlagFilled fontSize={12} /> Flagged
-                        </span>
-                      </Badge>
-                    )}
-                  </div>
-                  <Caption1 className={styles.meta}>
-                    {`${r.category} · ${r.ownerName ?? "Unassigned"} · Last contact ${formatDate(r.last_contact_at)}`}
-                  </Caption1>
-                </div>
-                <div className={styles.pills}>
-                  <Badge appearance="filled" color={riskColor[r.risk]}>
-                    {riskLabel[r.risk]}
-                  </Badge>
-                  <Badge appearance="tint" color={sentColor[r.sentiment]}>
-                    {sentLabel[r.sentiment]}
-                  </Badge>
-                </div>
-              </Link>
+              <StakeholderCard
+                key={r.id}
+                id={r.id}
+                name={r.name}
+                tier={r.tier}
+                risk={r.risk}
+                sentiment={r.sentiment}
+                flagged={r.flagged}
+                meta={`${r.category} · ${r.ownerName ?? "Unassigned"} · Last contact ${formatDate(r.last_contact_at)}`}
+              />
             ))}
           </div>
         )}

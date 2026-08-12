@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { LandingView } from "@/components/LandingView";
-import type { StakeholderRow } from "@/components/StakeholderTable";
+import type { StakeholderSummary } from "@/components/StakeholderCard";
 import type { Profile } from "@/lib/roles";
 
 const RISK_RANK = { high: 3, medium: 2, low: 1 } as const;
@@ -31,7 +31,7 @@ export async function RoleLanding({
       .limit(8),
   ]);
 
-  const rows = ((data as StakeholderRow[] | null) ?? []).sort(
+  const rows = ((data as StakeholderSummary[] | null) ?? []).sort(
     (a, b) =>
       RISK_RANK[b.risk] - RISK_RANK[a.risk] || a.name.localeCompare(b.name),
   );
