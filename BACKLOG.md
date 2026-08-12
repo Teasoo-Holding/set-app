@@ -1,7 +1,17 @@
-# Backlog — SIS
+# Backlog — Teasoo SET
 
 Ideas and requested work not yet scheduled into an epic. Each item should
 graduate into a GitHub issue (epic/story) when picked up.
+
+## Priority
+
+- **Sign in with Microsoft** — the pilot org (Unilever) is a Microsoft shop, so
+  the real production sign-in is **Microsoft Entra ID (Azure AD)**. Add a
+  "Sign in with Microsoft" button on `/login`. Supabase's built-in **Azure
+  (OIDC) provider** (`signInWithOAuth({ provider: 'azure' })`) avoids the paid
+  SAML tier — needs an Azure app registration + redirect URLs + tenant config,
+  and mapping the Entra identity to a profile (role/function). Supersedes the
+  generic SSO placeholder currently on the login screen. _(Requested 2026-08-12.)_
 
 ## Architecture
 

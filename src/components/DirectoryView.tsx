@@ -11,7 +11,6 @@ import {
   Button,
   SearchBox,
   Select,
-  Card,
   Avatar,
   Badge,
 } from "@fluentui/react-components";
@@ -55,10 +54,27 @@ const useStyles = makeStyles({
   chipSpacer: { flexGrow: 1 },
   sortWrap: { display: "flex", alignItems: "center", columnGap: "8px" },
   list: { display: "flex", flexDirection: "column", rowGap: "10px", marginTop: "4px" },
-  card: { padding: "14px 16px", display: "flex", alignItems: "center", columnGap: "14px" },
+  card: {
+    display: "flex",
+    alignItems: "center",
+    columnGap: "16px",
+    padding: "14px 18px",
+    backgroundColor: tokens.colorNeutralBackground1,
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusXLarge,
+    cursor: "pointer",
+    transitionProperty: "box-shadow, border-color",
+    transitionDuration: tokens.durationNormal,
+    ":hover": {
+      boxShadow: tokens.shadow8,
+      border: `1px solid ${tokens.colorBrandStroke1}`,
+    },
+  },
   cardMid: { display: "flex", flexDirection: "column", rowGap: "3px", flexGrow: 1, minWidth: 0 },
   nameRow: { display: "flex", alignItems: "center", columnGap: "8px", flexWrap: "wrap" },
-  pills: { display: "flex", flexDirection: "column", alignItems: "flex-end", rowGap: "4px", flexShrink: 0 },
+  name: { fontSize: tokens.fontSizeBase400, lineHeight: tokens.lineHeightBase400 },
+  meta: { color: tokens.colorNeutralForeground3 },
+  pills: { display: "flex", flexDirection: "column", alignItems: "flex-end", rowGap: "6px", flexShrink: 0 },
   flagBadge: { display: "inline-flex", alignItems: "center", columnGap: "4px" },
   empty: { padding: "40px", textAlign: "center", color: tokens.colorNeutralForeground3 },
 });
@@ -155,11 +171,13 @@ export function DirectoryView({
         ) : (
           <div className={styles.list}>
             {filtered.map((r) => (
-              <Card key={r.id} className={styles.card}>
+              <div key={r.id} className={styles.card}>
                 <Avatar name={r.name} color="colorful" size={40} shape="square" />
                 <div className={styles.cardMid}>
                   <div className={styles.nameRow}>
-                    <Text weight="semibold">{r.name}</Text>
+                    <Text weight="semibold" className={styles.name}>
+                      {r.name}
+                    </Text>
                     <Badge appearance="tint" color="informative" size="small">
                       {`Tier ${r.tier}`}
                     </Badge>
@@ -171,19 +189,19 @@ export function DirectoryView({
                       </Badge>
                     )}
                   </div>
-                  <Caption1>
+                  <Caption1 className={styles.meta}>
                     {`${r.category} · ${r.ownerName ?? "Unassigned"} · Last contact ${formatDate(r.last_contact_at)}`}
                   </Caption1>
                 </div>
                 <div className={styles.pills}>
-                  <Badge appearance="tint" color={riskColor[r.risk]}>
+                  <Badge appearance="filled" color={riskColor[r.risk]}>
                     {riskLabel[r.risk]}
                   </Badge>
                   <Badge appearance="tint" color={sentColor[r.sentiment]}>
                     {sentLabel[r.sentiment]}
                   </Badge>
                 </div>
-              </Card>
+              </div>
             ))}
           </div>
         )}
