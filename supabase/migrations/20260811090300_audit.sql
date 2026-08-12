@@ -32,10 +32,8 @@ as $$
 declare
   v_entity_id uuid;
 begin
-  v_entity_id := coalesce(
-    (case when tg_op = 'DELETE' then old else new end ->> 'id')::uuid,
-    null
-  );
+  -- old/new are record types; convert to jsonb before using ->>.
+  v_entity_id := (to_jsonb(case when tg_op = 'DELETE' then old else new end) ->> 'id')::uuid;
 
   insert into public.audit_log (actor_id, action, entity_type, entity_id, old_data, new_data)
   values (
