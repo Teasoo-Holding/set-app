@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import {
   makeStyles,
   tokens,
@@ -63,6 +64,8 @@ const useStyles = makeStyles({
     border: `1px solid ${tokens.colorNeutralStroke2}`,
     borderRadius: tokens.borderRadiusXLarge,
     cursor: "pointer",
+    textDecoration: "none",
+    color: "inherit",
     transitionProperty: "box-shadow, border-color",
     transitionDuration: tokens.durationNormal,
     ":hover": {
@@ -171,7 +174,7 @@ export function DirectoryView({
         ) : (
           <div className={styles.list}>
             {filtered.map((r) => (
-              <div key={r.id} className={styles.card}>
+              <Link key={r.id} href={`/directory/${r.id}`} className={styles.card}>
                 <Avatar name={r.name} color="colorful" size={40} shape="square" />
                 <div className={styles.cardMid}>
                   <div className={styles.nameRow}>
@@ -201,7 +204,7 @@ export function DirectoryView({
                     {sentLabel[r.sentiment]}
                   </Badge>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         )}
