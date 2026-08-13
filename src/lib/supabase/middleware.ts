@@ -3,10 +3,12 @@ import { NextResponse, type NextRequest } from "next/server";
 
 type CookieToSet = { name: string; value: string; options: CookieOptions };
 
-// Paths the session gate doesn't redirect. API routes handle their own auth
-// (e.g. the reminder cron verifies CRON_SECRET), so the middleware must not
-// bounce them to /login.
-const PUBLIC_PREFIXES = ["/login", "/auth", "/api"];
+// Paths the session gate doesn't redirect. Default-deny everywhere else.
+// Only routes that handle their own auth are allow-listed: /auth (OAuth
+// callback) and /api/cron (verifies CRON_SECRET, fails closed). We deliberately
+// do NOT blanket-allow all of /api, so any future API route is gated by
+// default rather than silently public. (#58)
+const PUBLIC_PREFIXES = ["/login", "/auth", "/api/cron"];
 
 /**
  * Refreshes the Supabase session on every request and gates access.

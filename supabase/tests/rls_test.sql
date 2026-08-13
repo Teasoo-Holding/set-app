@@ -11,7 +11,7 @@
 -- Fixtures are created inside the test transaction and rolled back.
 -- ─────────────────────────────────────────────────────────────
 begin;
-select plan(9);
+select plan(13);
 
 -- `supabase db reset` loads seed.sql before tests run. Start from a clean
 -- slate so fixtures don't collide with seed data and counts are exact.
@@ -142,6 +142,47 @@ select is(
     where stakeholder_id = 'aaaaaaaa-0000-0000-0000-000000000001' and status <> 'resolved'),
   0,
   'dropping below High resolves the auto escalation (E6-1)'
+);
+
+-- ── [#58 F-1] a user cannot escalate their own role/function ─
+-- The profiles_guard_privileged trigger makes the authorization-bearing
+-- columns immutable to non-admins, closing the self-escalation hole that
+-- profiles_update_self (RLS WITH CHECK can't compare OLD/NEW) left open.
+select tests.act_as('11111111-1111-1111-1111-111111111111');
+select throws_ok(
+  $$ update public.profiles set role = 'admin'
+     where id = '11111111-1111-1111-1111-111111111111' $$,
+  '42501',
+  null,
+  'field cannot self-escalate role to admin (#58 F-1)'
+);
+select throws_ok(
+  $$ update public.profiles set function = 'Legal'
+     where id = '11111111-1111-1111-1111-111111111111' $$,
+  '42501',
+  null,
+  'field cannot move themselves into another function (#58 F-1)'
+);
+-- …but updating a NON-privileged column on your own row still works.
+select lives_ok(
+  $$ update public.profiles set full_name = 'Field Sales (edited)'
+     where id = '11111111-1111-1111-1111-111111111111' $$,
+  'a user may still edit their own non-privileged columns (#58 F-1)'
+);
+
+-- ── [#58 F-2] every table in public has RLS enabled ──────────
+-- Regression guard: a future migration that forgets `enable row level
+-- security` (while default privileges grant DML) would silently expose the
+-- table. Assert zero unprotected base tables.
+select is(
+  (select count(*)::int
+     from pg_class c
+     join pg_namespace n on n.oid = c.relnamespace
+    where n.nspname = 'public'
+      and c.relkind = 'r'
+      and not c.relrowsecurity),
+  0,
+  'every base table in schema public has RLS enabled (#58 F-2)'
 );
 
 select * from finish();
