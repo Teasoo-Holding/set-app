@@ -3,8 +3,10 @@ import { NextResponse, type NextRequest } from "next/server";
 
 type CookieToSet = { name: string; value: string; options: CookieOptions };
 
-// Paths reachable without a session.
-const PUBLIC_PREFIXES = ["/login", "/auth"];
+// Paths the session gate doesn't redirect. API routes handle their own auth
+// (e.g. the reminder cron verifies CRON_SECRET), so the middleware must not
+// bounce them to /login.
+const PUBLIC_PREFIXES = ["/login", "/auth", "/api"];
 
 /**
  * Refreshes the Supabase session on every request and gates access.
