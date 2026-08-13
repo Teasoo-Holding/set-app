@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendEmail } from "@/lib/brevo";
+import { commitmentReminderEmail, headOverdueEmail } from "@/lib/emails";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +18,7 @@ type Row = {
   due_date: string;
   priority: string;
   owner: Owner | null;
-  stakeholder: { name: string; tier: number } | null;
+  stakeholder: { id: string; name: string; tier: number } | null;
 };
 
 function iso(d: Date): string {
@@ -42,6 +43,7 @@ export async function GET(request: Request) {
   }
 
   const admin = createAdminClient();
+  const appUrl = new URL(request.url).origin;
   const today = new Date();
   const todayStr = iso(today);
   const t3Str = iso(new Date(today.getTime() + 3 * 86_400_000));
@@ -51,7 +53,7 @@ export async function GET(request: Request) {
     .select(
       "id, description, due_date, priority, " +
         "owner:profiles!commitments_owner_id_fkey ( id, full_name, email, manager_id, functional_manager_id ), " +
-        "stakeholder:stakeholders!commitments_stakeholder_id_fkey ( name, tier )",
+        "stakeholder:stakeholders!commitments_stakeholder_id_fkey ( id, name, tier )",
     )
     .eq("status", "open")
     .lte("due_date", t3Str);
@@ -111,26 +113,46 @@ export async function GET(request: Request) {
       continue;
     }
 
-    const when =
-      type === "overdue"
-        ? `overdue (was due ${r.due_date})`
-        : type === "t-0"
-          ? `due today`
-          : `due in 3 days (${r.due_date})`;
-    const subject = `Reminder: "${r.description}" is ${type === "overdue" ? "overdue" : type === "t-0" ? "due today" : "coming up"}`;
-    const html = `<p>Hi ${r.owner.full_name},</p><p>Your commitment on <strong>${r.stakeholder?.name ?? "a stakeholder"}</strong> is ${when}:</p><blockquote>${r.description}</blockquote><p>— Teasoo SET</p>`;
+    const stakeholderName = r.stakeholder?.name ?? "a stakeholder";
+    const link = `${appUrl}/directory/${r.stakeholder?.id ?? ""}`;
 
-    const recipients: { email: string; name?: string }[] = [
-      { email: r.owner.email, name: r.owner.full_name },
-    ];
+    // Email the owner.
+    const ownerMail = commitmentReminderEmail({
+      ownerName: r.owner.full_name,
+      stakeholderName,
+      description: r.description,
+      dueDate: r.due_date,
+      type,
+      link,
+    });
+    await sendEmail({
+      to: [{ email: r.owner.email, name: r.owner.full_name }],
+      subject: ownerMail.subject,
+      html: ownerMail.html,
+    });
+    sent += 1;
+
+    // E7-3: Tier-1 overdue also emails the owner's Head (separately, addressed to them).
     if (type === "overdue" && r.stakeholder?.tier === 1) {
       const headId = r.owner.functional_manager_id ?? r.owner.manager_id;
       const head = headId ? headEmail.get(headId) : undefined;
-      if (head) recipients.push({ email: head.email, name: head.full_name });
+      if (head) {
+        const headMail = headOverdueEmail({
+          headName: head.full_name,
+          ownerName: r.owner.full_name,
+          stakeholderName,
+          description: r.description,
+          dueDate: r.due_date,
+          link,
+        });
+        await sendEmail({
+          to: [{ email: head.email, name: head.full_name }],
+          subject: headMail.subject,
+          html: headMail.html,
+        });
+        sent += 1;
+      }
     }
-
-    await sendEmail({ to: recipients, subject, html });
-    sent += 1;
   }
 
   return NextResponse.json({ processed: rows.length, sent, skipped });
