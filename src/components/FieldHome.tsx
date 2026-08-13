@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { makeStyles, tokens, Title2, Title3, Body1, Caption1, Text, Badge } from "@fluentui/react-components";
+import { makeStyles, tokens, Title2, Title3, Body1, Caption1, Text, Badge, Button } from "@fluentui/react-components";
 import { AppShell } from "@/components/AppShell";
 import { StakeholderCard, type StakeholderSummary } from "@/components/StakeholderCard";
 import { LogEngagementDialog } from "@/components/LogEngagementDialog";
 import { RequestStakeholderDialog } from "@/components/RequestStakeholderDialog";
+import { completeCommitment } from "@/app/actions/commitment";
 import type { Role } from "@/lib/roles";
 
 type Commitment = {
@@ -35,6 +36,7 @@ const useStyles = makeStyles({
   commitDesc: { display: "flex", flexDirection: "column", flexGrow: 1, minWidth: "150px" },
   link: { textDecoration: "none", color: tokens.colorBrandForeground1, fontWeight: tokens.fontWeightSemibold },
   badges: { display: "flex", alignItems: "center", columnGap: "8px", flexShrink: 0, marginLeft: "auto" },
+  form: { margin: 0, display: "flex" },
   muted: { color: tokens.colorNeutralForeground3 },
   section: { display: "flex", flexDirection: "column", rowGap: "8px" },
   list: { display: "flex", flexDirection: "column", rowGap: "10px" },
@@ -108,6 +110,10 @@ export function FieldHome({
                   <Badge appearance="tint" color={isOverdue(c.due_date) ? "danger" : "informative"} size="small">
                     {isOverdue(c.due_date) ? `Overdue · ${fmt(c.due_date)}` : `Due ${fmt(c.due_date)}`}
                   </Badge>
+                  <form action={completeCommitment} className={styles.form}>
+                    <input type="hidden" name="id" value={c.id} />
+                    <Button type="submit" size="small" appearance="subtle">Done</Button>
+                  </form>
                 </span>
               </div>
             ))

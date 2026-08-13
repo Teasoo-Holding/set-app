@@ -20,7 +20,9 @@ import {
 import { ArrowLeftRegular, FlagFilled, FlagRegular } from "@fluentui/react-icons";
 import { AppShell } from "@/components/AppShell";
 import { LogEngagementDialog } from "@/components/LogEngagementDialog";
+import { AddCommitmentDialog } from "@/components/AddCommitmentDialog";
 import { updateStakeholder, toggleFlag } from "@/app/actions/stakeholder";
+import { completeCommitment } from "@/app/actions/commitment";
 import type { Role } from "@/lib/roles";
 
 export type StakeholderProfile = {
@@ -252,7 +254,7 @@ export function ProfileView({
         <div className={styles.card}>
           <div className={styles.sectionHead}>
             <Title3>Open commitments</Title3>
-            <Caption1 className={styles.muted}>{commitments.length}</Caption1>
+            {canEdit && <AddCommitmentDialog stakeholderId={s.id} today={today} />}
           </div>
           {commitments.length === 0 ? (
             <div className={styles.empty}>No open commitments.</div>
@@ -273,6 +275,15 @@ export function ProfileView({
                   >
                     {isOverdue(c.due_date) ? `Overdue · ${fmt(c.due_date)}` : `Due ${fmt(c.due_date)}`}
                   </Badge>
+                  {canEdit && (
+                    <form action={completeCommitment} className={styles.form}>
+                      <input type="hidden" name="id" value={c.id} />
+                      <input type="hidden" name="stakeholderId" value={s.id} />
+                      <Button type="submit" size="small" appearance="subtle">
+                        Done
+                      </Button>
+                    </form>
+                  )}
                 </span>
               </div>
             ))
