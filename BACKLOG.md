@@ -13,13 +13,29 @@ graduate into a GitHub issue (epic/story) when picked up.
   and mapping the Entra identity to a profile (role/function). Supersedes the
   generic SSO placeholder currently on the login screen. _(Requested 2026-08-12.)_
 
+## Onboarding & Access
+
+- **Invitation-based onboarding (hierarchical)** — people join by invitation from
+  someone of higher privilege; no open sign-up. **Who can invite whom:** Admin →
+  anyone; Leadership → Heads + Field; Head → Field (in their function); Field →
+  no one. Invitee gets an **email invite** to accept and set up their account
+  (maps to a profile with the assigned role/function). Pairs with #23 Microsoft
+  sign-in (accept via Entra). _(Requested 2026-08-13.)_
+
 ## Notifications
 
-- **In-app + email notifications** — a notification system with (a) an **in-app**
-  centre/badge (new activity, escalations assigned to me, commitments due) and
-  (b) **email** delivery via Brevo. Overlaps E7 (commitment reminders) and E8-5
-  (activity badge); this is the unifying capability + preferences. Respect RLS
-  scope in what each user is notified about. _(Requested 2026-08-12.)_
+- **In-app + email notifications** — a unifying notification system: an **in-app**
+  centre/badge **and** **email** via Brevo, with per-user preferences. Respect RLS
+  scope. Overlaps E7 (commitment reminders) and E8-5 (activity badge).
+  **Events to cover** _(Requested 2026-08-12/13)_:
+  - **Escalation routing** — a field-raised escalation notifies the **Head of the
+    function**; a Head-raised escalation notifies **Leadership** (email + in-app).
+  - **Field activity → Head** — any update logged by field staff notifies their
+    **Head of department** (email + in-app).
+  - **Stakeholder assigned** — when a stakeholder (or escalation) is assigned to
+    someone, that assignee gets an **email + in-app** notification.
+  - **Invite sent** — invitee gets an email (see Onboarding).
+  - Existing: commitments due (E7), escalation assigned-to-me (E6).
 
 ## UX
 
@@ -30,9 +46,22 @@ graduate into a GitHub issue (epic/story) when picked up.
 
 ## Reporting / Export
 
-- **Download reports (PDF + CSV)** — export directory / portfolio / escalation
-  views as a formatted **PDF** report and raw **CSV**. Must respect the viewer's
-  RLS scope (export only what they can see). _(Requested 2026-08-12.)_
+- **Download reports (PDF + CSV), period-based** — export directory / portfolio /
+  escalation / activity as a formatted **PDF** and raw **CSV**, over a chosen
+  **date range (from X to Y)**. Everyone can export **what they can see** (RLS-
+  scoped). _(Requested 2026-08-12/13.)_
+- **Scheduled monthly reports** — automatically email a **monthly report** to each
+  **Head of department** (their function) and to **Leadership** (portfolio-wide).
+  Vercel Cron + Brevo; scope each recipient's report to what they may see.
+  _(Requested 2026-08-13.)_
+
+## Discoverability
+
+- **LLM / AI SEO** — make the public marketing site (see Public/Marketing)
+  discoverable by AI assistants: `llms.txt`, clean semantic HTML + structured
+  data (schema.org Organization/Product), good metadata/OG tags, sitemap. Goal:
+  the product surfaces when people ask AI about stakeholder-engagement tools.
+  _(Requested 2026-08-13.)_
 
 ## Architecture
 
