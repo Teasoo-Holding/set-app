@@ -1,17 +1,62 @@
 import { redirect } from "next/navigation";
 import { getCurrentProfile, getLandingPath } from "@/lib/auth";
-import { RoleLanding } from "@/components/RoleLanding";
+import { createClient } from "@/lib/supabase/server";
+import { GovernanceAdmin, type PendingRequest, type TaxonomyValue, type PersonOption } from "@/components/GovernanceAdmin";
 
-export default async function Governance() {
+export default async function GovernancePage() {
   const profile = await getCurrentProfile();
   if (!profile) redirect("/login");
   if (getLandingPath(profile.role) !== "/governance") redirect(getLandingPath(profile.role));
 
+  const supabase = createClient();
+  const [{ data: reqRows }, { data: taxRows }, { data: people }, { data: owned }] = await Promise.all([
+    supabase
+      .from("stakeholder_requests")
+      .select("id, requested_name, category, reason, created_at, requester:profiles!stakeholder_requests_requested_by_fkey ( full_name )")
+      .eq("status", "pending")
+      .order("created_at", { ascending: true }),
+    supabase.from("taxonomy").select("id, kind, value, label, is_active").order("kind").order("sort_order"),
+    supabase.from("profiles").select("id, full_name, role").order("full_name"),
+    supabase.from("stakeholders").select("owner_id"),
+  ]);
+
+  const requests: PendingRequest[] = (
+    (reqRows as unknown as {
+      id: string;
+      requested_name: string;
+      category: string;
+      reason: string;
+      created_at: string;
+      requester: { full_name: string } | null;
+    }[]) ?? []
+  ).map((r) => ({
+    id: r.id,
+    name: r.requested_name,
+    category: r.category,
+    reason: r.reason,
+    createdAt: r.created_at,
+    requesterName: r.requester?.full_name ?? "Unknown",
+  }));
+
+  const taxonomy = (taxRows as TaxonomyValue[]) ?? [];
+
+  const counts = new Map<string, number>();
+  for (const s of (owned as { owner_id: string }[]) ?? []) {
+    counts.set(s.owner_id, (counts.get(s.owner_id) ?? 0) + 1);
+  }
+  const persons: PersonOption[] = ((people as { id: string; full_name: string; role: string }[]) ?? []).map((p) => ({
+    id: p.id,
+    name: p.full_name,
+    role: p.role,
+    owns: counts.get(p.id) ?? 0,
+  }));
+
   return (
-    <RoleLanding
-      profile={profile}
-      title="Governance & administration"
-      subtitle="The full directory and system configuration."
+    <GovernanceAdmin
+      viewer={{ full_name: profile.full_name, role: profile.role, function: profile.function }}
+      requests={requests}
+      taxonomy={taxonomy}
+      persons={persons}
     />
   );
 }
