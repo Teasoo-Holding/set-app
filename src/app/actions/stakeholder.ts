@@ -43,6 +43,38 @@ export async function updateStakeholder(formData: FormData) {
 }
 
 /**
+ * E4-3 — propose a new stakeholder into the master directory. Inserts a
+ * pending stakeholder_request as the current user (RLS: requested_by =
+ * auth.uid()). Admins approve/reject later (E10-1).
+ */
+export async function requestStakeholder(formData: FormData) {
+  const requested_name = String(formData.get("requested_name") ?? "").trim();
+  const category = String(formData.get("category") ?? "");
+  const reason = String(formData.get("reason") ?? "").trim();
+  if (!requested_name || !category || !reason) {
+    throw new Error("Name, category and reason are required.");
+  }
+
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not signed in.");
+
+  const { error } = await supabase.from("stakeholder_requests").insert({
+    requested_name,
+    category,
+    reason,
+    requested_by: user.id,
+  });
+  if (error) throw new Error(error.message);
+
+  for (const p of ["/home", "/dashboard", "/portfolio", "/governance"]) {
+    revalidatePath(p);
+  }
+}
+
+/**
  * E5-2 / E5-3 — flag or unflag a stakeholder. Flagging sets `flagged` (and an
  * optional reason); the sync_escalation trigger opens/closes the escalation.
  * RLS gates who may flag; the audit trigger logs it.

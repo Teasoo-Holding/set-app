@@ -63,6 +63,30 @@ graduate into a GitHub issue (epic/story) when picked up.
   the product surfaces when people ask AI about stakeholder-engagement tools.
   _(Requested 2026-08-13.)_
 
+## Product enhancements
+
+- **Audit-trail viewer** — a "History" tab per stakeholder over the existing
+  `audit_log` (who changed what, when). Trust/compliance; useful for the pilot.
+- **Risk/sentiment history** — snapshot risk/sentiment over time so the profile
+  "relationship trajectory" chart (demo, deferred) and dashboard trends become
+  real (not fabricated).
+- **Stale-relationship alerts** — flag stakeholders with no contact in N days,
+  Tier-aware (Tier 1 tighter). Serves "keep the record fresh."
+- **SLA timers on escalations** — auto-nudge / auto-escalate if a Critical isn't
+  acknowledged within X hours (Vercel Cron + notifications).
+- **Bulk data import** — CSV/Excel import to seed real stakeholders at
+  onboarding (needed for Unilever day one); validation + dedupe.
+- **Duplicate detection** on new-stakeholder requests — warn on likely dupes
+  before an Admin approves (avoid two "Ministry of Trade"s).
+- **Global search / command palette** — ⌘K to jump to any stakeholder fast
+  (RLS-scoped results).
+- **Data retention / GDPR** — personal data on real people: right-to-be-
+  forgotten, retention policy, export-my-data. Address before production.
+- **Guided onboarding / empty-state tour** — first-run tour + helpful empty
+  states (pairs with the Empty states item under UX).
+
+_(All requested 2026-08-13.)_
+
 ## Architecture
 
 - **Multi-tenant SaaS** — convert SIS so many organisations (tenants) can use
