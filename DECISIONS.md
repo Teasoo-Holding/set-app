@@ -5,6 +5,15 @@ what we decided, why, and what it affects.
 
 ---
 
+## D-006 · Governance is an Admin-only tab, not the Admin's home
+
+**2026-08-13** · E10 shipped `/governance` as the Admin's landing page, which
+made the nav rail highlight **Home** while the page read **Governance**. We split
+them: the Admin's **Home** is now the org-wide **`/portfolio`** overview (Admins
+see everything, like Leadership), and **Governance** is a dedicated Admin-only
+nav item. `/governance` access is a straight role check, not a landing rule.
+**Affects:** E10, `getLandingPath("admin")`, `AppShell` nav.
+
 ## D-005 · Branching workflow: build on `staging`, promote to `main`
 
 **2026-08-12** · New workflow: all feature work lands on the **`staging`**
