@@ -63,6 +63,20 @@ graduate into a GitHub issue (epic/story) when picked up.
   the product surfaces when people ask AI about stakeholder-engagement tools.
   _(Requested 2026-08-13.)_
 
+## Security
+
+- **Comprehensive security audit (pre-production)** — run a full audit before the
+  pilot goes live, covering the 5 high-frequency vibe-code gaps + OWASP-style
+  checklist: (1) secrets/env (no hardcoded keys, service-role never `NEXT_PUBLIC_`,
+  source maps off, startup env validation), (2) **RLS on every table** + `WITH
+  CHECK` on insert/update + `auth.uid()` identity + SECURITY DEFINER review,
+  (3) server-side validation (identity from session not request body; input
+  validation; no `dangerouslySetInnerHTML`), (4) dependencies (`npm audit`, no
+  hallucinated pkgs, lockfile, patch CVEs — see #7 Next upgrade), (5) auth
+  middleware (default-deny, `getUser()` not `getSession()`), plus **rate
+  limiting** (auth + expensive routes), CORS, and file-upload checks. Use the
+  provided audit prompt; fix CRITICAL/HIGH before launch. _(Requested 2026-08-13.)_
+
 ## Product enhancements
 
 - **Audit-trail viewer** — a "History" tab per stakeholder over the existing
