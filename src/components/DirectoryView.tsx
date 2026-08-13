@@ -46,9 +46,11 @@ const useStyles = makeStyles({
 export function DirectoryView({
   profile,
   rows,
+  initialFunction = null,
 }: {
   profile: { id: string; full_name: string; role: Role; function: string | null };
   rows: DirectoryRow[];
+  initialFunction?: string | null;
 }) {
   const styles = useStyles();
 
@@ -62,10 +64,12 @@ export function DirectoryView({
   const [category, setCategory] = React.useState<string>("All");
   const [tier, setTier] = React.useState<string>("All");
   const [sort, setSort] = React.useState<string>("risk");
+  const [functionFilter, setFunctionFilter] = React.useState<string | null>(initialFunction);
 
   const filtered = React.useMemo(() => {
     const q = query.trim().toLowerCase();
     let out = rows.filter((r) => {
+      if (functionFilter && r.function !== functionFilter) return false;
       if (category !== "All" && r.category !== category) return false;
       if (tier !== "All" && String(r.tier) !== tier) return false;
       if (q) {
@@ -81,7 +85,7 @@ export function DirectoryView({
       return RISK_RANK[b.risk] - RISK_RANK[a.risk] || a.name.localeCompare(b.name);
     });
     return out;
-  }, [rows, query, category, tier, sort]);
+  }, [rows, query, category, tier, sort, functionFilter]);
 
   const chip = (value: string, current: string, set: (v: string) => void, label: string) => (
     <Button
@@ -114,6 +118,19 @@ export function DirectoryView({
           value={query}
           onChange={(_, d) => setQuery(d.value)}
         />
+
+        {functionFilter && (
+          <div className={styles.chipRow}>
+            <Button
+              size="small"
+              appearance="primary"
+              shape="circular"
+              onClick={() => setFunctionFilter(null)}
+            >
+              {`Function: ${functionFilter}  ✕`}
+            </Button>
+          </div>
+        )}
 
         <div className={styles.chipRow}>
           {chip("All", category, setCategory, "All")}

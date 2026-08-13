@@ -3,7 +3,11 @@ import { getCurrentProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { DirectoryView, type DirectoryRow } from "@/components/DirectoryView";
 
-export default async function DirectoryPage() {
+export default async function DirectoryPage({
+  searchParams,
+}: {
+  searchParams: { function?: string };
+}) {
   const profile = await getCurrentProfile();
   if (!profile) redirect("/login");
 
@@ -37,6 +41,7 @@ export default async function DirectoryPage() {
     <DirectoryView
       profile={{ id: profile.id, full_name: profile.full_name, role: profile.role, function: profile.function }}
       rows={rows}
+      initialFunction={searchParams.function ?? null}
     />
   );
 }
