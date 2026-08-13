@@ -34,12 +34,12 @@ function iso(d: Date): string {
  * Protected by CRON_SECRET (Vercel Cron sends it as a Bearer token).
  */
 export async function GET(request: Request) {
+  // Fail CLOSED: this route uses the service role (bypasses RLS) and sends
+  // email, so it must never be callable without the secret. A missing/empty
+  // CRON_SECRET is treated as "deny", not "skip the check". (#58)
   const secret = process.env.CRON_SECRET;
-  if (secret) {
-    const auth = request.headers.get("authorization");
-    if (auth !== `Bearer ${secret}`) {
-      return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-    }
+  if (!secret || request.headers.get("authorization") !== `Bearer ${secret}`) {
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
   const admin = createAdminClient();
@@ -58,7 +58,9 @@ export async function GET(request: Request) {
     .eq("status", "open")
     .lte("due_date", t3Str);
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    // Log the detail server-side; don't leak DB/schema detail to the caller. (#58)
+    console.error("cron/reminders query failed:", error.message);
+    return NextResponse.json({ error: "internal error" }, { status: 500 });
   }
 
   const rows = (data as unknown as Row[]) ?? [];

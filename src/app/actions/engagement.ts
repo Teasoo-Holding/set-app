@@ -3,6 +3,9 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 
+const RISKS = ["low", "medium", "high"] as const;
+const SENTIMENTS = ["supportive", "neutral", "resistant"] as const;
+
 /**
  * E3-1/E3-2/E3-3 — log an engagement. Inserts as the current user (RLS
  * requires logged_by = auth.uid() and the stakeholder to be in scope). The
@@ -40,10 +43,18 @@ export async function logEngagement(formData: FormData) {
     throw new Error(error.message);
   }
 
-  // E3-3 — optional risk/sentiment update in the same flow.
+  // E3-3 — optional risk/sentiment update in the same flow. Validate against
+  // the allowed values (mirrors updateStakeholder) rather than trusting the
+  // posted string; the DB enum backstops this, but reject early and clearly. (#58)
   const patch: Record<string, string> = {};
-  if (risk) patch.risk = risk;
-  if (sentiment) patch.sentiment = sentiment;
+  if (risk) {
+    if (!RISKS.includes(risk as (typeof RISKS)[number])) throw new Error("Invalid risk value.");
+    patch.risk = risk;
+  }
+  if (sentiment) {
+    if (!SENTIMENTS.includes(sentiment as (typeof SENTIMENTS)[number])) throw new Error("Invalid sentiment value.");
+    patch.sentiment = sentiment;
+  }
   if (Object.keys(patch).length > 0) {
     await supabase.from("stakeholders").update(patch).eq("id", stakeholderId);
   }
