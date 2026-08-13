@@ -76,6 +76,21 @@ graduate into a GitHub issue (epic/story) when picked up.
   middleware (default-deny, `getUser()` not `getSession()`), plus **rate
   limiting** (auth + expensive routes), CORS, and file-upload checks. Use the
   provided audit prompt; fix CRITICAL/HIGH before launch. _(Requested 2026-08-13.)_
+  **Update 2026-08-13:** audit run; CRITICAL (profiles self-escalation) + all
+  MEDIUM fixed (#58). Deferred code items filed as #80 (field-owner column
+  scope) and #81 (rate limiting). Remaining low hardening below.
+
+- **Tighten `anon` table grants** — post-audit LOW (defense-in-depth). `anon`
+  currently has `SELECT` on every table (neutralised by RLS, which denies all
+  rows to an anon user). Drop the blanket `anon` default-privilege grant and
+  grant only what pre-auth pages actually need (today: nothing). _(2026-08-13.)_
+
+- **Pin `NEXT_PUBLIC_SITE_URL` per environment** — post-audit LOW. `siteOrigin()`
+  falls back to the `x-forwarded-host` header when the env var is unset; behind
+  Vercel that header is trusted and Supabase validates the OAuth redirect
+  allowlist, so risk is low — but setting `NEXT_PUBLIC_SITE_URL` in each
+  deployment makes the origin deterministic and removes header reliance.
+  Also: keep `NEXT_PUBLIC_DEMO_MODE` off for the real pilot. _(2026-08-13.)_
 
 ## Product enhancements
 

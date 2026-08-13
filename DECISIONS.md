@@ -5,6 +5,23 @@ what we decided, why, and what it affects.
 
 ---
 
+## D-007 · Column-immutability enforced by trigger, not RLS, on `profiles`
+
+**2026-08-13** · The #58 audit found a CRITICAL: `profiles_update_self` +
+table-wide `UPDATE` for `authenticated` let any user set their own
+`role='admin'`, because RLS `WITH CHECK` cannot compare OLD vs NEW and so can't
+express "these columns are immutable to yourself". **Decision:** enforce
+privileged-column immutability (`role`, `function`, `manager_id`,
+`functional_manager_id`) with a `BEFORE UPDATE` trigger
+(`guard_profile_privileged_columns`); admins and no-JWT service/migration
+contexts pass through. This trigger pattern is the standard tool for
+column-level authorization here (RLS handles row-level). Also hardened: cron
+fails closed without `CRON_SECRET`, middleware default-denies `/api`, and a
+pgTAP assertion now fails CI if any `public` table ships without RLS.
+**Affects:** `profiles`, cron route, middleware, RLS test harness. **Note:**
+migrations are **not** auto-applied to the hosted DB — the fix must be pushed
+to Supabase manually to protect the live database.
+
 ## D-006 · Governance is an Admin-only tab, not the Admin's home
 
 **2026-08-13** · E10 shipped `/governance` as the Admin's landing page, which
