@@ -20,6 +20,8 @@ import {
   PeopleFilled,
   FlagRegular,
   FlagFilled,
+  SettingsRegular,
+  SettingsFilled,
   SignOutRegular,
   Navigation24Regular,
 } from "@fluentui/react-icons";
@@ -91,7 +93,7 @@ const useStyles = makeStyles({
   form: { margin: 0, display: "flex" },
 });
 
-type NavKey = "home" | "directory" | "escalations";
+type NavKey = "home" | "directory" | "escalations" | "governance";
 
 export function AppShell({
   profile,
@@ -116,6 +118,17 @@ export function AppShell({
     { key: "directory", label: "Directory", href: "/directory", icon: <PeopleRegular />, iconActive: <PeopleFilled /> },
     { key: "escalations", label: "Escalations", href: "/escalations", icon: <FlagRegular />, iconActive: <FlagFilled /> },
   ];
+
+  // Governance is an Admin-only destination — not everyone's home.
+  if (profile.role === "admin") {
+    items.push({
+      key: "governance",
+      label: "Governance",
+      href: "/governance",
+      icon: <SettingsRegular />,
+      iconActive: <SettingsFilled />,
+    });
+  }
 
   const roleColor = profile.role === "leadership" || profile.role === "admin" ? "brand" : "informative";
 

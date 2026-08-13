@@ -72,7 +72,7 @@ export function GovernanceAdmin({
   const movingCount = persons.find((p) => p.id === fromId)?.owns ?? 0;
 
   return (
-    <AppShell profile={viewer} active="home">
+    <AppShell profile={viewer} active="governance">
       <main className={styles.main}>
         <div className={styles.head}>
           <Title2>Governance &amp; administration</Title2>

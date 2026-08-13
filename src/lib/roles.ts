@@ -15,11 +15,12 @@ export type Profile = {
 export function getLandingPath(role: Role): string {
   switch (role) {
     case "leadership":
+    case "admin":
+      // Admins see everything — their home is the portfolio overview.
+      // Governance lives on its own nav tab.
       return "/portfolio";
     case "head":
       return "/dashboard";
-    case "admin":
-      return "/governance";
     case "field":
     default:
       return "/home";

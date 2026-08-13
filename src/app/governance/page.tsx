@@ -6,7 +6,7 @@ import { GovernanceAdmin, type PendingRequest, type TaxonomyValue, type PersonOp
 export default async function GovernancePage() {
   const profile = await getCurrentProfile();
   if (!profile) redirect("/login");
-  if (getLandingPath(profile.role) !== "/governance") redirect(getLandingPath(profile.role));
+  if (profile.role !== "admin") redirect(getLandingPath(profile.role));
 
   const supabase = createClient();
   const [{ data: reqRows }, { data: taxRows }, { data: people }, { data: owned }] = await Promise.all([
