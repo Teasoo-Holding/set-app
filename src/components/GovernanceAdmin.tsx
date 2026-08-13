@@ -23,10 +23,10 @@ export type TaxonomyValue = {
 };
 export type PersonOption = { id: string; name: string; role: string; owns: number };
 
-const KINDS: { key: TaxonomyValue["kind"]; label: string }[] = [
-  { key: "category", label: "Categories" },
-  { key: "function", label: "Functions" },
-  { key: "engagement_type", label: "Engagement types" },
+const KINDS: { key: TaxonomyValue["kind"]; label: string; addLabel: string }[] = [
+  { key: "category", label: "Categories", addLabel: "Add a category…" },
+  { key: "function", label: "Functions", addLabel: "Add a function…" },
+  { key: "engagement_type", label: "Engagement types", addLabel: "Add an engagement type…" },
 ];
 
 function fmt(iso: string): string {
@@ -137,7 +137,7 @@ export function GovernanceAdmin({
                 </div>
                 <form action={addTaxonomy} className={styles.addRow}>
                   <input type="hidden" name="kind" value={k.key} />
-                  <Input name="value" size="small" placeholder={`Add a ${k.label.slice(0, -1).toLowerCase()}…`} />
+                  <Input name="value" size="small" placeholder={k.addLabel} />
                   <Button type="submit" size="small" appearance="outline">Add</Button>
                 </form>
                 <Divider />
