@@ -9,15 +9,26 @@ import {
   Text,
   Avatar,
   Divider,
-  Badge,
   MessageBar,
   MessageBarBody,
   MessageBarTitle,
 } from "@fluentui/react-components";
-import { ArrowRightRegular, LockClosedRegular } from "@fluentui/react-icons";
+import { ArrowRightRegular } from "@fluentui/react-icons";
 import { BrandMark } from "@/components/BrandMark";
-import { signInAsDemo } from "@/app/actions/auth";
+import { signInAsDemo, signInWithMicrosoft } from "@/app/actions/auth";
 import { DEMO_USERS, DEMO_MODE, ROLE_LABEL } from "@/lib/roles";
+
+/** Microsoft's four-square logo (official colours). */
+function MicrosoftLogo() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 21 21" aria-hidden="true">
+      <rect x="1" y="1" width="9" height="9" fill="#f25022" />
+      <rect x="11" y="1" width="9" height="9" fill="#7fba00" />
+      <rect x="1" y="11" width="9" height="9" fill="#00a4ef" />
+      <rect x="11" y="11" width="9" height="9" fill="#ffb900" />
+    </svg>
+  );
+}
 
 const useStyles = makeStyles({
   page: {
@@ -43,16 +54,28 @@ const useStyles = makeStyles({
     boxShadow: tokens.shadow4,
   },
   hero: { display: "flex", flexDirection: "column", rowGap: "8px" },
-  ssoRow: {
+  msForm: { margin: 0 },
+  msButton: {
+    width: "100%",
     display: "flex",
     alignItems: "center",
+    justifyContent: "center",
     columnGap: "10px",
     padding: "12px 14px",
     borderRadius: tokens.borderRadiusMedium,
-    backgroundColor: tokens.colorNeutralBackground2,
-    border: `1px solid ${tokens.colorNeutralStroke2}`,
-    color: tokens.colorNeutralForeground3,
+    backgroundColor: tokens.colorNeutralBackground1,
+    border: `1px solid ${tokens.colorNeutralStroke1}`,
+    cursor: "pointer",
+    fontFamily: tokens.fontFamilyBase,
+    fontSize: tokens.fontSizeBase300,
+    fontWeight: tokens.fontWeightSemibold,
+    color: tokens.colorNeutralForeground1,
+    ":hover": {
+      backgroundColor: tokens.colorNeutralBackground1Hover,
+      border: `1px solid ${tokens.colorBrandStroke1}`,
+    },
   },
+  ssoHint: { color: tokens.colorNeutralForeground3, textAlign: "center" },
   sectionLabel: {
     color: tokens.colorNeutralForeground3,
     textTransform: "uppercase",
@@ -118,13 +141,15 @@ export default function LoginPage({
           </MessageBar>
         )}
 
-        <div className={styles.ssoRow}>
-          <LockClosedRegular />
-          <Body1 style={{ flexGrow: 1 }}>Corporate SSO</Body1>
-          <Badge appearance="tint" color="informative">
-            Coming soon
-          </Badge>
-        </div>
+        <form action={signInWithMicrosoft} className={styles.msForm}>
+          <button type="submit" className={styles.msButton}>
+            <MicrosoftLogo />
+            Sign in with Microsoft
+          </button>
+        </form>
+        <Caption1 className={styles.ssoHint}>
+          Use your Unilever work account.
+        </Caption1>
 
         {DEMO_MODE && (
           <>
