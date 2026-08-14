@@ -12,11 +12,20 @@ export default async function DirectoryPage({
   if (!profile) redirect("/login");
 
   const supabase = createClient();
-  const { data } = await supabase
-    .from("stakeholders")
-    .select(
-      "id, name, category, function, tier, risk, sentiment, flagged, last_contact_at, notes, owner_id, owner:profiles!stakeholders_owner_id_fkey(full_name)",
-    );
+  const [{ data }, { data: taxRows }, { data: memberRows }] = await Promise.all([
+    supabase
+      .from("stakeholders")
+      .select(
+        "id, name, category, function, tier, risk, sentiment, flagged, last_contact_at, notes, owner_id, owner:profiles!stakeholders_owner_id_fkey(full_name)",
+      ),
+    supabase.from("taxonomy").select("kind, value").eq("is_active", true).order("sort_order"),
+    supabase.from("profiles").select("id, full_name").order("full_name"),
+  ]);
+
+  const tax = (taxRows as { kind: string; value: string }[]) ?? [];
+  const categories = tax.filter((t) => t.kind === "category").map((t) => t.value);
+  const functions = tax.filter((t) => t.kind === "function").map((t) => t.value);
+  const members = ((memberRows as { id: string; full_name: string }[]) ?? []).map((m) => ({ id: m.id, name: m.full_name }));
 
   const rows: DirectoryRow[] = (
     (data as unknown as (Omit<DirectoryRow, "ownerName"> & {
@@ -41,6 +50,9 @@ export default async function DirectoryPage({
     <DirectoryView
       profile={{ id: profile.id, full_name: profile.full_name, role: profile.role, function: profile.function }}
       rows={rows}
+      categories={categories}
+      functions={functions}
+      members={members}
       initialFunction={searchParams.function ?? null}
     />
   );

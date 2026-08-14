@@ -75,6 +75,41 @@ export async function requestStakeholder(formData: FormData) {
 }
 
 /**
+ * Directly create a stakeholder (Admin / Leadership / Head). Field users can't
+ * reach this — they propose via requestStakeholder. RLS (stakeholders_insert)
+ * is the real guard: Leadership/Admin anywhere in the tenant, a Head only in
+ * their own function. tenant_id defaults to the caller's tenant.
+ */
+export async function createStakeholder(formData: FormData) {
+  const name = String(formData.get("name") ?? "").trim();
+  const category = String(formData.get("category") ?? "").trim();
+  const func = String(formData.get("function") ?? "").trim();
+  const tier = Number(formData.get("tier"));
+  const ownerId = String(formData.get("owner_id") ?? "").trim();
+  if (!name || !category || !func) throw new Error("Name, category and function are required.");
+  if (tier !== 1 && tier !== 2) throw new Error("Choose a tier.");
+
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not signed in.");
+
+  const { error } = await supabase.from("stakeholders").insert({
+    name,
+    category,
+    function: func,
+    tier,
+    owner_id: ownerId || user.id,
+  });
+  if (error) throw new Error(error.message);
+
+  for (const p of ["/directory", "/home", "/dashboard", "/portfolio", "/governance"]) {
+    revalidatePath(p);
+  }
+}
+
+/**
  * E5-2 / E5-3 — flag or unflag a stakeholder. Flagging sets `flagged` (and an
  * optional reason); the sync_escalation trigger opens/closes the escalation.
  * RLS gates who may flag; the audit trigger logs it.
