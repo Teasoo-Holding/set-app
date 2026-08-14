@@ -5,6 +5,22 @@ what we decided, why, and what it affects.
 
 ---
 
+## D-008 · Multi-tenant SaaS with database-enforced tenant isolation
+
+**2026-08-14** · Teasoo SET became a multi-tenant SaaS (E12). One shared
+database; every business table carries a `tenant_id`. **Isolation is enforced in
+the database, not the app**: (1) structurally — `NOT NULL tenant_id` + composite
+tenant-scoped FKs (taxonomy and child→stakeholder), so a row can't reference
+another tenant's data; (2) by RLS — `tenant_id = current_tenant()` AND-ed into
+every policy; (3) `tenant_id` is immutable via trigger. Proven by pgTAP
+cross-tenant tests in CI. **Roles:** `platform_admin` (cross-tenant, manages
+tenants, **no business-data access**), `admin` (tenant admin), plus
+leadership/head/field scoped to their tenant. **Onboarding is invite-only** —
+platform admin provisions a tenant + first admin; everyone joins via a hashed,
+single-use, expiring email token; open sign-up was removed. **One tenant per
+user.** Cutover is a fresh reseed (a demo tenant + a platform admin). **Affects:**
+the whole schema, RLS, auth/onboarding, and every screen (now tenant-scoped).
+
 ## D-007 · Column-immutability enforced by trigger, not RLS, on `profiles`
 
 **2026-08-13** · The #58 audit found a CRITICAL: `profiles_update_self` +
