@@ -60,7 +60,7 @@ select u.id::text, u.id,
        jsonb_build_object('sub', u.id::text, 'email', u.email),
        'email', now(), now(), now()
 from auth.users u
-where u.email like '%@example.com'
+where u.email like '%@example.com' or u.email like '%@teasooconsulting.com'
 on conflict do nothing;
 
 -- GoTrue scans many auth.users columns into non-nullable Go types; normalise
@@ -78,7 +78,7 @@ update auth.users set
   phone_change_token         = coalesce(phone_change_token, ''),
   reauthentication_token     = coalesce(reauthentication_token, ''),
   email_change_confirm_status = coalesce(email_change_confirm_status, 0)
-where email like '%@example.com';
+where email like '%@example.com' or email like '%@teasooconsulting.com';
 
 -- Platform admin: no tenant, no function.
 insert into public.profiles (id, tenant_id, full_name, email, role, function, manager_id) values
