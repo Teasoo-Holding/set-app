@@ -1,7 +1,9 @@
 "use client";
 
+import { useFormState } from "react-dom";
 import {
   makeStyles, tokens, Title2, Title3, Body1, Caption1, Text, Button, Badge, Input, Field,
+  MessageBar, MessageBarBody, MessageBarTitle,
 } from "@fluentui/react-components";
 import { SignOutRegular } from "@fluentui/react-icons";
 import { BrandMark } from "@/components/BrandMark";
@@ -43,6 +45,7 @@ const useStyles = makeStyles({
   muted: { color: tokens.colorNeutralForeground3 },
   form: { margin: 0, display: "flex" },
   empty: { color: tokens.colorNeutralForeground3, paddingTop: "4px" },
+  linkBox: { marginTop: "6px", padding: "8px 10px", borderRadius: tokens.borderRadiusMedium, backgroundColor: tokens.colorNeutralBackground3, wordBreak: "break-all", fontFamily: tokens.fontFamilyMonospace, fontSize: tokens.fontSizeBase200 },
 });
 
 export function PlatformConsole({
@@ -53,6 +56,7 @@ export function PlatformConsole({
   tenants: TenantRow[];
 }) {
   const styles = useStyles();
+  const [createState, createAction] = useFormState(createTenant, null);
 
   return (
     <div className={styles.page}>
@@ -79,7 +83,7 @@ export function PlatformConsole({
             Creates the organisation, sets up its default categories and functions, and emails the first
             administrator an invitation to set up their account.
           </Caption1>
-          <form action={createTenant} className={styles.createForm}>
+          <form action={createAction} className={styles.createForm}>
             <Field label="Organisation name" className={styles.field}>
               <Input name="name" required placeholder="Acme Foods" />
             </Field>
@@ -88,6 +92,29 @@ export function PlatformConsole({
             </Field>
             <Button type="submit" appearance="primary">Create &amp; invite</Button>
           </form>
+
+          {createState?.error && (
+            <MessageBar intent="error">
+              <MessageBarBody>
+                <MessageBarTitle>Couldn&apos;t create the organisation</MessageBarTitle>
+                {createState.error}
+              </MessageBarBody>
+            </MessageBar>
+          )}
+          {createState?.createdOrg && createState.emailed && (
+            <MessageBar intent="success">
+              <MessageBarBody>{`Created ${createState.createdOrg} and emailed the administrator an invitation.`}</MessageBarBody>
+            </MessageBar>
+          )}
+          {createState?.createdOrg && !createState.emailed && createState.inviteLink && (
+            <MessageBar intent="warning">
+              <MessageBarBody>
+                <MessageBarTitle>{`Created ${createState.createdOrg} — invite email not sent`}</MessageBarTitle>
+                Email isn&apos;t configured yet, so send this invitation link to the administrator yourself:
+                <div className={styles.linkBox}>{createState.inviteLink}</div>
+              </MessageBarBody>
+            </MessageBar>
+          )}
         </div>
 
         {/* Tenant list */}

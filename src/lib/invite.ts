@@ -65,7 +65,7 @@ export async function createAndSendInvite(
     invitedById: string;
     inviterName: string | null;
   },
-): Promise<void> {
+): Promise<{ link: string; emailed: boolean }> {
   const { token, hash } = newInviteToken();
   const expiresAt = new Date(Date.now() + INVITE_TTL_DAYS * 86_400_000).toISOString();
 
@@ -88,14 +88,25 @@ export async function createAndSendInvite(
   if (error) throw new Error(error.message);
 
   const link = `${siteOrigin()}/invite/accept?token=${token}`;
-  await sendEmail({
-    to: [{ email: args.email }],
-    ...invitationEmail({
-      orgName: args.orgName,
-      roleLabel: ROLE_LABEL[args.role],
-      inviterName: args.inviterName,
-      link,
-      expiresOn: expiresAt.slice(0, 10),
-    }),
-  });
+
+  // Email is best-effort: a Brevo misconfiguration must NOT fail the invite.
+  // The caller surfaces the link so onboarding works even before email is set up.
+  let emailed = false;
+  try {
+    const res = await sendEmail({
+      to: [{ email: args.email }],
+      ...invitationEmail({
+        orgName: args.orgName,
+        roleLabel: ROLE_LABEL[args.role],
+        inviterName: args.inviterName,
+        link,
+        expiresOn: expiresAt.slice(0, 10),
+      }),
+    });
+    emailed = !res.skipped;
+  } catch (e) {
+    console.error("Invitation email failed to send:", e);
+  }
+
+  return { link, emailed };
 }
