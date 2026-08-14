@@ -39,7 +39,7 @@ insert into auth.users (id, email) values
   ('22222222-2222-2222-2222-222222222222', 'head.sales.a@example.com'),
   ('33333333-3333-3333-3333-333333333333', 'leadership.a@example.com'),
   ('44444444-4444-4444-4444-444444444444', 'field.sales.b@example.com'),
-  ('55555555-5555-5555-5555-555555555555', 'platform@example.com');
+  ('55555555-5555-5555-5555-555555555555', 'platform.test@example.com');
 
 -- handle_new_user() created default (null-tenant, field) profiles above; set them.
 insert into public.profiles (id, tenant_id, full_name, email, role, function) values
@@ -47,7 +47,7 @@ insert into public.profiles (id, tenant_id, full_name, email, role, function) va
   ('22222222-2222-2222-2222-222222222222', '0a000000-0000-0000-0000-0000000000a0', 'Head A',       'head.sales.a@example.com',  'head',           'Sales'),
   ('33333333-3333-3333-3333-333333333333', '0a000000-0000-0000-0000-0000000000a0', 'Leadership A', 'leadership.a@example.com',  'leadership',     null),
   ('44444444-4444-4444-4444-444444444444', '0b000000-0000-0000-0000-0000000000b0', 'Field B',      'field.sales.b@example.com', 'field',          'Sales'),
-  ('55555555-5555-5555-5555-555555555555', null,                                   'Platform',     'platform@example.com',      'platform_admin', null)
+  ('55555555-5555-5555-5555-555555555555', null,                                   'Platform',     'platform.test@example.com', 'platform_admin', null)
 on conflict (id) do update set
   tenant_id = excluded.tenant_id, full_name = excluded.full_name,
   role = excluded.role, function = excluded.function;
