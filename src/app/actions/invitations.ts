@@ -104,28 +104,16 @@ export async function acceptInvite(formData: FormData) {
   if (created?.user) {
     uid = created.user.id;
   } else {
-    // createUser failed. If an account already exists for this email but has no
-    // tenant yet (e.g. a half-finished earlier attempt), adopt it and set the
+    // createUser failed — most often because the email is already registered
+    // (e.g. an earlier test, or a half-finished accept). Recover: find the auth
+    // user; if it isn't already attached to a tenant, adopt it and set the
     // password. If it already belongs to a tenant, they should just sign in.
-    const { data: existing } = await db
-      .from("profiles")
-      .select("id, tenant_id")
-      .eq("email", invite!.email)
-      .maybeSingle();
-    const ex = existing as { id: string; tenant_id: string | null } | null;
+    const { data: list } = await db.auth.admin.listUsers({ page: 1, perPage: 1000 });
+    const existingUser = (list?.users ?? []).find(
+      (u) => (u.email ?? "").toLowerCase() === invite!.email.toLowerCase(),
+    );
 
-    if (ex && ex.tenant_id) {
-      return fail("An account for this email already exists. Please sign in instead.");
-    }
-    if (ex && !ex.tenant_id) {
-      uid = ex.id;
-      const { error: upErr } = await db.auth.admin.updateUserById(uid, {
-        password,
-        email_confirm: true,
-        user_metadata: { full_name: fullName },
-      });
-      if (upErr) return fail("We couldn't finish setting up your account. Ask for a new invitation.");
-    } else {
+    if (!existingUser) {
       console.error("acceptInvite createUser failed:", cErr?.message);
       return fail(
         cErr?.message
@@ -133,6 +121,23 @@ export async function acceptInvite(formData: FormData) {
           : "We couldn't create your account. Ask for a new invitation.",
       );
     }
+
+    const { data: prof } = await db
+      .from("profiles")
+      .select("tenant_id")
+      .eq("id", existingUser.id)
+      .maybeSingle();
+    if ((prof as { tenant_id: string | null } | null)?.tenant_id) {
+      return fail("An account for this email already exists. Please sign in instead.");
+    }
+
+    uid = existingUser.id;
+    const { error: upErr } = await db.auth.admin.updateUserById(uid, {
+      password,
+      email_confirm: true,
+      user_metadata: { full_name: fullName },
+    });
+    if (upErr) return fail("We couldn't finish setting up your account. Ask for a new invitation.");
   }
 
   // handle_new_user created a tenant-less profile; bind it to the invitation.
