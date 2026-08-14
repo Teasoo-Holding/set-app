@@ -19,6 +19,7 @@ import {
 } from "@fluentui/react-components";
 import { ArrowRightRegular } from "@fluentui/react-icons";
 import { BrandMark } from "@/components/BrandMark";
+import { PasswordInput } from "@/components/PasswordInput";
 import {
   signInAsDemo,
   signInWithMicrosoft,
@@ -195,7 +196,7 @@ export default function LoginPage({
               <Input name="email" type="email" autoComplete="email" required placeholder="you@company.com" />
             </Field>
             <Field label="Password">
-              <Input name="password" type="password" autoComplete="current-password" required />
+              <PasswordInput name="password" autoComplete="current-password" required />
             </Field>
             <Button type="submit" appearance="primary" className={styles.submit}>
               {copy.cta}

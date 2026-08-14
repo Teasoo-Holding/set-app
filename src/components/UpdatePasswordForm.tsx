@@ -7,12 +7,12 @@ import {
   Body1,
   Text,
   Field,
-  Input,
   Button,
   MessageBar,
   MessageBarBody,
 } from "@fluentui/react-components";
 import { BrandMark } from "@/components/BrandMark";
+import { PasswordInput } from "@/components/PasswordInput";
 import { updatePassword } from "@/app/actions/auth";
 
 const useStyles = makeStyles({
@@ -67,7 +67,7 @@ export function UpdatePasswordForm({ error }: { error?: string }) {
 
         <form action={updatePassword} className={styles.form}>
           <Field label="New password" hint="At least 8 characters.">
-            <Input name="password" type="password" autoComplete="new-password" required minLength={8} />
+            <PasswordInput name="password" autoComplete="new-password" required minLength={8} />
           </Field>
           <Button type="submit" appearance="primary">
             Save new password

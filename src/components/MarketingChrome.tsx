@@ -61,7 +61,12 @@ export function MarketingFooter() {
             <Text weight="semibold">Teasoo SET</Text>
           </div>
           <Caption1 className={styles.muted}>{COMPANY.productLong}</Caption1>
-          <Caption1 className={styles.muted}>By {COMPANY.name}</Caption1>
+          <Caption1 className={styles.muted}>
+            By{" "}
+            <a href={COMPANY.website} target="_blank" rel="noopener noreferrer" className={styles.footerLink}>
+              {COMPANY.name}
+            </a>
+          </Caption1>
         </div>
 
         <div className={styles.footerCol}>

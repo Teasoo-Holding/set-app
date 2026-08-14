@@ -2,6 +2,7 @@
 // Client-safe (no server-only imports).
 export const COMPANY = {
   name: "Teasoo Consulting",
+  website: "https://teasooconsulting.com",
   product: "Teasoo SET",
   productLong: "Stakeholder Engagement Tracker",
   email: "info@teasooconsulting.com",

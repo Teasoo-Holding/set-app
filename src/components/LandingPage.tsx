@@ -39,6 +39,11 @@ const useStyles = makeStyles({
   secText: { display: "flex", flexDirection: "column", rowGap: "2px" },
 
   ctaBand: { textAlign: "center", padding: "56px 24px", display: "flex", flexDirection: "column", alignItems: "center", rowGap: "16px" },
+
+  trustBand: { padding: "8px 24px 44px", display: "flex", flexDirection: "column", alignItems: "center", rowGap: "16px" },
+  trustLabel: { color: tokens.colorNeutralForeground3, textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: tokens.fontWeightSemibold },
+  logos: { display: "flex", alignItems: "center", columnGap: "40px", rowGap: "16px", flexWrap: "wrap", justifyContent: "center" },
+  wordmark: { fontSize: "30px", fontWeight: tokens.fontWeightBold, color: tokens.colorNeutralForeground2, letterSpacing: "0.02em" },
 });
 
 const FEATURES = [
@@ -81,6 +86,14 @@ export function LandingPage() {
           <Button as="a" href={`mailto:${COMPANY.email}?subject=Teasoo%20SET%20demo`} appearance="outline" size="large" icon={<MailRegular />}>
             Request a demo
           </Button>
+        </div>
+      </section>
+
+      {/* Trusted by */}
+      <section className={styles.trustBand}>
+        <Caption1 className={styles.trustLabel}>Trusted by teams at</Caption1>
+        <div className={styles.logos}>
+          <span className={styles.wordmark}>Unilever</span>
         </div>
       </section>
 
