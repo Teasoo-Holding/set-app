@@ -114,7 +114,7 @@ export async function acceptInvite(formData: FormData) {
     role: invite!.role,
     function: invite!.function,
   });
-  if (pErr) fail(pErr.message);
+  if (pErr) return fail("We couldn't finish setting up your account. Ask for a new invitation.");
 
   await db
     .from("invitations")

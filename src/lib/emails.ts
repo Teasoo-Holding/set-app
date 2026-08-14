@@ -22,6 +22,10 @@ function esc(s: string): string {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
 }
+/** Escape for an HTML attribute value (adds quotes on top of esc). */
+function escAttr(s: string): string {
+  return esc(s).replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
 
 // Simple, readable shell — no images, generous line-height, a single button.
 function layout(bodyHtml: string): string {
@@ -31,7 +35,7 @@ ${bodyHtml}
 </div>`;
 }
 function button(href: string, label: string): string {
-  return `<p style="margin:24px 0"><a href="${href}" style="background:#2563eb;color:#fff;text-decoration:none;padding:10px 18px;border-radius:6px;display:inline-block;font-weight:600">${label}</a></p>`;
+  return `<p style="margin:24px 0"><a href="${escAttr(href)}" style="background:#2563eb;color:#fff;text-decoration:none;padding:10px 18px;border-radius:6px;display:inline-block;font-weight:600">${esc(label)}</a></p>`;
 }
 
 const STATUS = {
