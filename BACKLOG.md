@@ -13,6 +13,15 @@ graduate into a GitHub issue (epic/story) when picked up.
   and mapping the Entra identity to a profile (role/function). Supersedes the
   generic SSO placeholder currently on the login screen. _(Requested 2026-08-12.)_
 
+## Marketing site
+
+- **Request a demo form** (#95) — replace the landing-page mailto with a real
+  form (name, work email, organisation, message). On submit: store the request
+  in the DB (`demo_requests`, RLS-closed, platform-admin read) and email
+  **info@teasooconsulting.com** + **efeosasere.okoro@teasooconsulting.com** via
+  Brevo, with a "thanks, we'll be in touch" confirmation. Basic anti-spam.
+  _(Requested 2026-08-14.)_
+
 ## Onboarding & Access
 
 - **Invitation-based onboarding (hierarchical)** — people join by invitation from

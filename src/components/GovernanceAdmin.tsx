@@ -4,7 +4,8 @@ import * as React from "react";
 import { makeStyles, tokens, Title2, Title3, Body1, Caption1, Text, Button, Badge, Input, Select, Divider } from "@fluentui/react-components";
 import { AppShell } from "@/components/AppShell";
 import { approveRequest, rejectRequest, addTaxonomy, setTaxonomyActive, reassignStakeholders } from "@/app/actions/governance";
-import type { Role } from "@/lib/roles";
+import { inviteUser, revokeInvite } from "@/app/actions/invitations";
+import { ROLE_LABEL, type Role } from "@/lib/roles";
 
 export type PendingRequest = {
   id: string;
@@ -22,6 +23,15 @@ export type TaxonomyValue = {
   is_active: boolean;
 };
 export type PersonOption = { id: string; name: string; role: string; owns: number };
+export type Member = { id: string; name: string; email: string; role: string; function: string | null };
+export type PendingInvite = { id: string; email: string; role: string; function: string | null; createdAt: string; expiresAt: string };
+
+const INVITE_ROLES: { value: Role; label: string }[] = [
+  { value: "field", label: "Standard User" },
+  { value: "head", label: "Function Head" },
+  { value: "leadership", label: "Leadership" },
+  { value: "admin", label: "Administrator" },
+];
 
 const KINDS: { key: TaxonomyValue["kind"]; label: string; addLabel: string }[] = [
   { key: "category", label: "Categories", addLabel: "Add a category…" },
@@ -52,18 +62,34 @@ const useStyles = makeStyles({
   reassign: { display: "flex", columnGap: "12px", rowGap: "12px", flexWrap: "wrap", alignItems: "flex-end" },
   field: { display: "flex", flexDirection: "column", rowGap: "4px", minWidth: "200px" },
   empty: { color: tokens.colorNeutralForeground3, paddingTop: "4px" },
+  inviteRow: { display: "flex", columnGap: "12px", rowGap: "12px", flexWrap: "wrap", alignItems: "flex-end" },
+  memberRow: { display: "flex", alignItems: "center", columnGap: "10px", flexWrap: "wrap", padding: "10px 0", borderTop: `1px solid ${tokens.colorNeutralStroke2}` },
+  memberMain: { display: "flex", flexDirection: "column", rowGap: "2px", flexGrow: 1, minWidth: "180px" },
 });
+
+const ROLE_BADGE: Record<string, "brand" | "informative" | "success" | "warning"> = {
+  admin: "brand",
+  leadership: "brand",
+  head: "informative",
+  field: "informative",
+};
 
 export function GovernanceAdmin({
   viewer,
   requests,
   taxonomy,
   persons,
+  members,
+  invites,
+  functions,
 }: {
   viewer: { full_name: string; role: Role; function: string | null };
   requests: PendingRequest[];
   taxonomy: TaxonomyValue[];
   persons: PersonOption[];
+  members: Member[];
+  invites: PendingInvite[];
+  functions: string[];
 }) {
   const styles = useStyles();
   const owners = persons.filter((p) => p.owns > 0);
@@ -77,6 +103,76 @@ export function GovernanceAdmin({
         <div className={styles.head}>
           <Title2>Governance &amp; administration</Title2>
           <Body1>Approve requests, manage the taxonomy, and reassign ownership.</Body1>
+        </div>
+
+        {/* E12-6 people & invitations */}
+        <div className={styles.card}>
+          <Title3>People &amp; invitations</Title3>
+          <Caption1 className={styles.muted}>Invite teammates by email. They set their own password from the link — no account exists until they accept.</Caption1>
+          <form action={inviteUser} className={styles.inviteRow}>
+            <label className={styles.field}>
+              <Caption1>Email</Caption1>
+              <Input name="email" type="email" required placeholder="teammate@company.com" />
+            </label>
+            <label className={styles.field}>
+              <Caption1>Role</Caption1>
+              <Select name="role" defaultValue="field">
+                {INVITE_ROLES.map((r) => (
+                  <option key={r.value} value={r.value}>{r.label}</option>
+                ))}
+              </Select>
+            </label>
+            <label className={styles.field}>
+              <Caption1>Function</Caption1>
+              <Select name="function" defaultValue="">
+                <option value="">— none —</option>
+                {functions.map((f) => (
+                  <option key={f} value={f}>{f}</option>
+                ))}
+              </Select>
+            </label>
+            <Button type="submit" appearance="primary">Send invite</Button>
+          </form>
+
+          {invites.length > 0 && (
+            <>
+              <Caption1 className={styles.muted}>{`Pending invitations (${invites.length})`}</Caption1>
+              {invites.map((i) => (
+                <div key={i.id} className={styles.memberRow}>
+                  <div className={styles.memberMain}>
+                    <div className={styles.nameRow}>
+                      <Text weight="semibold">{i.email}</Text>
+                      <Badge appearance="tint" color={ROLE_BADGE[i.role] ?? "informative"} size="small">
+                        {ROLE_LABEL[i.role as Role] ?? i.role}
+                      </Badge>
+                      {i.function && <Caption1 className={styles.muted}>{i.function}</Caption1>}
+                    </div>
+                    <Caption1 className={styles.muted}>{`Invited ${fmt(i.createdAt)} · expires ${fmt(i.expiresAt)}`}</Caption1>
+                  </div>
+                  <form action={revokeInvite} className={styles.form}>
+                    <input type="hidden" name="id" value={i.id} />
+                    <Button type="submit" size="small" appearance="subtle">Revoke</Button>
+                  </form>
+                </div>
+              ))}
+            </>
+          )}
+
+          <Caption1 className={styles.muted}>{`Members (${members.length})`}</Caption1>
+          {members.map((m) => (
+            <div key={m.id} className={styles.memberRow}>
+              <div className={styles.memberMain}>
+                <div className={styles.nameRow}>
+                  <Text weight="semibold">{m.name}</Text>
+                  <Badge appearance="tint" color={ROLE_BADGE[m.role] ?? "informative"} size="small">
+                    {ROLE_LABEL[m.role as Role] ?? m.role}
+                  </Badge>
+                  {m.function && <Caption1 className={styles.muted}>{m.function}</Caption1>}
+                </div>
+                <Caption1 className={styles.muted}>{m.email}</Caption1>
+              </div>
+            </div>
+          ))}
         </div>
 
         {/* E10-1 approval queue */}

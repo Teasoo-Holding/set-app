@@ -6,6 +6,7 @@
 -- ─────────────────────────────────────────────────────────────
 create table public.reminder_sends (
   commitment_id uuid not null references public.commitments (id) on delete cascade,
+  tenant_id     uuid references public.tenants (id) on delete cascade,
   reminder_type text not null check (reminder_type in ('t-3', 't-0', 'overdue')),
   sent_for_date date not null,
   sent_at       timestamptz not null default now(),

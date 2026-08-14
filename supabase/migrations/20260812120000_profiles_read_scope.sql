@@ -9,6 +9,7 @@ drop policy if exists profiles_select on public.profiles;
 create policy profiles_select on public.profiles
   for select using (
     id = auth.uid()
-    or public.is_leadership_or_admin()
-    or public.can_read_function(function)
+    or public.is_platform_admin()
+    or (tenant_id = public.current_tenant()
+        and (public.is_leadership_or_admin() or public.can_read_function(function)))
   );

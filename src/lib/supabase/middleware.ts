@@ -8,7 +8,9 @@ type CookieToSet = { name: string; value: string; options: CookieOptions };
 // callback) and /api/cron (verifies CRON_SECRET, fails closed). We deliberately
 // do NOT blanket-allow all of /api, so any future API route is gated by
 // default rather than silently public. (#58)
-const PUBLIC_PREFIXES = ["/login", "/auth", "/api/cron"];
+const PUBLIC_PREFIXES = ["/login", "/auth", "/api/cron", "/invite", "/terms", "/privacy"];
+// Exact public paths (can't be prefixes — "/" would match everything).
+const PUBLIC_EXACT = ["/"];
 
 /**
  * Refreshes the Supabase session on every request and gates access.
@@ -46,7 +48,7 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const { pathname } = request.nextUrl;
-  const isPublic = PUBLIC_PREFIXES.some((p) => pathname.startsWith(p));
+  const isPublic = PUBLIC_EXACT.includes(pathname) || PUBLIC_PREFIXES.some((p) => pathname.startsWith(p));
 
   // Redirect while preserving any refreshed auth cookies on `response`
   // (Supabase SSR requirement: don't drop cookies when returning a new response).

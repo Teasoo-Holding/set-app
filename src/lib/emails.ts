@@ -22,6 +22,10 @@ function esc(s: string): string {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;");
 }
+/** Escape for an HTML attribute value (adds quotes on top of esc). */
+function escAttr(s: string): string {
+  return esc(s).replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
 
 // Simple, readable shell — no images, generous line-height, a single button.
 function layout(bodyHtml: string): string {
@@ -31,7 +35,7 @@ ${bodyHtml}
 </div>`;
 }
 function button(href: string, label: string): string {
-  return `<p style="margin:24px 0"><a href="${href}" style="background:#2563eb;color:#fff;text-decoration:none;padding:10px 18px;border-radius:6px;display:inline-block;font-weight:600">${label}</a></p>`;
+  return `<p style="margin:24px 0"><a href="${escAttr(href)}" style="background:#2563eb;color:#fff;text-decoration:none;padding:10px 18px;border-radius:6px;display:inline-block;font-weight:600">${esc(label)}</a></p>`;
 }
 
 const STATUS = {
@@ -58,6 +62,27 @@ export function commitmentReminderEmail(args: {
 <p>${s.line(longDate(args.dueDate))}</p>
 <p>When you have done it, open the stakeholder and mark the commitment complete.</p>
 ${button(args.link, "Open in Teasoo SET")}
+<p>Thanks,<br>Teasoo SET</p>`,
+  );
+  return { subject, html };
+}
+
+/** Invitation to join a tenant (E12-4). */
+export function invitationEmail(args: {
+  orgName: string;
+  roleLabel: string;
+  inviterName: string | null;
+  link: string;
+  expiresOn: string; // ISO date
+}): { subject: string; html: string } {
+  const subject = `You're invited to ${args.orgName} on Teasoo SET`;
+  const from = args.inviterName ? `${esc(args.inviterName)} has invited you` : "You've been invited";
+  const html = layout(
+    `<p>Hello,</p>
+<p>${from} to join <strong>${esc(args.orgName)}</strong> on Teasoo SET as <strong>${esc(args.roleLabel)}</strong>.</p>
+<p>To set up your account, choose a password and sign in:</p>
+${button(args.link, "Accept your invitation")}
+<p>This invitation expires on ${longDate(args.expiresOn)}. If you weren't expecting it, you can ignore this email.</p>
 <p>Thanks,<br>Teasoo SET</p>`,
   );
   return { subject, html };

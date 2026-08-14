@@ -39,8 +39,9 @@ begin
         set severity = v_severity
         where stakeholder_id = new.id and status <> 'resolved';
     else
-      insert into public.escalations (stakeholder_id, severity, source, summary, next_action_date)
+      insert into public.escalations (tenant_id, stakeholder_id, severity, source, summary, next_action_date)
       values (
+        new.tenant_id,
         new.id,
         v_severity,
         v_source,

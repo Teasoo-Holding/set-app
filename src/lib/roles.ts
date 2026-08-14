@@ -1,23 +1,27 @@
 // Client-safe roles, types, and demo constants — NO server-only imports
 // (this module is pulled into client components; keep it free of next/headers).
 
-export type Role = "field" | "head" | "leadership" | "admin";
+export type Role = "field" | "head" | "leadership" | "admin" | "platform_admin";
 
 export type Profile = {
   id: string;
+  tenant_id: string | null; // null only for platform_admin
   full_name: string;
   email: string;
   role: Role;
   function: string | null;
 };
 
-/** E1-2 — where each role lands after sign-in. */
+/** E1-2 / E12-3 — where each role lands after sign-in. */
 export function getLandingPath(role: Role): string {
   switch (role) {
+    case "platform_admin":
+      // Cross-tenant operator — the platform console, no business data.
+      return "/platform";
     case "leadership":
     case "admin":
-      // Admins see everything — their home is the portfolio overview.
-      // Governance lives on its own nav tab.
+      // Tenant admins / leadership see everything in their tenant — the
+      // portfolio overview. Governance lives on its own nav tab.
       return "/portfolio";
     case "head":
       return "/dashboard";
@@ -32,6 +36,7 @@ export const ROLE_LABEL: Record<Role, string> = {
   head: "Function Head",
   leadership: "Leadership",
   admin: "Administrator",
+  platform_admin: "Platform Admin",
 };
 
 /** Demo roster shown on the login screen (E1-4). Matches seed profiles. */
@@ -52,3 +57,10 @@ export const DEMO_USERS: DemoUser[] = [
 ];
 
 export const DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
+
+/**
+ * Show the "Sign in with Microsoft" button. Off by default — the Entra
+ * provider config is parked (#23); flip NEXT_PUBLIC_ENTRA_ENABLED=true to
+ * bring it back without touching code.
+ */
+export const ENTRA_ENABLED = process.env.NEXT_PUBLIC_ENTRA_ENABLED === "true";
