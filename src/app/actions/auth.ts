@@ -53,41 +53,12 @@ export async function signInWithPassword(formData: FormData) {
 }
 
 /**
- * Create an account with email + password. A new user is auto-provisioned as a
- * `field` profile by the handle_new_user trigger; an Admin adjusts role/function
- * later. If Supabase email-confirmation is on, we show "check your email";
- * if it's off, sign-up returns a session and we go straight in.
+ * Open sign-up is disabled — accounts are created by invitation only (E12).
+ * Kept as a safety net in case anything still posts here.
  */
-export async function signUpNewAccount(formData: FormData) {
-  const fullName = String(formData.get("full_name") ?? "").trim();
-  const email = String(formData.get("email") ?? "").trim().toLowerCase();
-  const password = String(formData.get("password") ?? "");
-  if (!fullName || !email) {
-    redirect(`/login?mode=signup&error=${encodeURIComponent("Enter your name and email.")}`);
-  }
-  if (password.length < MIN_PASSWORD) {
-    redirect(`/login?mode=signup&error=${encodeURIComponent(`Choose a password of at least ${MIN_PASSWORD} characters.`)}`);
-  }
-
-  const supabase = createClient();
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: {
-      data: { full_name: fullName },
-      emailRedirectTo: `${siteOrigin()}/auth/callback`,
-    },
-  });
-  if (error) {
-    redirect(`/login?mode=signup&error=${encodeURIComponent(error.message)}`);
-  }
-  if (data.session) {
-    redirect(await landingForSession(supabase));
-  }
-  // Confirmation required (or the email already exists — Supabase returns the
-  // same shape either way, which avoids leaking whether an account exists).
+export async function signUpNewAccount() {
   redirect(
-    `/login?mode=signin&message=${encodeURIComponent("Account created. Check your email for a confirmation link, then sign in.")}`,
+    `/login?error=${encodeURIComponent("Accounts are created by invitation. Ask your administrator to invite you.")}`,
   );
 }
 

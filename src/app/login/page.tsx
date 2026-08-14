@@ -23,12 +23,13 @@ import {
   signInAsDemo,
   signInWithMicrosoft,
   signInWithPassword,
-  signUpNewAccount,
   requestPasswordReset,
 } from "@/app/actions/auth";
 import { DEMO_USERS, DEMO_MODE, ENTRA_ENABLED, ROLE_LABEL } from "@/lib/roles";
 
-type Mode = "signin" | "signup" | "forgot";
+// Accounts are created by invitation only (E12), so there's no self-serve
+// sign-up here — just sign in and password reset.
+type Mode = "signin" | "forgot";
 
 /** Microsoft's four-square logo (official colours). */
 function MicrosoftLogo() {
@@ -139,11 +140,6 @@ const COPY: Record<Mode, { title: string; blurb: string; cta: string }> = {
     blurb: "Sign in with your email. Your role decides what you see — frictionless logging for the field, full risk visibility for leadership.",
     cta: "Sign in",
   },
-  signup: {
-    title: "Create your account.",
-    blurb: "Set up access with your work email. You'll start as a standard user — an administrator sets your team and permissions.",
-    cta: "Create account",
-  },
   forgot: {
     title: "Reset your password.",
     blurb: "Enter your email and we'll send you a link to set a new password.",
@@ -159,8 +155,7 @@ export default function LoginPage({
   const styles = useStyles();
   const error = searchParams?.error;
   const message = searchParams?.message;
-  const initialMode: Mode =
-    searchParams?.mode === "signup" || searchParams?.mode === "forgot" ? searchParams.mode : "signin";
+  const initialMode: Mode = searchParams?.mode === "forgot" ? "forgot" : "signin";
   const [mode, setMode] = React.useState<Mode>(initialMode);
   const copy = COPY[mode];
 
@@ -208,32 +203,6 @@ export default function LoginPage({
             <div className={styles.linkRow}>
               <button type="button" className={styles.linkBtn} onClick={() => setMode("forgot")}>
                 Forgot password?
-              </button>
-              <button type="button" className={styles.linkBtn} onClick={() => setMode("signup")}>
-                Create an account
-              </button>
-            </div>
-          </form>
-        )}
-
-        {/* Create account */}
-        {mode === "signup" && (
-          <form action={signUpNewAccount} className={styles.form}>
-            <Field label="Full name">
-              <Input name="full_name" type="text" autoComplete="name" required placeholder="Ada Lovelace" />
-            </Field>
-            <Field label="Email">
-              <Input name="email" type="email" autoComplete="email" required placeholder="you@company.com" />
-            </Field>
-            <Field label="Password" hint="At least 8 characters.">
-              <Input name="password" type="password" autoComplete="new-password" required minLength={8} />
-            </Field>
-            <Button type="submit" appearance="primary" className={styles.submit}>
-              {copy.cta}
-            </Button>
-            <div className={styles.linkRow}>
-              <button type="button" className={styles.linkBtn} onClick={() => setMode("signin")}>
-                Already have an account? Sign in
               </button>
             </div>
           </form>

@@ -8,7 +8,7 @@ type CookieToSet = { name: string; value: string; options: CookieOptions };
 // callback) and /api/cron (verifies CRON_SECRET, fails closed). We deliberately
 // do NOT blanket-allow all of /api, so any future API route is gated by
 // default rather than silently public. (#58)
-const PUBLIC_PREFIXES = ["/login", "/auth", "/api/cron"];
+const PUBLIC_PREFIXES = ["/login", "/auth", "/api/cron", "/invite"];
 
 /**
  * Refreshes the Supabase session on every request and gates access.
