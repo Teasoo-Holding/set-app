@@ -25,10 +25,21 @@ begin
   if auth.uid() is null then
     return new;
   end if;
-  -- Admins may change any column (role assignment, reporting lines, etc.).
-  if public.is_admin() then
+
+  -- E12: tenant_id is the isolation boundary. Only a platform admin (or a
+  -- trusted server context, handled above) may move a profile between tenants.
+  -- No tenant admin, and certainly no end-user, may change it. CWE-269.
+  if new.tenant_id is distinct from old.tenant_id and not public.is_platform_admin() then
+    raise exception 'Not allowed: tenant cannot be changed.'
+      using errcode = '42501';
+  end if;
+
+  -- Tenant admins (and platform admins) may assign role/function/reporting
+  -- lines within their remit (row-level tenant scope is enforced by RLS).
+  if public.is_admin() or public.is_platform_admin() then
     return new;
   end if;
+
   -- Everyone else: the authorization-bearing columns are read-only. Changing
   -- your own name is fine; changing your role/function/managers is not.
   if new.role is distinct from old.role

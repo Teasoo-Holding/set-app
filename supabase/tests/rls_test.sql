@@ -1,63 +1,68 @@
 -- ─────────────────────────────────────────────────────────────
--- E0-5 / NFR-2 · Per-role RLS test harness (pgTAP).
+-- E0-5 / E12-2 · Per-role AND per-tenant RLS tests (pgTAP).
 -- Run with:  supabase test db
 --
--- Proves the §8 scope guarantees hold at the database, not the UI:
---   • field/head cannot read another function's stakeholders
---   • leadership reads across functions
---   • audit_log is closed to client writes
---   • escalation auto-opens when a stakeholder becomes High risk
+-- Proves at the database (not the UI):
+--   • Role/function scope within a tenant (field/head walled to their function)
+--   • TENANT ISOLATION — a user in tenant A reads ZERO of tenant B's rows on
+--     every table; a platform admin reads ZERO business rows; tenant_id is
+--     immutable; a cross-tenant insert is refused.
+--   • audit_log closed to clients; escalation auto-open; self-escalation blocked.
 --
--- Fixtures are created inside the test transaction and rolled back.
+-- Fixtures are created as the (superuser) test runner, then act_as() switches
+-- to an authenticated JWT so RLS applies. Everything rolls back.
 -- ─────────────────────────────────────────────────────────────
 begin;
-select plan(13);
+select plan(20);
 
--- `supabase db reset` loads seed.sql before tests run. Start from a clean
--- slate so fixtures don't collide with seed data and counts are exact.
--- Truncating taxonomy cascades to every public table that references it
--- (profiles, stakeholders, engagements, …). auth.* is left untouched (the
--- test role can't reset its sequences). All rolled back at the end.
-truncate public.taxonomy cascade;
+-- Clean slate: truncating tenants cascades to every tenant-scoped table.
+-- audit_log has no FK to tenants, so clear it explicitly.
+truncate public.tenants cascade;
 delete from public.audit_log;
 
--- ── Fixtures ─────────────────────────────────────────────────
--- Two functions, four users (one per role) plus a second field user.
+-- ── Fixtures: two tenants ────────────────────────────────────
+insert into public.tenants (id, name, slug) values
+  ('0a000000-0000-0000-0000-0000000000a0', 'Tenant A', 'tenant-a'),
+  ('0b000000-0000-0000-0000-0000000000b0', 'Tenant B', 'tenant-b');
+
+insert into public.taxonomy (tenant_id, kind, value, label) values
+  ('0a000000-0000-0000-0000-0000000000a0', 'function', 'Sales', 'Sales'),
+  ('0a000000-0000-0000-0000-0000000000a0', 'function', 'Legal', 'Legal'),
+  ('0a000000-0000-0000-0000-0000000000a0', 'category', 'Regulator', 'Regulator'),
+  ('0a000000-0000-0000-0000-0000000000a0', 'engagement_type', 'Call', 'Call'),
+  ('0b000000-0000-0000-0000-0000000000b0', 'function', 'Sales', 'Sales'),
+  ('0b000000-0000-0000-0000-0000000000b0', 'category', 'Regulator', 'Regulator'),
+  ('0b000000-0000-0000-0000-0000000000b0', 'engagement_type', 'Call', 'Call');
+
 insert into auth.users (id, email) values
-  ('11111111-1111-1111-1111-111111111111', 'field.sales@example.com'),
-  ('22222222-2222-2222-2222-222222222222', 'head.sales@example.com'),
-  ('33333333-3333-3333-3333-333333333333', 'leadership@example.com'),
-  ('44444444-4444-4444-4444-444444444444', 'field.legal@example.com');
+  ('11111111-1111-1111-1111-111111111111', 'field.sales.a@example.com'),
+  ('22222222-2222-2222-2222-222222222222', 'head.sales.a@example.com'),
+  ('33333333-3333-3333-3333-333333333333', 'leadership.a@example.com'),
+  ('44444444-4444-4444-4444-444444444444', 'field.sales.b@example.com'),
+  ('55555555-5555-5555-5555-555555555555', 'platform@example.com');
 
-insert into public.taxonomy (kind, value, label) values
-  ('function', 'Sales', 'Sales'),
-  ('function', 'Legal', 'Legal'),
-  ('category', 'Regulator', 'Regulator'),
-  ('engagement_type', 'Call', 'Call');
-
--- handle_new_user() auto-creates a default profile on the auth.users inserts
--- above, so upsert to set the intended role/function.
-insert into public.profiles (id, full_name, email, role, function) values
-  ('11111111-1111-1111-1111-111111111111', 'Field Sales',  'field.sales@example.com', 'field',      'Sales'),
-  ('22222222-2222-2222-2222-222222222222', 'Head Sales',   'head.sales@example.com',  'head',       'Sales'),
-  ('33333333-3333-3333-3333-333333333333', 'Leadership',   'leadership@example.com',  'leadership', null),
-  ('44444444-4444-4444-4444-444444444444', 'Field Legal',  'field.legal@example.com', 'field',      'Legal')
+-- handle_new_user() created default (null-tenant, field) profiles above; set them.
+insert into public.profiles (id, tenant_id, full_name, email, role, function) values
+  ('11111111-1111-1111-1111-111111111111', '0a000000-0000-0000-0000-0000000000a0', 'Field A',      'field.sales.a@example.com', 'field',          'Sales'),
+  ('22222222-2222-2222-2222-222222222222', '0a000000-0000-0000-0000-0000000000a0', 'Head A',       'head.sales.a@example.com',  'head',           'Sales'),
+  ('33333333-3333-3333-3333-333333333333', '0a000000-0000-0000-0000-0000000000a0', 'Leadership A', 'leadership.a@example.com',  'leadership',     null),
+  ('44444444-4444-4444-4444-444444444444', '0b000000-0000-0000-0000-0000000000b0', 'Field B',      'field.sales.b@example.com', 'field',          'Sales'),
+  ('55555555-5555-5555-5555-555555555555', null,                                   'Platform',     'platform@example.com',      'platform_admin', null)
 on conflict (id) do update set
-  full_name = excluded.full_name,
-  email     = excluded.email,
-  role      = excluded.role,
-  function  = excluded.function;
+  tenant_id = excluded.tenant_id, full_name = excluded.full_name,
+  role = excluded.role, function = excluded.function;
 
-insert into public.stakeholders (id, name, category, function, tier, owner_id, risk, sentiment) values
-  ('aaaaaaaa-0000-0000-0000-000000000001', 'Sales Reg A', 'Regulator', 'Sales', 1, '11111111-1111-1111-1111-111111111111', 'low', 'neutral'),
-  ('bbbbbbbb-0000-0000-0000-000000000002', 'Legal Reg B', 'Regulator', 'Legal', 1, '44444444-4444-4444-4444-444444444444', 'low', 'neutral');
+insert into public.stakeholders (id, tenant_id, name, category, function, tier, owner_id, risk, sentiment) values
+  ('aaaaaaaa-0000-0000-0000-0000000000a1', '0a000000-0000-0000-0000-0000000000a0', 'A Sales Reg', 'Regulator', 'Sales', 1, '11111111-1111-1111-1111-111111111111', 'low', 'neutral'),
+  ('aaaaaaaa-0000-0000-0000-0000000000a2', '0a000000-0000-0000-0000-0000000000a0', 'A Legal Reg', 'Regulator', 'Legal', 1, '11111111-1111-1111-1111-111111111111', 'low', 'neutral'),
+  ('bbbbbbbb-0000-0000-0000-0000000000b1', '0b000000-0000-0000-0000-0000000000b0', 'B Sales Reg', 'Regulator', 'Sales', 1, '44444444-4444-4444-4444-444444444444', 'low', 'neutral');
 
--- Impersonation helper: become an authenticated user with a jwt sub.
--- The `authenticated` role must be able to USE this schema/function for the
--- later act_as() calls (which run after the role has been switched).
+insert into public.engagements (tenant_id, stakeholder_id, type, logged_by) values
+  ('0b000000-0000-0000-0000-0000000000b0', 'bbbbbbbb-0000-0000-0000-0000000000b1', 'Call', '44444444-4444-4444-4444-444444444444');
+
+-- Impersonation helper.
 create schema if not exists tests;
 grant usage on schema tests to public;
--- INVOKER (not definer) so the role/JWT switch persists in the caller's txn.
 create or replace function tests.act_as(uid uuid) returns void
 language plpgsql as $$
 begin
@@ -67,113 +72,133 @@ end;
 $$;
 grant execute on function tests.act_as(uuid) to public;
 
--- ── field (Sales) sees only Sales stakeholders ───────────────
+-- ── Role/function scope within tenant A ──────────────────────
 select tests.act_as('11111111-1111-1111-1111-111111111111');
 select is(
   (select count(*)::int from public.stakeholders),
   1,
-  'field(Sales) sees exactly their function''s stakeholders'
+  'field(A,Sales) sees exactly their function''s stakeholders in their tenant'
 );
 select is(
   (select count(*)::int from public.stakeholders where function = 'Legal'),
   0,
-  'field(Sales) cannot read Legal stakeholders (E1 success signal)'
+  'field(A,Sales) cannot read another function''s stakeholders'
 );
-
--- field can log an engagement on an in-scope stakeholder…
 select lives_ok(
-  $$ insert into public.engagements (stakeholder_id, type, logged_by)
-     values ('aaaaaaaa-0000-0000-0000-000000000001', 'Call', '11111111-1111-1111-1111-111111111111') $$,
+  $$ insert into public.engagements (tenant_id, stakeholder_id, type, logged_by)
+     values ('0a000000-0000-0000-0000-0000000000a0', 'aaaaaaaa-0000-0000-0000-0000000000a1', 'Call', '11111111-1111-1111-1111-111111111111') $$,
   'field can log an engagement within scope (E3-1)'
 );
--- …but not on an out-of-scope stakeholder.
 select throws_ok(
-  $$ insert into public.engagements (stakeholder_id, type, logged_by)
-     values ('bbbbbbbb-0000-0000-0000-000000000002', 'Call', '11111111-1111-1111-1111-111111111111') $$,
-  '42501',
-  null,
+  $$ insert into public.engagements (tenant_id, stakeholder_id, type, logged_by)
+     values ('0a000000-0000-0000-0000-0000000000a0', 'aaaaaaaa-0000-0000-0000-0000000000a2', 'Call', '11111111-1111-1111-1111-111111111111') $$,
+  '42501', null,
   'field cannot log against an out-of-scope stakeholder'
 );
 
--- ── head (Sales) is function-scoped ──────────────────────────
 select tests.act_as('22222222-2222-2222-2222-222222222222');
 select is(
   (select count(*)::int from public.stakeholders where function = 'Legal'),
   0,
-  'head(Sales) cannot read Legal stakeholders'
+  'head(A,Sales) cannot read Legal stakeholders'
 );
 
--- ── leadership reads across functions ────────────────────────
 select tests.act_as('33333333-3333-3333-3333-333333333333');
 select is(
   (select count(*)::int from public.stakeholders),
   2,
-  'leadership reads all functions'
+  'leadership(A) reads all functions in their tenant'
 );
 
--- ── audit_log is closed to client writes ─────────────────────
+-- ── TENANT ISOLATION ─────────────────────────────────────────
+select tests.act_as('11111111-1111-1111-1111-111111111111');
+select is(
+  (select count(*)::int from public.stakeholders where tenant_id = '0b000000-0000-0000-0000-0000000000b0'),
+  0,
+  'ISOLATION: field(A) sees zero of tenant B''s stakeholders'
+);
+select is(
+  (select count(*)::int from public.engagements),
+  1,
+  'ISOLATION: field(A) sees only tenant A engagements (never tenant B''s)'
+);
+
+select tests.act_as('33333333-3333-3333-3333-333333333333');
+select is(
+  (select count(*)::int from public.stakeholders where tenant_id = '0b000000-0000-0000-0000-0000000000b0'),
+  0,
+  'ISOLATION: even leadership(A) sees zero of tenant B''s stakeholders'
+);
+-- Leadership can insert in their own tenant, but NOT into another tenant.
+select throws_ok(
+  $$ insert into public.stakeholders (tenant_id, name, category, function, tier, owner_id)
+     values ('0b000000-0000-0000-0000-0000000000b0', 'Sneaky', 'Regulator', 'Sales', 2, '33333333-3333-3333-3333-333333333333') $$,
+  '42501', null,
+  'ISOLATION: a user cannot insert a row into another tenant (RLS WITH CHECK)'
+);
+-- tenant_id is immutable to end-users (cannot smuggle yourself into tenant B).
+select throws_ok(
+  $$ update public.profiles set tenant_id = '0b000000-0000-0000-0000-0000000000b0'
+     where id = '33333333-3333-3333-3333-333333333333' $$,
+  '42501', null,
+  'ISOLATION: a user cannot move their profile to another tenant'
+);
+
+-- Platform admin: manages tenants, sees ZERO business data.
+select tests.act_as('55555555-5555-5555-5555-555555555555');
+select is(
+  (select count(*)::int from public.stakeholders),
+  0,
+  'ISOLATION: platform admin reads zero tenant business rows'
+);
+select is(
+  (select count(*)::int from public.tenants),
+  2,
+  'platform admin can see all tenants (management scope)'
+);
+
+-- ── audit_log closed to client writes ────────────────────────
 select tests.act_as('11111111-1111-1111-1111-111111111111');
 select throws_ok(
   $$ insert into public.audit_log (action, entity_type) values ('HACK', 'stakeholders') $$,
-  '42501',
-  null,
+  '42501', null,
   'clients cannot write audit_log directly'
 );
 
--- ── escalation auto-opens on High risk (E6-1 trigger) ────────
--- Head raises risk on a Sales stakeholder → active escalation appears.
+-- ── escalation auto-open on High risk (E6-1 trigger) ─────────
 select tests.act_as('22222222-2222-2222-2222-222222222222');
 update public.stakeholders
   set risk = 'high', sentiment = 'resistant'
-  where id = 'aaaaaaaa-0000-0000-0000-000000000001';
+  where id = 'aaaaaaaa-0000-0000-0000-0000000000a1';
 select is(
   (select severity::text from public.escalations
-    where stakeholder_id = 'aaaaaaaa-0000-0000-0000-000000000001' and status <> 'resolved'),
+    where stakeholder_id = 'aaaaaaaa-0000-0000-0000-0000000000a1' and status <> 'resolved'),
   'critical',
   'High + Resistant auto-opens a Critical escalation (E6-2)'
 );
-
--- Dropping back below High clears it.
 update public.stakeholders
   set risk = 'low', sentiment = 'neutral'
-  where id = 'aaaaaaaa-0000-0000-0000-000000000001';
+  where id = 'aaaaaaaa-0000-0000-0000-0000000000a1';
 select is(
   (select count(*)::int from public.escalations
-    where stakeholder_id = 'aaaaaaaa-0000-0000-0000-000000000001' and status <> 'resolved'),
+    where stakeholder_id = 'aaaaaaaa-0000-0000-0000-0000000000a1' and status <> 'resolved'),
   0,
   'dropping below High resolves the auto escalation (E6-1)'
 );
 
--- ── [#58 F-1] a user cannot escalate their own role/function ─
--- The profiles_guard_privileged trigger makes the authorization-bearing
--- columns immutable to non-admins, closing the self-escalation hole that
--- profiles_update_self (RLS WITH CHECK can't compare OLD/NEW) left open.
+-- ── self privilege-escalation blocked (#58 F-1) ──────────────
 select tests.act_as('11111111-1111-1111-1111-111111111111');
 select throws_ok(
-  $$ update public.profiles set role = 'admin'
-     where id = '11111111-1111-1111-1111-111111111111' $$,
-  '42501',
-  null,
+  $$ update public.profiles set role = 'admin' where id = '11111111-1111-1111-1111-111111111111' $$,
+  '42501', null,
   'field cannot self-escalate role to admin (#58 F-1)'
 );
-select throws_ok(
-  $$ update public.profiles set function = 'Legal'
-     where id = '11111111-1111-1111-1111-111111111111' $$,
-  '42501',
-  null,
-  'field cannot move themselves into another function (#58 F-1)'
-);
--- …but updating a NON-privileged column on your own row still works.
 select lives_ok(
-  $$ update public.profiles set full_name = 'Field Sales (edited)'
-     where id = '11111111-1111-1111-1111-111111111111' $$,
+  $$ update public.profiles set full_name = 'Field A (edited)' where id = '11111111-1111-1111-1111-111111111111' $$,
   'a user may still edit their own non-privileged columns (#58 F-1)'
 );
 
--- ── [#58 F-2] every table in public has RLS enabled ──────────
--- Regression guard: a future migration that forgets `enable row level
--- security` (while default privileges grant DML) would silently expose the
--- table. Assert zero unprotected base tables.
+-- ── every base table has RLS enabled (#58 F-2) ───────────────
 select is(
   (select count(*)::int
      from pg_class c

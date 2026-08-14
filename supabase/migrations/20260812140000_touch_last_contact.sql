@@ -13,7 +13,7 @@ as $$
 begin
   update public.stakeholders
     set last_contact_at = greatest(coalesce(last_contact_at, new.occurred_on), new.occurred_on)
-    where id = new.stakeholder_id;
+    where id = new.stakeholder_id and tenant_id = new.tenant_id;
   return new;
 end;
 $$;

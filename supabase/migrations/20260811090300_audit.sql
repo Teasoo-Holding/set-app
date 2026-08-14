@@ -8,6 +8,7 @@
 
 create table public.audit_log (
   id          bigint generated always as identity primary key,
+  tenant_id   uuid,                       -- from the changed row (isolates the trail)
   actor_id    uuid,                       -- auth.uid(); null for system/cron
   action      text not null,              -- INSERT | UPDATE | DELETE
   entity_type text not null,              -- table name
@@ -16,10 +17,11 @@ create table public.audit_log (
   old_data    jsonb,
   new_data    jsonb
 );
-comment on table public.audit_log is 'Immutable audit trail (E0-3). Trigger-written only.';
+comment on table public.audit_log is 'Immutable audit trail (E0-3), tenant-scoped. Trigger-written only.';
 
 create index audit_log_entity_idx on public.audit_log (entity_type, entity_id, changed_at desc);
 create index audit_log_actor_idx  on public.audit_log (actor_id, changed_at desc);
+create index audit_log_tenant_idx on public.audit_log (tenant_id, changed_at desc);
 
 -- Generic audit trigger. SECURITY DEFINER so it can always write the
 -- log regardless of the acting user's table privileges/RLS.
@@ -30,13 +32,18 @@ security definer
 set search_path = public
 as $$
 declare
+  v_row       jsonb;
   v_entity_id uuid;
+  v_tenant_id uuid;
 begin
   -- old/new are record types; convert to jsonb before using ->>.
-  v_entity_id := (to_jsonb(case when tg_op = 'DELETE' then old else new end) ->> 'id')::uuid;
+  v_row       := to_jsonb(case when tg_op = 'DELETE' then old else new end);
+  v_entity_id := (v_row ->> 'id')::uuid;
+  v_tenant_id := (v_row ->> 'tenant_id')::uuid;   -- every audited table carries it
 
-  insert into public.audit_log (actor_id, action, entity_type, entity_id, old_data, new_data)
+  insert into public.audit_log (tenant_id, actor_id, action, entity_type, entity_id, old_data, new_data)
   values (
+    v_tenant_id,
     auth.uid(),
     tg_op,
     tg_table_name,
