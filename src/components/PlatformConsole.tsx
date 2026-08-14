@@ -57,6 +57,7 @@ export function PlatformConsole({
 }) {
   const styles = useStyles();
   const [createState, createAction] = useFormState(createTenant, null);
+  const [resendState, resendAction] = useFormState(reinviteTenantAdmin, null);
 
   return (
     <div className={styles.page}>
@@ -120,6 +121,23 @@ export function PlatformConsole({
         {/* Tenant list */}
         <div className={styles.card}>
           <Title3>{`Organisations (${tenants.length})`}</Title3>
+
+          {resendState?.error && (
+            <MessageBar intent="error">
+              <MessageBarBody>{resendState.error}</MessageBarBody>
+            </MessageBar>
+          )}
+          {resendState?.inviteLink && (
+            <MessageBar intent={resendState.emailed ? "success" : "warning"}>
+              <MessageBarBody>
+                <MessageBarTitle>
+                  {resendState.emailed ? "Invitation resent (and emailed)" : "Invitation resent — email not sent"}
+                </MessageBarTitle>
+                Send this fresh link to the administrator (the previous link no longer works):
+                <div className={styles.linkBox}>{resendState.inviteLink}</div>
+              </MessageBarBody>
+            </MessageBar>
+          )}
           {tenants.length === 0 ? (
             <div className={styles.empty}>No organisations yet. Add your first above.</div>
           ) : (
@@ -142,7 +160,7 @@ export function PlatformConsole({
                 </div>
                 <div className={styles.actions}>
                   {!t.hasAdmin && t.pendingAdminEmail && (
-                    <form action={reinviteTenantAdmin} className={styles.form}>
+                    <form action={resendAction} className={styles.form}>
                       <input type="hidden" name="tenant_id" value={t.id} />
                       <input type="hidden" name="email" value={t.pendingAdminEmail} />
                       <input type="hidden" name="name" value={t.name} />

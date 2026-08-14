@@ -94,25 +94,35 @@ export async function setTenantStatus(formData: FormData) {
   revalidatePath("/platform");
 }
 
-/** E12-3 — re-send the first tenant admin's invite (new token). */
-export async function reinviteTenantAdmin(formData: FormData) {
-  const me = await requirePlatformAdmin();
+/**
+ * E12-3 — re-send the first tenant admin's invite (fresh token; invalidates the
+ * previous link). Returns the new link so the platform admin can copy it even if
+ * email isn't delivering.
+ */
+export async function reinviteTenantAdmin(_prev: TenantActionState, formData: FormData): Promise<TenantActionState> {
   const tenantId = String(formData.get("tenant_id") ?? "");
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const name = String(formData.get("name") ?? "").trim();
-  if (!tenantId || !email) throw new Error("Missing tenant or email.");
+  if (!tenantId || !email) return { error: "Missing tenant or email." };
 
-  const db = createAdminClient();
-  await createAndSendInvite(db, {
-    tenantId,
-    orgName: name,
-    email,
-    role: "admin",
-    func: null,
-    invitedById: me.id,
-    inviterName: null,
-  });
-  revalidatePath("/platform");
+  try {
+    const me = await requirePlatformAdmin();
+    const db = createAdminClient();
+    const { link, emailed } = await createAndSendInvite(db, {
+      tenantId,
+      orgName: name,
+      email,
+      role: "admin",
+      func: null,
+      invitedById: me.id,
+      inviterName: null,
+    });
+    revalidatePath("/platform");
+    // Always surface the fresh link on a manual resend.
+    return { createdOrg: name, emailed, inviteLink: link };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "Could not resend the invitation." };
+  }
 }
 
 function randomSuffix(): string {
