@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import Link from "next/link";
 import { makeStyles, tokens, Title1, Title2, Title3, Body1, Body2, Caption1, Text, Button } from "@fluentui/react-components";
 import {
   PeopleTeamRegular, NotepadRegular, WarningRegular, DataTrendingRegular,
@@ -78,10 +77,10 @@ export function LandingPage() {
           view of every relationship — so nothing important slips.
         </Body1>
         <div className={styles.ctaRow}>
-          <Link href="/login"><Button appearance="primary" size="large">Sign in</Button></Link>
-          <a href={`mailto:${COMPANY.email}?subject=Teasoo%20SET%20demo`}>
-            <Button appearance="outline" size="large" icon={<MailRegular />}>Request a demo</Button>
-          </a>
+          <Button as="a" href="/login" appearance="primary" size="large">Sign in</Button>
+          <Button as="a" href={`mailto:${COMPANY.email}?subject=Teasoo%20SET%20demo`} appearance="outline" size="large" icon={<MailRegular />}>
+            Request a demo
+          </Button>
         </div>
       </section>
 
@@ -151,9 +150,9 @@ export function LandingPage() {
         <Title2>Ready to see it?</Title2>
         <Body1 className={styles.bandSub}>Access is by invitation. Talk to us about a pilot for your organisation.</Body1>
         <div className={styles.ctaRow}>
-          <a href={`mailto:${COMPANY.email}?subject=Teasoo%20SET%20demo`}>
-            <Button appearance="primary" size="large" icon={<MailRegular />}>Email {COMPANY.email}</Button>
-          </a>
+          <Button as="a" href={`mailto:${COMPANY.email}?subject=Teasoo%20SET%20demo`} appearance="primary" size="large" icon={<MailRegular />}>
+            Email {COMPANY.email}
+          </Button>
         </div>
       </section>
 

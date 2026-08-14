@@ -45,9 +45,7 @@ export function MarketingHeader() {
         <Link href="/#features" className={styles.navLink}>Features</Link>
         <Link href="/#security" className={styles.navLink}>Security</Link>
       </div>
-      <Link href="/login">
-        <Button appearance="primary">Sign in</Button>
-      </Link>
+      <Button as="a" href="/login" appearance="primary">Sign in</Button>
     </header>
   );
 }
