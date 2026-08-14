@@ -1,11 +1,13 @@
 import { redirect } from "next/navigation";
 import { getCurrentProfile, getLandingPath } from "@/lib/auth";
+import { LandingPage } from "@/components/LandingPage";
 
-/** Root routes the signed-in user to their role landing (E1-2). */
+/**
+ * Public marketing landing page. Signed-in users are routed straight to their
+ * role home; anonymous visitors see the landing (E-landing).
+ */
 export default async function Home() {
   const profile = await getCurrentProfile();
-  if (!profile) {
-    redirect("/login");
-  }
-  redirect(getLandingPath(profile.role));
+  if (profile) redirect(getLandingPath(profile.role));
+  return <LandingPage />;
 }
