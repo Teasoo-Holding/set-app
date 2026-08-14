@@ -3,15 +3,26 @@ import { createClient } from "@/lib/supabase/server";
 import { getLandingPath, type Role } from "@/lib/roles";
 
 /**
- * #23 — OAuth callback for Microsoft Entra sign-in. Microsoft (via Supabase)
- * returns here with a one-time `code`; we exchange it for a session (the
- * PKCE verifier is read from the cookie set when the flow started), then land
- * the user on their role's home. On failure we bounce back to /login with a
- * readable message rather than a blank error.
+ * Only allow same-site relative redirect targets — guards against an open
+ * redirect via the `next` query param (CWE-601). Must start with a single "/"
+ * and not "//" or "/\".
+ */
+function safeNext(next: string | null): string | null {
+  if (!next || !next.startsWith("/") || next.startsWith("//") || next.startsWith("/\\")) return null;
+  return next;
+}
+
+/**
+ * Auth callback. Used by (a) the password-reset link and (b) Microsoft Entra
+ * sign-in (#23, parked). Exchanges the one-time `code` for a session (the PKCE
+ * verifier is read from the cookie set when the flow started), then forwards to
+ * a safe `next` path if given, else the user's role home. On failure we bounce
+ * back to /login with a readable message rather than a blank error.
  */
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
+  const next = safeNext(searchParams.get("next"));
   const oauthError = searchParams.get("error_description") ?? searchParams.get("error");
 
   // Behind the Vercel proxy the request origin can be an internal host, so
@@ -29,6 +40,10 @@ export async function GET(request: NextRequest) {
   const supabase = createClient();
   const { error } = await supabase.auth.exchangeCodeForSession(code);
   if (error) return bounce(error.message);
+
+  // A password-reset link carries next=/account/update-password → go set the
+  // new password. Otherwise land on the role's home.
+  if (next) return NextResponse.redirect(`${base}${next}`);
 
   // Land on the role's home. A brand-new user is provisioned as 'field' by the
   // handle_new_user trigger; an Admin can adjust role/function afterwards.

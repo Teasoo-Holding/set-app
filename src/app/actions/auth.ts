@@ -3,7 +3,9 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { DEMO_USERS, getLandingPath } from "@/lib/roles";
+import { DEMO_USERS, getLandingPath, type Role } from "@/lib/roles";
+
+const MIN_PASSWORD = 8;
 
 /** The site origin, honouring the Vercel proxy and a configured override. */
 function siteOrigin(): string {
@@ -13,6 +15,122 @@ function siteOrigin(): string {
   const host = h.get("x-forwarded-host") ?? h.get("host") ?? "localhost:3000";
   const proto = h.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
   return `${proto}://${host}`;
+}
+
+type SupabaseServerClient = ReturnType<typeof createClient>;
+
+/** Where the just-authenticated user should land, based on their profile role. */
+async function landingForSession(supabase: SupabaseServerClient): Promise<string> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return "/login";
+  const { data } = await supabase.from("profiles").select("role").eq("id", user.id).maybeSingle();
+  return getLandingPath(((data as { role: Role } | null)?.role ?? "field"));
+}
+
+/**
+ * Email + password sign-in. Identity is established by Supabase Auth; the
+ * resulting session is a real one, so RLS scopes every later query. Wrong
+ * credentials return a single generic message (no account-enumeration).
+ */
+export async function signInWithPassword(formData: FormData) {
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  const password = String(formData.get("password") ?? "");
+  if (!email || !password) {
+    redirect(`/login?mode=signin&error=${encodeURIComponent("Enter your email and password.")}`);
+  }
+
+  const supabase = createClient();
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) {
+    const msg = /confirm/i.test(error.message)
+      ? "Please confirm your email first — check your inbox for the link we sent."
+      : "That email and password don't match an account. Try again, or reset your password below.";
+    redirect(`/login?mode=signin&error=${encodeURIComponent(msg)}`);
+  }
+  redirect(await landingForSession(supabase));
+}
+
+/**
+ * Create an account with email + password. A new user is auto-provisioned as a
+ * `field` profile by the handle_new_user trigger; an Admin adjusts role/function
+ * later. If Supabase email-confirmation is on, we show "check your email";
+ * if it's off, sign-up returns a session and we go straight in.
+ */
+export async function signUpNewAccount(formData: FormData) {
+  const fullName = String(formData.get("full_name") ?? "").trim();
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  const password = String(formData.get("password") ?? "");
+  if (!fullName || !email) {
+    redirect(`/login?mode=signup&error=${encodeURIComponent("Enter your name and email.")}`);
+  }
+  if (password.length < MIN_PASSWORD) {
+    redirect(`/login?mode=signup&error=${encodeURIComponent(`Choose a password of at least ${MIN_PASSWORD} characters.`)}`);
+  }
+
+  const supabase = createClient();
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: { full_name: fullName },
+      emailRedirectTo: `${siteOrigin()}/auth/callback`,
+    },
+  });
+  if (error) {
+    redirect(`/login?mode=signup&error=${encodeURIComponent(error.message)}`);
+  }
+  if (data.session) {
+    redirect(await landingForSession(supabase));
+  }
+  // Confirmation required (or the email already exists — Supabase returns the
+  // same shape either way, which avoids leaking whether an account exists).
+  redirect(
+    `/login?mode=signin&message=${encodeURIComponent("Account created. Check your email for a confirmation link, then sign in.")}`,
+  );
+}
+
+/**
+ * Start a password reset. Always reports the same message regardless of whether
+ * the email exists (no account-enumeration). The link lands on /auth/callback,
+ * which establishes a short-lived session then forwards to the set-password page.
+ */
+export async function requestPasswordReset(formData: FormData) {
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  if (!email) {
+    redirect(`/login?mode=forgot&error=${encodeURIComponent("Enter your email.")}`);
+  }
+
+  const supabase = createClient();
+  await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${siteOrigin()}/auth/callback?next=/account/update-password`,
+  });
+  redirect(
+    `/login?mode=signin&message=${encodeURIComponent("If that email has an account, we've sent a link to reset your password.")}`,
+  );
+}
+
+/** Set a new password for the user in the current (recovery) session. */
+export async function updatePassword(formData: FormData) {
+  const password = String(formData.get("password") ?? "");
+  if (password.length < MIN_PASSWORD) {
+    redirect(`/account/update-password?error=${encodeURIComponent(`Choose a password of at least ${MIN_PASSWORD} characters.`)}`);
+  }
+
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    redirect(`/login?error=${encodeURIComponent("Your reset link has expired. Request a new one.")}`);
+  }
+
+  const { error } = await supabase.auth.updateUser({ password });
+  if (error) {
+    redirect(`/account/update-password?error=${encodeURIComponent(error.message)}`);
+  }
+  redirect(await landingForSession(supabase));
 }
 
 /**

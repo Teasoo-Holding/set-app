@@ -52,3 +52,10 @@ export const DEMO_USERS: DemoUser[] = [
 ];
 
 export const DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
+
+/**
+ * Show the "Sign in with Microsoft" button. Off by default — the Entra
+ * provider config is parked (#23); flip NEXT_PUBLIC_ENTRA_ENABLED=true to
+ * bring it back without touching code.
+ */
+export const ENTRA_ENABLED = process.env.NEXT_PUBLIC_ENTRA_ENABLED === "true";
