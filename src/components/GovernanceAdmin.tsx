@@ -108,7 +108,7 @@ export function GovernanceAdmin({
         {/* E12-6 people & invitations */}
         <div className={styles.card}>
           <Title3>People &amp; invitations</Title3>
-          <Caption1 className={styles.muted}>Invite teammates by email. They set their own password from the link — no account exists until they accept.</Caption1>
+          <Caption1 className={styles.muted}>Invite teammates by email. They set their own password from the link. No account exists until they accept.</Caption1>
           <form action={inviteUser} className={styles.inviteRow}>
             <label className={styles.field}>
               <Caption1>Email</Caption1>
@@ -125,7 +125,7 @@ export function GovernanceAdmin({
             <label className={styles.field}>
               <Caption1>Function</Caption1>
               <Select name="function" defaultValue="">
-                <option value="">— none —</option>
+                <option value="">None</option>
                 {functions.map((f) => (
                   <option key={f} value={f}>{f}</option>
                 ))}
@@ -245,7 +245,7 @@ export function GovernanceAdmin({
         {/* E10-3 reassignment */}
         <div className={styles.card}>
           <Title3>Reassign ownership</Title3>
-          <Caption1 className={styles.muted}>Move every stakeholder from one owner to another — useful when someone leaves.</Caption1>
+          <Caption1 className={styles.muted}>Move every stakeholder from one owner to another. This is useful when someone leaves.</Caption1>
           <form action={reassignStakeholders} className={styles.reassign}>
             <label className={styles.field}>
               <Caption1>From</Caption1>

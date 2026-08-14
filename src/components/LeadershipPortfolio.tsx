@@ -4,6 +4,8 @@ import Link from "next/link";
 import { makeStyles, tokens, Title2, Title3, Body1, Caption1, Text, Badge } from "@fluentui/react-components";
 import { ChevronRightRegular } from "@fluentui/react-icons";
 import { AppShell } from "@/components/AppShell";
+import { EmptyState } from "@/components/EmptyState";
+import { TenantOnboarding } from "@/components/TenantOnboarding";
 import type { Role } from "@/lib/roles";
 
 type Kpi = { highRisk: number; openEscalations: number; dueThisWeek: number; pctSupportive: number };
@@ -61,6 +63,7 @@ export function LeadershipPortfolio({
   functions,
   escalations,
   activity,
+  onboarding,
 }: {
   viewer: { full_name: string; role: Role; function: string | null };
   kpis: Kpi;
@@ -68,8 +71,13 @@ export function LeadershipPortfolio({
   functions: Fn[];
   escalations: Esc[];
   activity: Activity[];
+  onboarding?: { orgName: string; memberCount: number; stakeholderCount: number } | null;
 }) {
   const styles = useStyles();
+
+  // First-run guide for a brand-new tenant admin (empty tenant) instead of a
+  // wall of empty cards.
+  const showOnboarding = viewer.role === "admin" && onboarding && onboarding.stakeholderCount === 0;
 
   const kpiCards = [
     { label: "High risk", value: kpis.highRisk, color: tokens.colorStatusDangerForeground1 },
@@ -83,8 +91,17 @@ export function LeadershipPortfolio({
       <main className={styles.main}>
         <div className={styles.head}>
           <Title2>Leadership portfolio</Title2>
-          <Body1>Relationship risk and sentiment across every function — where&apos;s the biggest risk right now?</Body1>
+          <Body1>See relationship risk and sentiment across every function, so you know where the biggest risk is right now.</Body1>
         </div>
+
+        {showOnboarding && onboarding && (
+          <TenantOnboarding
+            orgName={onboarding.orgName}
+            adminFirstName={viewer.full_name.split(" ")[0]}
+            memberCount={onboarding.memberCount}
+            stakeholderCount={onboarding.stakeholderCount}
+          />
+        )}
 
         <div className={styles.kpis}>
           {kpiCards.map((k) => (
@@ -100,7 +117,7 @@ export function LeadershipPortfolio({
           <div className={styles.card}>
             <Title3>Sentiment mix</Title3>
             {mix.total === 0 ? (
-              <div className={styles.empty}>No stakeholders yet.</div>
+              <EmptyState title="No stakeholders yet" hint="The sentiment mix appears here once your team adds stakeholders to the directory." />
             ) : (
               <>
                 <div className={styles.bar}>
@@ -122,7 +139,7 @@ export function LeadershipPortfolio({
           <div className={styles.card}>
             <Title3>By function</Title3>
             {functions.length === 0 ? (
-              <div className={styles.empty}>No functions yet.</div>
+              <EmptyState title="No functions to show yet" hint="Each function appears here once it has stakeholders." />
             ) : (
               functions.map((f) => (
                 <Link key={f.function} href={`/directory?function=${encodeURIComponent(f.function)}`} className={styles.fnRow}>
@@ -148,7 +165,7 @@ export function LeadershipPortfolio({
             <Link href="/escalations" className={styles.link}>View board</Link>
           </div>
           {escalations.length === 0 ? (
-            <div className={styles.empty}>Nothing on the board. 🎉</div>
+            <EmptyState title="Nothing on the board" hint="There are no active escalations across the organisation right now." />
           ) : (
             escalations.map((e) => (
               <div key={e.id} className={styles.row}>
@@ -169,7 +186,7 @@ export function LeadershipPortfolio({
         <div className={styles.card}>
           <Title3>Recent activity</Title3>
           {activity.length === 0 ? (
-            <div className={styles.empty}>No recent engagements.</div>
+            <EmptyState title="No engagements logged yet" hint="Recent activity appears here as your team logs engagements with stakeholders." />
           ) : (
             activity.map((a) => (
               <div key={a.id} className={styles.row}>

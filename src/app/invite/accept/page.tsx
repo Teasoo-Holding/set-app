@@ -29,7 +29,7 @@ export default async function AcceptInvitePage({
 
   if (!inv || inv.status !== "pending" || new Date(inv.expires_at) < new Date()) {
     return (
-      <AcceptInviteInvalid reason="This invitation is no longer valid — it may have been used, revoked, or expired. Ask whoever invited you for a new link." />
+      <AcceptInviteInvalid reason="This invitation is no longer valid. It may have been used, revoked, or expired. Ask whoever invited you for a new link." />
     );
   }
 

@@ -47,10 +47,10 @@ const useStyles = makeStyles({
 });
 
 const FEATURES = [
-  { icon: <PeopleTeamRegular />, title: "One authoritative directory", body: "Every stakeholder in one tiered record — no more scattered spreadsheets or conflicting versions of the truth." },
+  { icon: <PeopleTeamRegular />, title: "One authoritative directory", body: "Every stakeholder in one tiered record. No more scattered spreadsheets or conflicting versions of the truth." },
   { icon: <NotepadRegular />, title: "Frictionless logging", body: "The field captures an engagement in seconds. Each log refreshes the record and keeps relationships from going stale." },
   { icon: <WarningRegular />, title: "Risk & escalations", body: "High risk or a raised flag opens an escalation automatically, so the right people act before a problem grows." },
-  { icon: <DataTrendingRegular />, title: "Leadership visibility", body: "Function heads and leadership see sentiment, risk and commitments across the portfolio — live, not in a monthly deck." },
+  { icon: <DataTrendingRegular />, title: "Leadership visibility", body: "Function heads and leadership see sentiment, risk and commitments across the portfolio, live rather than in a monthly deck." },
 ];
 
 const STEPS = [
@@ -61,7 +61,7 @@ const STEPS = [
 ];
 
 const SECURITY = [
-  { icon: <LockClosedRegular />, title: "Strict tenant isolation", body: "Each organisation's data is walled off in the database — enforced by row-level security and tested continuously. One customer can never see another's data." },
+  { icon: <LockClosedRegular />, title: "Strict tenant isolation", body: "Each organisation's data is walled off in the database, enforced by row-level security and tested continuously. One customer can never see another's data." },
   { icon: <ShieldCheckmarkRegular />, title: "Role-based access", body: "People see only what their role allows. Access is decided in the database, not just hidden in the interface." },
   { icon: <GlobeRegular />, title: "GDPR & NDPA aligned", body: "Built to the EU GDPR and the Nigeria Data Protection Act 2023. Read our plain-English privacy notice for the detail." },
 ];
@@ -79,7 +79,7 @@ export function LandingPage() {
         <Title1 as="h1" className={styles.heroTitle}>One voice, one source of truth for every stakeholder relationship.</Title1>
         <Body1 className={styles.heroSub}>
           {COMPANY.product} gives your teams one place to log engagements, track risk and commitments, and give leadership a live
-          view of every relationship — so nothing important slips.
+          view of every relationship, so nothing important slips.
         </Body1>
         <div className={styles.ctaRow}>
           <Button as="a" href="/login" appearance="primary" size="large">Sign in</Button>

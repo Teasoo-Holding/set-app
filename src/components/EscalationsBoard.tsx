@@ -131,7 +131,7 @@ export function EscalationsBoard({
 
         {shown.length === 0 ? (
           <div className={styles.empty}>
-            <Text>Nothing on the board — no active escalations in your scope. 🎉</Text>
+            <Text>Nothing on the board. There are no active escalations in your scope right now.</Text>
           </div>
         ) : (
           <div className={styles.list}>

@@ -138,7 +138,7 @@ const useStyles = makeStyles({
 const COPY: Record<Mode, { title: string; blurb: string; cta: string }> = {
   signin: {
     title: "One voice, one source of truth.",
-    blurb: "Sign in with your email. Your role decides what you see — frictionless logging for the field, full risk visibility for leadership.",
+    blurb: "Sign in with your email. Your role decides what you see: frictionless logging for the field, and full risk visibility for leadership.",
     cta: "Sign in",
   },
   forgot: {
@@ -242,7 +242,7 @@ export default function LoginPage({
         {DEMO_MODE && (
           <>
             <Divider />
-            <Caption1 className={styles.sectionLabel}>Continue as — demo roles</Caption1>
+            <Caption1 className={styles.sectionLabel}>Continue as a demo role</Caption1>
             <div className={styles.roles}>
               {DEMO_USERS.map((u) => (
                 <form key={u.email} action={signInAsDemo} className={styles.roleForm}>

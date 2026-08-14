@@ -82,7 +82,7 @@ export function FunctionDashboard({
       <main className={styles.main}>
         <div className={styles.head}>
           <Title2>{`${functionName} dashboard`}</Title2>
-          <Body1>Your function&apos;s health, team, and what&apos;s urgent — at a glance.</Body1>
+          <Body1>Your function&apos;s health, team and priorities, at a glance.</Body1>
         </div>
 
         {/* E8-1 KPI cards */}

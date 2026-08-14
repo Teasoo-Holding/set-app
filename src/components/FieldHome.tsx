@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { makeStyles, tokens, Title2, Title3, Body1, Caption1, Text, Badge, Button } from "@fluentui/react-components";
 import { AppShell } from "@/components/AppShell";
+import { EmptyState } from "@/components/EmptyState";
 import { StakeholderCard, type StakeholderSummary } from "@/components/StakeholderCard";
 import { LogEngagementDialog } from "@/components/LogEngagementDialog";
 import { RequestStakeholderDialog } from "@/components/RequestStakeholderDialog";
@@ -91,7 +92,7 @@ export function FieldHome({
         <div className={styles.card}>
           <Title3>My open commitments</Title3>
           {commitments.length === 0 ? (
-            <div className={styles.empty}>Nothing due — you&apos;re all caught up. 🎉</div>
+            <div className={styles.empty}>You have no open commitments. You&apos;re all caught up.</div>
           ) : (
             commitments.map((c) => (
               <div key={c.id} className={styles.commitRow}>
@@ -123,7 +124,10 @@ export function FieldHome({
         <div className={styles.section}>
           <Title3>My stakeholders</Title3>
           {myStakeholders.length === 0 ? (
-            <div className={styles.empty}>You don&apos;t own any stakeholders yet.</div>
+            <EmptyState
+              title="No stakeholders assigned to you yet"
+              hint="When you own a stakeholder, it appears here. You can propose a new one with “Request a stakeholder” above."
+            />
           ) : (
             <div className={styles.list}>
               {myStakeholders.map((r) => (

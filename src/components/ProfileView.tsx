@@ -245,7 +245,7 @@ export function ProfileView({
                 {escalation.severity === "critical" ? "Critical escalation" : "Escalation active"}
                 {escalation.next_action_date ? ` · next action ${fmt(escalation.next_action_date)}` : ""}
               </Text>
-              {escalation.summary && <Body1> — {escalation.summary}</Body1>}
+              {escalation.summary && <Body1>{escalation.summary}</Body1>}
             </div>
           </div>
         )}

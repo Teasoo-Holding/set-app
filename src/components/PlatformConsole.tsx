@@ -110,7 +110,7 @@ export function PlatformConsole({
           {createState?.createdOrg && !createState.emailed && createState.inviteLink && (
             <MessageBar intent="warning">
               <MessageBarBody>
-                <MessageBarTitle>{`Created ${createState.createdOrg} — invite email not sent`}</MessageBarTitle>
+                <MessageBarTitle>{`Created ${createState.createdOrg}, but the invite email was not sent`}</MessageBarTitle>
                 Email isn&apos;t configured yet, so send this invitation link to the administrator yourself:
                 <div className={styles.linkBox}>{createState.inviteLink}</div>
               </MessageBarBody>
@@ -131,7 +131,7 @@ export function PlatformConsole({
             <MessageBar intent={resendState.emailed ? "success" : "warning"}>
               <MessageBarBody>
                 <MessageBarTitle>
-                  {resendState.emailed ? "Invitation resent (and emailed)" : "Invitation resent — email not sent"}
+                  {resendState.emailed ? "Invitation resent (and emailed)" : "Invitation resent, but email not sent"}
                 </MessageBarTitle>
                 Send this fresh link to the administrator (the previous link no longer works):
                 <div className={styles.linkBox}>{resendState.inviteLink}</div>
