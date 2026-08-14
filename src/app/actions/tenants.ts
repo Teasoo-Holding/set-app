@@ -70,7 +70,8 @@ export async function createTenant(_prev: TenantActionState, formData: FormData)
       role: "admin",
       func: null,
       invitedById: me.id,
-      inviterName: me.full_name,
+      // Platform-provisioned invite — the email shouldn't name the operator.
+      inviterName: null,
     });
 
     revalidatePath("/platform");
@@ -109,7 +110,7 @@ export async function reinviteTenantAdmin(formData: FormData) {
     role: "admin",
     func: null,
     invitedById: me.id,
-    inviterName: me.full_name,
+    inviterName: null,
   });
   revalidatePath("/platform");
 }
