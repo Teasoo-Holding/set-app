@@ -193,6 +193,11 @@ select throws_ok(
   '42501', null,
   'field cannot self-escalate role to admin (#58 F-1)'
 );
+select throws_ok(
+  $$ update public.profiles set function = 'Legal' where id = '11111111-1111-1111-1111-111111111111' $$,
+  '42501', null,
+  'field cannot move themselves into another function (#58 F-1)'
+);
 select lives_ok(
   $$ update public.profiles set full_name = 'Field A (edited)' where id = '11111111-1111-1111-1111-111111111111' $$,
   'a user may still edit their own non-privileged columns (#58 F-1)'

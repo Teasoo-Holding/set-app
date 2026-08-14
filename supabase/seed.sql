@@ -40,7 +40,10 @@ insert into auth.users (
   instance_id, id, aud, role, email, encrypted_password,
   email_confirmed_at, raw_app_meta_data, raw_user_meta_data
 ) values
-  ('00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-0000000000f0', 'authenticated', 'authenticated', 'platform@example.com',     extensions.crypt('sis-demo-2026', extensions.gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{"full_name":"Platform Admin"}'),
+  -- Platform admin. Email is the real bootstrap account; the password here is
+  -- the throwaway demo password for LOCAL/CI only. Set the real production
+  -- password out-of-band (never commit it) — see docs/platform-admin.md.
+  ('00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-0000000000f0', 'authenticated', 'authenticated', 'efeosasere.okoro@teasooconsulting.com', extensions.crypt('sis-demo-2026', extensions.gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{"full_name":"Efeosasere Okoro"}'),
   ('00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-0000000000a1', 'authenticated', 'authenticated', 'zainab.obagun@example.com', extensions.crypt('sis-demo-2026', extensions.gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{"full_name":"Zainab Obagun"}'),
   ('00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-0000000000a2', 'authenticated', 'authenticated', 'chidi.okonkwo@example.com', extensions.crypt('sis-demo-2026', extensions.gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{"full_name":"Chidi Okonkwo"}'),
   ('00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-0000000000a3', 'authenticated', 'authenticated', 'amara.eze@example.com',     extensions.crypt('sis-demo-2026', extensions.gen_salt('bf')), now(), '{"provider":"email","providers":["email"]}', '{"full_name":"Amara Eze"}'),
@@ -79,7 +82,7 @@ where email like '%@example.com';
 
 -- Platform admin: no tenant, no function.
 insert into public.profiles (id, tenant_id, full_name, email, role, function, manager_id) values
-  ('00000000-0000-0000-0000-0000000000f0', null, 'Platform Admin', 'platform@example.com', 'platform_admin', null, null)
+  ('00000000-0000-0000-0000-0000000000f0', null, 'Efeosasere Okoro', 'efeosasere.okoro@teasooconsulting.com', 'platform_admin', null, null)
 on conflict (id) do update set
   tenant_id = excluded.tenant_id, full_name = excluded.full_name, role = excluded.role,
   function = excluded.function, manager_id = excluded.manager_id;
