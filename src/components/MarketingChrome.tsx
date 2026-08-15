@@ -85,6 +85,7 @@ export function MarketingFooter() {
         <div className={styles.footerCol}>
           <Caption1 className={styles.footerHead}>Contact</Caption1>
           <a href={`mailto:${COMPANY.email}`} className={styles.footerLink}>{COMPANY.email}</a>
+          <a href={COMPANY.phoneHref} className={styles.footerLink}>{`Call us: ${COMPANY.phone}`}</a>
           <Caption1 className={styles.muted}>{COMPANY.address}</Caption1>
         </div>
       </div>

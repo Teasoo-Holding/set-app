@@ -6,6 +6,8 @@ export const COMPANY = {
   product: "Teasoo SET",
   productLong: "Stakeholder Engagement Tracker",
   email: "info@teasooconsulting.com",
+  phone: "+234 803 443 3595",
+  phoneHref: "tel:+2348034433595",
   address: "43 Oghosa Crescent, Benin City, Edo State, Nigeria",
   dpoName: "Efeosasere Okoro",
   dpoEmail: "efeosasere.okoro@teasooconsulting.com",

@@ -5,7 +5,7 @@ import { makeStyles, tokens, Title2, Title3, Body1, Body2, Caption1, Text, Butto
 import {
   PeopleTeamRegular, NotepadRegular, WarningRegular, DataTrendingRegular,
   ShieldCheckmarkRegular, MailRegular, LockClosedRegular, GlobeRegular,
-  ArrowRightRegular, CheckmarkCircleFilled,
+  ArrowRightRegular, CheckmarkCircleFilled, CallRegular,
 } from "@fluentui/react-icons";
 import { MarketingHeader, MarketingFooter } from "@/components/MarketingChrome";
 import { COMPANY } from "@/lib/company";
@@ -305,9 +305,14 @@ export function LandingPage() {
       <div className={styles.ctaBand}>
         <Title2>Ready to see it?</Title2>
         <Body1 className={styles.bandSub}>Access is by invitation. Talk to us about a pilot for your organisation.</Body1>
-        <Button as="a" href={`mailto:${COMPANY.email}?subject=Teasoo%20SET%20demo`} appearance="primary" size="large" icon={<ArrowRightRegular />}>
-          Email {COMPANY.email}
-        </Button>
+        <div className={styles.ctaRow} style={{ justifyContent: "center" }}>
+          <Button as="a" href={`mailto:${COMPANY.email}?subject=Teasoo%20SET%20demo`} appearance="primary" size="large" icon={<ArrowRightRegular />}>
+            Email us
+          </Button>
+          <Button as="a" href={COMPANY.phoneHref} appearance="outline" size="large" icon={<CallRegular />}>
+            {`Call us · ${COMPANY.phone}`}
+          </Button>
+        </div>
       </div>
 
       <MarketingFooter />
