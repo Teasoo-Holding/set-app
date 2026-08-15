@@ -37,10 +37,14 @@ export default async function HeadDashboardPage() {
       .from("recent_activity")
       .select("id, stakeholder_id, stakeholder_name, sentiment, engagement_type, occurred_on, note_excerpt")
       .limit(8),
+    // A Head's team = the people in their function (the manager_id hierarchy is
+    // never populated, so scope by function — consistent with the rest of the app
+    // and with RLS, which lets a Head read only their own function's profiles).
     supabase
       .from("profiles")
       .select("id, full_name")
-      .or(`manager_id.eq.${profile.id},functional_manager_id.eq.${profile.id}`),
+      .eq("function", profile.function ?? "")
+      .neq("id", profile.id),
   ]);
 
   const sh = (stakeholders as { id: string; risk: string; sentiment: string; owner_id: string }[]) ?? [];
