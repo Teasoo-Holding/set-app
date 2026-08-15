@@ -11,37 +11,49 @@ import { getLandingPath, type Role } from "@/lib/roles";
 const TENANT_ROLES: Role[] = ["field", "head", "leadership", "admin"];
 const MIN_PASSWORD = 8;
 
+export type InviteState = {
+  error?: string;
+  invitedEmail?: string;
+  emailed?: boolean;
+  inviteLink?: string; // present only when the email couldn't be sent
+} | null;
+
 /**
  * E12-4/E12-6 — a tenant admin invites a teammate (role + function). Gated to
- * the caller's own tenant; the invitee joins only via the emailed link.
+ * the caller's own tenant. Returns a result so the People panel can confirm the
+ * invite and surface the link when email isn't delivering (never throws).
  */
-export async function inviteUser(formData: FormData) {
+export async function inviteUser(_prev: InviteState, formData: FormData): Promise<InviteState> {
   const me = await getCurrentProfile();
   if (!me || me.role !== "admin" || !me.tenant_id) {
-    throw new Error("Only a tenant administrator can invite people.");
+    return { error: "Only a tenant administrator can invite people." };
   }
 
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const role = String(formData.get("role") ?? "") as Role;
   const func = String(formData.get("function") ?? "").trim() || null;
-  if (!email || !TENANT_ROLES.includes(role)) throw new Error("A valid email and role are required.");
+  if (!email || !TENANT_ROLES.includes(role)) return { error: "A valid email and role are required." };
   if ((role === "field" || role === "head") && !func) {
-    throw new Error("Choose a function for a standard user or function head.");
+    return { error: "Choose a function for a standard user or function head." };
   }
 
-  const db = createAdminClient();
-  const { data: t } = await db.from("tenants").select("name").eq("id", me.tenant_id).single();
-
-  await createAndSendInvite(db, {
-    tenantId: me.tenant_id,
-    orgName: (t as { name: string } | null)?.name ?? "your organisation",
-    email,
-    role,
-    func: role === "admin" || role === "leadership" ? null : func,
-    invitedById: me.id,
-    inviterName: me.full_name,
-  });
-  revalidatePath("/governance");
+  try {
+    const db = createAdminClient();
+    const { data: t } = await db.from("tenants").select("name").eq("id", me.tenant_id).single();
+    const { link, emailed } = await createAndSendInvite(db, {
+      tenantId: me.tenant_id,
+      orgName: (t as { name: string } | null)?.name ?? "your organisation",
+      email,
+      role,
+      func: role === "admin" || role === "leadership" ? null : func,
+      invitedById: me.id,
+      inviterName: me.full_name,
+    });
+    revalidatePath("/governance");
+    return { invitedEmail: email, emailed, inviteLink: emailed ? undefined : link };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "Could not send the invitation." };
+  }
 }
 
 /** E12-4 — revoke a pending invitation (tenant admin: own tenant; platform admin: any). */

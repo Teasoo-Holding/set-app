@@ -1,7 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { makeStyles, tokens, Title2, Title3, Body1, Caption1, Text, Button, Badge, Input, Select, Divider } from "@fluentui/react-components";
+import { useFormState } from "react-dom";
+import { makeStyles, tokens, Title2, Title3, Body1, Caption1, Text, Button, Badge, Input, Select, Divider, MessageBar, MessageBarBody, MessageBarTitle } from "@fluentui/react-components";
 import { AppShell } from "@/components/AppShell";
 import { approveRequest, rejectRequest, addTaxonomy, setTaxonomyActive, reassignStakeholders } from "@/app/actions/governance";
 import { inviteUser, revokeInvite } from "@/app/actions/invitations";
@@ -62,6 +63,7 @@ const useStyles = makeStyles({
   reassign: { display: "flex", columnGap: "12px", rowGap: "12px", flexWrap: "wrap", alignItems: "flex-end" },
   field: { display: "flex", flexDirection: "column", rowGap: "4px", minWidth: "200px" },
   empty: { color: tokens.colorNeutralForeground3, paddingTop: "4px" },
+  linkBox: { marginTop: "6px", padding: "8px 10px", borderRadius: tokens.borderRadiusMedium, backgroundColor: tokens.colorNeutralBackground3, wordBreak: "break-all", fontFamily: tokens.fontFamilyMonospace, fontSize: tokens.fontSizeBase200 },
   inviteRow: { display: "flex", columnGap: "12px", rowGap: "12px", flexWrap: "wrap", alignItems: "flex-end" },
   memberRow: { display: "flex", alignItems: "center", columnGap: "10px", flexWrap: "wrap", padding: "10px 0", borderTop: `1px solid ${tokens.colorNeutralStroke2}` },
   memberMain: { display: "flex", flexDirection: "column", rowGap: "2px", flexGrow: 1, minWidth: "180px" },
@@ -92,6 +94,7 @@ export function GovernanceAdmin({
   functions: string[];
 }) {
   const styles = useStyles();
+  const [inviteState, inviteAction] = useFormState(inviteUser, null);
   const owners = persons.filter((p) => p.owns > 0);
   const [fromId, setFromId] = React.useState<string>("");
   const [toId, setToId] = React.useState<string>("");
@@ -109,7 +112,24 @@ export function GovernanceAdmin({
         <div className={styles.card}>
           <Title3>People &amp; invitations</Title3>
           <Caption1 className={styles.muted}>Invite teammates by email. They set their own password from the link. No account exists until they accept.</Caption1>
-          <form action={inviteUser} className={styles.inviteRow}>
+
+          {inviteState?.error && (
+            <MessageBar intent="error"><MessageBarBody>{inviteState.error}</MessageBarBody></MessageBar>
+          )}
+          {inviteState?.invitedEmail && inviteState.emailed && (
+            <MessageBar intent="success"><MessageBarBody>{`Invitation emailed to ${inviteState.invitedEmail}.`}</MessageBarBody></MessageBar>
+          )}
+          {inviteState?.invitedEmail && !inviteState.emailed && inviteState.inviteLink && (
+            <MessageBar intent="warning">
+              <MessageBarBody>
+                <MessageBarTitle>{`Invited ${inviteState.invitedEmail}, but email not sent`}</MessageBarTitle>
+                Email isn&apos;t set up, so send this link to them yourself:
+                <div className={styles.linkBox}>{inviteState.inviteLink}</div>
+              </MessageBarBody>
+            </MessageBar>
+          )}
+
+          <form action={inviteAction} className={styles.inviteRow}>
             <label className={styles.field}>
               <Caption1>Email</Caption1>
               <Input name="email" type="email" required placeholder="teammate@company.com" />
