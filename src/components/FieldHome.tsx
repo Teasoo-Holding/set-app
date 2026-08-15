@@ -74,12 +74,16 @@ export function FieldHome({
         </div>
 
         <div className={styles.ctas}>
-          <LogEngagementDialog
-            stakeholders={picker}
-            types={types}
-            today={today}
-            triggerLabel="Log an engagement"
-          />
+          {/* Logging needs a stakeholder to log against — only offer it once the
+              user owns at least one, otherwise the primary action dead-ends. */}
+          {picker.length > 0 && (
+            <LogEngagementDialog
+              stakeholders={picker}
+              types={types}
+              today={today}
+              triggerLabel="Log an engagement"
+            />
+          )}
           <RequestStakeholderDialog categories={categories} />
         </div>
 

@@ -5,7 +5,7 @@ import { makeStyles, tokens, Title2, Title3, Body1, Body2, Caption1, Text, Butto
 import {
   PeopleTeamRegular, NotepadRegular, WarningRegular, DataTrendingRegular,
   ShieldCheckmarkRegular, MailRegular, LockClosedRegular, GlobeRegular,
-  ArrowRightRegular, CheckmarkCircleFilled, CallRegular,
+  ArrowRightRegular, CheckmarkCircleFilled, CallRegular, DismissCircleFilled,
 } from "@fluentui/react-icons";
 import { MarketingHeader, MarketingFooter } from "@/components/MarketingChrome";
 import { COMPANY } from "@/lib/company";
@@ -107,6 +107,16 @@ const useStyles = makeStyles({
   },
   cardBody: { color: tokens.colorNeutralForeground2 },
 
+  compare: { display: "grid", gridTemplateColumns: "1fr auto 1fr", columnGap: "18px", rowGap: "14px", alignItems: "stretch", "@media (max-width: 760px)": { gridTemplateColumns: "1fr" } },
+  cmpCard: { backgroundColor: tokens.colorNeutralBackground1, border: `1px solid ${tokens.colorNeutralStroke2}`, borderRadius: tokens.borderRadiusXLarge, padding: "26px", display: "flex", flexDirection: "column", rowGap: "14px" },
+  cmpAfter: { border: `1px solid ${tokens.colorBrandStroke1}`, backgroundImage: `radial-gradient(90% 120% at 50% -10%, ${tokens.colorBrandBackground2} 0%, transparent 60%)` },
+  cmpHead: { fontWeight: tokens.fontWeightSemibold, fontSize: "18px" },
+  cmpList: { display: "flex", flexDirection: "column", rowGap: "10px", margin: 0, padding: 0, listStyle: "none" },
+  cmpItem: { display: "flex", alignItems: "flex-start", columnGap: "10px", color: tokens.colorNeutralForeground2, fontSize: tokens.fontSizeBase300 },
+  cmpX: { color: tokens.colorStatusDangerForeground1, fontSize: "18px", flexShrink: 0, marginTop: "1px", display: "flex" },
+  cmpCheck: { color: tokens.colorStatusSuccessForeground1, fontSize: "18px", flexShrink: 0, marginTop: "1px", display: "flex" },
+  cmpVs: { display: "flex", alignItems: "center", justifyContent: "center", fontWeight: tokens.fontWeightBold, color: tokens.colorNeutralForeground3, letterSpacing: "0.08em" },
+
   steps: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", columnGap: "20px", rowGap: "24px" },
   step: { display: "flex", flexDirection: "column", rowGap: "10px" },
   stepNum: {
@@ -199,6 +209,21 @@ function ProductPreview() {
   );
 }
 
+const BEFORE = [
+  "Stakeholder details scattered across spreadsheets, inboxes and slide decks",
+  "No single view of who owns which relationship",
+  "Risk surfaces late, in a monthly deck",
+  "Commitments slip through the cracks",
+  "Leadership chases updates instead of seeing them",
+];
+const AFTER = [
+  "One authoritative record per stakeholder",
+  "Clear ownership, tiering and scope for every relationship",
+  "Risk and escalations surface automatically, in real time",
+  "Commitments tracked and nudged so nothing is dropped",
+  "Leadership sees the whole portfolio live",
+];
+
 export function LandingPage() {
   const styles = useStyles();
 
@@ -260,8 +285,44 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* How it works */}
+      {/* Before / after */}
       <section className={`${styles.band} ${styles.bandAlt}`}>
+        <div className={styles.section}>
+          <div className={styles.bandHead}>
+            <span className={styles.bandKicker}>Why switch</span>
+            <Title2>From scattered to one source of truth</Title2>
+            <Body1 className={styles.bandSub}>What changes when every relationship lives in one place.</Body1>
+          </div>
+          <div className={styles.compare}>
+            <div className={styles.cmpCard}>
+              <Text className={styles.cmpHead}>Fragmented tools &amp; spreadsheets</Text>
+              <ul className={styles.cmpList}>
+                {BEFORE.map((t) => (
+                  <li key={t} className={styles.cmpItem}>
+                    <span className={styles.cmpX}><DismissCircleFilled /></span>
+                    <span>{t}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className={styles.cmpVs}>VS</div>
+            <div className={`${styles.cmpCard} ${styles.cmpAfter}`}>
+              <Text className={styles.cmpHead}>Teasoo SET</Text>
+              <ul className={styles.cmpList}>
+                {AFTER.map((t) => (
+                  <li key={t} className={styles.cmpItem}>
+                    <span className={styles.cmpCheck}><CheckmarkCircleFilled /></span>
+                    <span>{t}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* How it works */}
+      <section className={styles.band}>
         <div className={styles.section}>
           <div className={styles.bandHead}>
             <span className={styles.bandKicker}>How it works</span>
