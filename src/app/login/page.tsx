@@ -15,7 +15,6 @@ import {
   Button,
   MessageBar,
   MessageBarBody,
-  MessageBarTitle,
 } from "@fluentui/react-components";
 import { ArrowRightRegular } from "@fluentui/react-icons";
 import { BrandMark } from "@/components/BrandMark";
@@ -177,10 +176,7 @@ export default function LoginPage({
 
         {error && (
           <MessageBar intent="error">
-            <MessageBarBody>
-              <MessageBarTitle>Something went wrong</MessageBarTitle>
-              {error}
-            </MessageBarBody>
+            <MessageBarBody>{error}</MessageBarBody>
           </MessageBar>
         )}
         {message && !error && (

@@ -64,7 +64,7 @@ export function TenantOnboarding({
     {
       done: memberCount > 1,
       title: "Invite your team",
-      body: "Add your leaders, function heads and field users, so everyone works from one place.",
+      body: "Add your leaders, function heads and standard users, so everyone works from one place.",
       actionLabel: "Invite people",
       actionHref: "/governance",
     },

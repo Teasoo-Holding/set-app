@@ -75,7 +75,7 @@ export function FunctionDashboard({
     { label: "High risk", value: kpis.highRisk, color: tokens.colorStatusDangerForeground1 },
     { label: "Open escalations", value: kpis.openEscalations, color: tokens.colorStatusWarningForeground1 },
     { label: "Due this week", value: kpis.dueThisWeek, color: tokens.colorNeutralForeground1 },
-    { label: "% Supportive", value: `${kpis.pctSupportive}%`, color: tokens.colorStatusSuccessForeground1 },
+    { label: "% supportive", value: `${kpis.pctSupportive}%`, color: tokens.colorStatusSuccessForeground1 },
   ];
 
   return (
@@ -137,7 +137,7 @@ export function FunctionDashboard({
           <div className={styles.card}>
             <Title3>My team</Title3>
             {team.length === 0 ? (
-              <EmptyState title="No one reports to you yet" hint="Your team appears here once field users are added to your function." />
+              <EmptyState title="No one reports to you yet" hint="Your team appears here once standard users are added to your function." />
             ) : (
               team.map((m) => (
                 <div key={m.id} className={styles.row}>
@@ -148,7 +148,7 @@ export function FunctionDashboard({
                   <span className={styles.right}>
                     <Badge appearance="tint" color="informative" size="small">{`${m.stakeholderCount} stakeholders`}</Badge>
                     {m.escalationCount > 0 && (
-                      <Badge appearance="tint" color="danger" size="small">{`${m.escalationCount} esc.`}</Badge>
+                      <Badge appearance="tint" color="danger" size="small">{`${m.escalationCount} escalations`}</Badge>
                     )}
                   </span>
                 </div>

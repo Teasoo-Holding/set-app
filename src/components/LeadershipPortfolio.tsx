@@ -83,7 +83,7 @@ export function LeadershipPortfolio({
     { label: "High risk", value: kpis.highRisk, color: tokens.colorStatusDangerForeground1 },
     { label: "Open escalations", value: kpis.openEscalations, color: tokens.colorStatusWarningForeground1 },
     { label: "Due this week", value: kpis.dueThisWeek, color: tokens.colorNeutralForeground1 },
-    { label: "% Supportive", value: `${kpis.pctSupportive}%`, color: tokens.colorStatusSuccessForeground1 },
+    { label: "% supportive", value: `${kpis.pctSupportive}%`, color: tokens.colorStatusSuccessForeground1 },
   ];
 
   return (
@@ -149,7 +149,7 @@ export function LeadershipPortfolio({
                   <span className={styles.fnStats}>
                     <Badge appearance="tint" color="informative" size="small">{`${f.stakeholders}`}</Badge>
                     {f.highRisk > 0 && <Badge appearance="tint" color="danger" size="small">{`${f.highRisk} high`}</Badge>}
-                    {f.openEscalations > 0 && <Badge appearance="tint" color="warning" size="small">{`${f.openEscalations} esc.`}</Badge>}
+                    {f.openEscalations > 0 && <Badge appearance="tint" color="warning" size="small">{`${f.openEscalations} escalations`}</Badge>}
                   </span>
                   <ChevronRightRegular className={styles.chevron} />
                 </Link>

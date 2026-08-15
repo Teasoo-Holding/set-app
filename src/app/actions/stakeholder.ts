@@ -37,7 +37,7 @@ export async function updateStakeholder(formData: FormData) {
   if (Object.keys(patch).length > 0) {
     const supabase = createClient();
     const { error } = await supabase.from("stakeholders").update(patch).eq("id", id);
-    if (error) throw new Error(error.message);
+    if (error) throw new Error("Sorry, that couldn't be saved. Please try again.");
   }
   revalidateStakeholder(id);
 }
@@ -67,7 +67,7 @@ export async function requestStakeholder(formData: FormData) {
     reason,
     requested_by: user.id,
   });
-  if (error) throw new Error(error.message);
+  if (error) throw new Error("Sorry, that couldn't be saved. Please try again.");
 
   for (const p of ["/home", "/dashboard", "/portfolio", "/governance"]) {
     revalidatePath(p);
@@ -102,7 +102,7 @@ export async function createStakeholder(formData: FormData) {
     tier,
     owner_id: ownerId || user.id,
   });
-  if (error) throw new Error(error.message);
+  if (error) throw new Error("Sorry, that couldn't be saved. Please try again.");
 
   for (const p of ["/directory", "/home", "/dashboard", "/portfolio", "/governance"]) {
     revalidatePath(p);
@@ -126,7 +126,7 @@ export async function toggleFlag(formData: FormData) {
     .from("stakeholders")
     .update({ flagged: flag, flag_reason: flag ? reason : null })
     .eq("id", id);
-  if (error) throw new Error(error.message);
+  if (error) throw new Error("Sorry, that couldn't be saved. Please try again.");
 
   revalidateStakeholder(id);
 }

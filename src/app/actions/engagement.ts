@@ -40,7 +40,7 @@ export async function logEngagement(formData: FormData) {
     logged_by: user.id,
   });
   if (error) {
-    throw new Error(error.message);
+    throw new Error("Sorry, that couldn't be saved. Please try again.");
   }
 
   // E3-3 — optional risk/sentiment update in the same flow. Validate against

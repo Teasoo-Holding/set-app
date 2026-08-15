@@ -224,7 +224,7 @@ export function LandingPage() {
             </div>
             <div className={styles.trustLine}>
               <span className={styles.trustItem}><span className={styles.trustCheck}><CheckmarkCircleFilled /></span>GDPR and Nigeria NDPA aligned</span>
-              <span className={styles.trustItem}><span className={styles.trustCheck}><CheckmarkCircleFilled /></span>Database-level tenant isolation</span>
+              <span className={styles.trustItem}><span className={styles.trustCheck}><CheckmarkCircleFilled /></span>Data isolated by organisation</span>
               <span className={styles.trustItem}><span className={styles.trustCheck}><CheckmarkCircleFilled /></span>Access by invitation</span>
             </div>
           </div>

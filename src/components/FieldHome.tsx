@@ -85,8 +85,8 @@ export function FieldHome({
 
         <Link href="/directory" className={styles.statCard}>
           <span className={styles.statNum}>{myStakeholders.length}</span>
-          <Body1>my stakeholders</Body1>
-          <Caption1 className={styles.muted}>The relationships I own. Tap to open the directory.</Caption1>
+          <Body1>your stakeholders</Body1>
+          <Caption1 className={styles.muted}>The relationships you own. Open the directory.</Caption1>
         </Link>
 
         <div className={styles.card}>

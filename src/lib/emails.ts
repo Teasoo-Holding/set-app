@@ -56,7 +56,7 @@ export function commitmentReminderEmail(args: {
   const s = STATUS[args.type];
   const subject = `${s.subjectLead}: your commitment for ${args.stakeholderName}`;
   const html = layout(
-    `<p>Dear ${esc(firstName(args.ownerName))},</p>
+    `<p>Hi ${esc(firstName(args.ownerName))},</p>
 <p>This is a reminder about a commitment you made for <strong>${esc(args.stakeholderName)}</strong>.</p>
 <p><strong>${esc(args.description)}</strong></p>
 <p>${s.line(longDate(args.dueDate))}</p>
@@ -99,7 +99,7 @@ export function headOverdueEmail(args: {
 }): { subject: string; html: string } {
   const subject = `Overdue Tier 1 commitment: ${args.stakeholderName}`;
   const html = layout(
-    `<p>Dear ${esc(firstName(args.headName))},</p>
+    `<p>Hi ${esc(firstName(args.headName))},</p>
 <p>A Tier 1 commitment in your function is overdue and needs attention.</p>
 <p><strong>Stakeholder:</strong> ${esc(args.stakeholderName)}<br>
 <strong>Owned by:</strong> ${esc(args.ownerName)}<br>

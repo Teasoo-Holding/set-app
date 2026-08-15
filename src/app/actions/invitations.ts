@@ -158,7 +158,7 @@ export async function acceptInvite(formData: FormData) {
 
   const supabase = createClient();
   const { error: sErr } = await supabase.auth.signInWithPassword({ email: invite!.email, password });
-  if (sErr) redirect(`/login?message=${encodeURIComponent("Account created. Please sign in.")}`);
+  if (sErr) redirect(`/login?message=${encodeURIComponent("Account created. Sign in to continue.")}`);
 
   redirect(getLandingPath(invite!.role));
 }

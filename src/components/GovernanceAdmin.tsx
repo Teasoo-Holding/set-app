@@ -102,7 +102,7 @@ export function GovernanceAdmin({
       <main className={styles.main}>
         <div className={styles.head}>
           <Title2>Governance &amp; administration</Title2>
-          <Body1>Approve requests, manage the taxonomy, and reassign ownership.</Body1>
+          <Body1>Approve requests, manage your lists, and reassign ownership.</Body1>
         </div>
 
         {/* E12-6 people & invitations */}
@@ -182,7 +182,7 @@ export function GovernanceAdmin({
             <Caption1 className={styles.muted}>{requests.length}</Caption1>
           </div>
           {requests.length === 0 ? (
-            <div className={styles.empty}>No requests waiting. 🎉</div>
+            <div className={styles.empty}>No requests waiting.</div>
           ) : (
             requests.map((r) => (
               <div key={r.id} className={styles.reqRow}>
@@ -211,7 +211,7 @@ export function GovernanceAdmin({
 
         {/* E10-2 taxonomy editor */}
         <div className={styles.card}>
-          <Title3>Taxonomy</Title3>
+          <Title3>Categories, functions &amp; engagement types</Title3>
           {KINDS.map((k) => {
             const values = taxonomy.filter((t) => t.kind === k.key);
             return (

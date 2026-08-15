@@ -45,7 +45,7 @@ export async function signInWithPassword(formData: FormData) {
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) {
     const msg = /confirm/i.test(error.message)
-      ? "Please confirm your email first. Check your inbox for the link we sent."
+      ? "Confirm your email first. Check your inbox for the link we sent."
       : "That email and password don't match an account. Try again, or reset your password below.";
     redirect(`/login?mode=signin&error=${encodeURIComponent(msg)}`);
   }

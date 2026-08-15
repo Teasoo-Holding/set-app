@@ -37,7 +37,7 @@ export async function approveRequest(formData: FormData) {
     .eq("id", r.requested_by)
     .maybeSingle();
   const fn = (requester as { function: string | null } | null)?.function;
-  if (!fn) throw new Error("The requester has no function set — assign one before approving.");
+  if (!fn) throw new Error("The person who requested this has no function yet. Give them a function before you approve.");
 
   const { data: created, error } = await supabase
     .from("stakeholders")
