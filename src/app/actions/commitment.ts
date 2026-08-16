@@ -38,7 +38,7 @@ export async function createCommitment(formData: FormData) {
     owner_id: user.id,
     status: "open",
   });
-  if (error) throw new Error(error.message);
+  if (error) throw new Error("Sorry, that couldn't be saved. Please try again.");
 
   revalidateAll(stakeholderId);
 }
@@ -54,7 +54,7 @@ export async function completeCommitment(formData: FormData) {
     .from("commitments")
     .update({ status: "completed", completed_at: new Date().toISOString() })
     .eq("id", id);
-  if (error) throw new Error(error.message);
+  if (error) throw new Error("Sorry, that couldn't be saved. Please try again.");
 
   revalidateAll(stakeholderId);
 }

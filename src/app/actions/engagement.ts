@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { notifyEscalationOpened } from "@/lib/escalation-notify";
 
 const RISKS = ["low", "medium", "high"] as const;
 const SENTIMENTS = ["supportive", "neutral", "resistant"] as const;
@@ -40,7 +41,7 @@ export async function logEngagement(formData: FormData) {
     logged_by: user.id,
   });
   if (error) {
-    throw new Error(error.message);
+    throw new Error("Sorry, that couldn't be saved. Please try again.");
   }
 
   // E3-3 — optional risk/sentiment update in the same flow. Validate against
@@ -56,7 +57,15 @@ export async function logEngagement(formData: FormData) {
     patch.sentiment = sentiment;
   }
   if (Object.keys(patch).length > 0) {
+    // A risk/sentiment change may open an escalation; notify on a fresh open.
+    const { data: pre } = await supabase
+      .from("escalations")
+      .select("id")
+      .eq("stakeholder_id", stakeholderId)
+      .neq("status", "resolved")
+      .maybeSingle();
     await supabase.from("stakeholders").update(patch).eq("id", stakeholderId);
+    if (!pre) await notifyEscalationOpened(stakeholderId);
   }
 
   revalidatePath(`/directory/${stakeholderId}`);

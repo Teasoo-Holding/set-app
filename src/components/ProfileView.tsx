@@ -199,8 +199,8 @@ export function ProfileView({
                 </Button>
               </div>
               <Caption1 className={styles.muted}>
-                Tier rubric: impact · power · escalation potential · cadence. Setting High
-                risk / Resistant may open an escalation.
+                How to tier: consider impact, power, escalation potential and how often you
+                engage. Setting High risk with Resistant may open an escalation.
               </Caption1>
             </form>
 
@@ -245,7 +245,7 @@ export function ProfileView({
                 {escalation.severity === "critical" ? "Critical escalation" : "Escalation active"}
                 {escalation.next_action_date ? ` · next action ${fmt(escalation.next_action_date)}` : ""}
               </Text>
-              {escalation.summary && <Body1> — {escalation.summary}</Body1>}
+              {escalation.summary && <Body1>{escalation.summary}</Body1>}
             </div>
           </div>
         )}

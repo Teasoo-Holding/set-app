@@ -71,7 +71,7 @@ export function RequestStakeholderDialog({ categories }: { categories: string[] 
             {done ? (
               <MessageBar intent="success">
                 <MessageBarBody>
-                  Request submitted — an admin will review it.
+                  Request submitted. An admin will review it.
                 </MessageBarBody>
               </MessageBar>
             ) : (

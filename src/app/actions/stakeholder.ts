@@ -2,9 +2,21 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { notifyEscalationOpened } from "@/lib/escalation-notify";
 
 const RISKS = ["low", "medium", "high"];
 const SENTIMENTS = ["supportive", "neutral", "resistant"];
+
+/** Is there a live (non-resolved) escalation for this stakeholder right now? */
+async function hasActiveEscalation(supabase: ReturnType<typeof createClient>, stakeholderId: string): Promise<boolean> {
+  const { data } = await supabase
+    .from("escalations")
+    .select("id")
+    .eq("stakeholder_id", stakeholderId)
+    .neq("status", "resolved")
+    .maybeSingle();
+  return !!data;
+}
 
 function revalidateStakeholder(id: string) {
   revalidatePath(`/directory/${id}`);
@@ -36,8 +48,13 @@ export async function updateStakeholder(formData: FormData) {
 
   if (Object.keys(patch).length > 0) {
     const supabase = createClient();
+    // A risk/sentiment change can open an escalation (via the DB trigger). Note
+    // whether one was already active so we only notify on a fresh open.
+    const mayEscalate = "risk" in patch || "sentiment" in patch;
+    const wasActive = mayEscalate ? await hasActiveEscalation(supabase, id) : true;
     const { error } = await supabase.from("stakeholders").update(patch).eq("id", id);
-    if (error) throw new Error(error.message);
+    if (error) throw new Error("Sorry, that couldn't be saved. Please try again.");
+    if (mayEscalate && !wasActive) await notifyEscalationOpened(id);
   }
   revalidateStakeholder(id);
 }
@@ -67,9 +84,44 @@ export async function requestStakeholder(formData: FormData) {
     reason,
     requested_by: user.id,
   });
-  if (error) throw new Error(error.message);
+  if (error) throw new Error("Sorry, that couldn't be saved. Please try again.");
 
   for (const p of ["/home", "/dashboard", "/portfolio", "/governance"]) {
+    revalidatePath(p);
+  }
+}
+
+/**
+ * Directly create a stakeholder (Admin / Leadership / Head). Field users can't
+ * reach this — they propose via requestStakeholder. RLS (stakeholders_insert)
+ * is the real guard: Leadership/Admin anywhere in the tenant, a Head only in
+ * their own function. tenant_id defaults to the caller's tenant.
+ */
+export async function createStakeholder(formData: FormData) {
+  const name = String(formData.get("name") ?? "").trim();
+  const category = String(formData.get("category") ?? "").trim();
+  const func = String(formData.get("function") ?? "").trim();
+  const tier = Number(formData.get("tier"));
+  const ownerId = String(formData.get("owner_id") ?? "").trim();
+  if (!name || !category || !func) throw new Error("Name, category and function are required.");
+  if (tier !== 1 && tier !== 2) throw new Error("Choose a tier.");
+
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not signed in.");
+
+  const { error } = await supabase.from("stakeholders").insert({
+    name,
+    category,
+    function: func,
+    tier,
+    owner_id: ownerId || user.id,
+  });
+  if (error) throw new Error("Sorry, that couldn't be saved. Please try again.");
+
+  for (const p of ["/directory", "/home", "/dashboard", "/portfolio", "/governance"]) {
     revalidatePath(p);
   }
 }
@@ -87,11 +139,14 @@ export async function toggleFlag(formData: FormData) {
   const reason = String(formData.get("reason") ?? "").trim() || null;
 
   const supabase = createClient();
+  // Flagging opens an escalation (via the trigger); notify only on a fresh open.
+  const wasActive = flag ? await hasActiveEscalation(supabase, id) : true;
   const { error } = await supabase
     .from("stakeholders")
     .update({ flagged: flag, flag_reason: flag ? reason : null })
     .eq("id", id);
-  if (error) throw new Error(error.message);
+  if (error) throw new Error("Sorry, that couldn't be saved. Please try again.");
+  if (flag && !wasActive) await notifyEscalationOpened(id);
 
   revalidateStakeholder(id);
 }

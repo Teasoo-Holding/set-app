@@ -3,7 +3,7 @@ import { LegalPage } from "@/components/LegalPage";
 import { COMPANY } from "@/lib/company";
 
 export const metadata: Metadata = {
-  title: "Terms of service — Teasoo SET",
+  title: "Terms of service · Teasoo SET",
   description: "The rules for using Teasoo SET.",
 };
 

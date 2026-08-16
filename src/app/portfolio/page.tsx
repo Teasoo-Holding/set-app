@@ -20,6 +20,8 @@ export default async function PortfolioPage() {
     { data: dueRows },
     { data: activity },
     { data: fnSummary },
+    { data: tenantRow },
+    { data: memberRows },
   ] = await Promise.all([
     supabase.from("stakeholders").select("id, risk, sentiment"),
     supabase
@@ -32,6 +34,8 @@ export default async function PortfolioPage() {
       .select("id, stakeholder_id, stakeholder_name, sentiment, engagement_type, occurred_on, note_excerpt")
       .limit(8),
     supabase.from("function_summary").select("function, stakeholders, high_risk, open_escalations, supportive"),
+    profile.tenant_id ? supabase.from("tenants").select("name").eq("id", profile.tenant_id).maybeSingle() : Promise.resolve({ data: null }),
+    supabase.from("profiles").select("id"),
   ]);
 
   const sh = (stakeholders as { id: string; risk: string; sentiment: string }[]) ?? [];
@@ -77,9 +81,16 @@ export default async function PortfolioPage() {
     }))
     .sort((a, b) => b.highRisk - a.highRisk || b.stakeholders - a.stakeholders);
 
+  const onboarding = {
+    orgName: (tenantRow as { name: string } | null)?.name ?? "your organisation",
+    memberCount: (memberRows as { id: string }[] | null)?.length ?? 0,
+    stakeholderCount: total,
+  };
+
   return (
     <LeadershipPortfolio
       viewer={{ full_name: profile.full_name, role: profile.role, function: profile.function }}
+      onboarding={onboarding}
       kpis={{
         highRisk: sh.filter((s) => s.risk === "high").length,
         openEscalations: escalations.length,

@@ -15,10 +15,10 @@ import {
   Button,
   MessageBar,
   MessageBarBody,
-  MessageBarTitle,
 } from "@fluentui/react-components";
 import { ArrowRightRegular } from "@fluentui/react-icons";
 import { BrandMark } from "@/components/BrandMark";
+import { PasswordInput } from "@/components/PasswordInput";
 import {
   signInAsDemo,
   signInWithMicrosoft,
@@ -137,7 +137,7 @@ const useStyles = makeStyles({
 const COPY: Record<Mode, { title: string; blurb: string; cta: string }> = {
   signin: {
     title: "One voice, one source of truth.",
-    blurb: "Sign in with your email. Your role decides what you see — frictionless logging for the field, full risk visibility for leadership.",
+    blurb: "Sign in with your email. Your role decides what you see: frictionless logging for the field, and full risk visibility for leadership.",
     cta: "Sign in",
   },
   forgot: {
@@ -176,10 +176,7 @@ export default function LoginPage({
 
         {error && (
           <MessageBar intent="error">
-            <MessageBarBody>
-              <MessageBarTitle>Something went wrong</MessageBarTitle>
-              {error}
-            </MessageBarBody>
+            <MessageBarBody>{error}</MessageBarBody>
           </MessageBar>
         )}
         {message && !error && (
@@ -195,7 +192,7 @@ export default function LoginPage({
               <Input name="email" type="email" autoComplete="email" required placeholder="you@company.com" />
             </Field>
             <Field label="Password">
-              <Input name="password" type="password" autoComplete="current-password" required />
+              <PasswordInput name="password" autoComplete="current-password" required />
             </Field>
             <Button type="submit" appearance="primary" className={styles.submit}>
               {copy.cta}
@@ -241,7 +238,7 @@ export default function LoginPage({
         {DEMO_MODE && (
           <>
             <Divider />
-            <Caption1 className={styles.sectionLabel}>Continue as — demo roles</Caption1>
+            <Caption1 className={styles.sectionLabel}>Continue as a demo role</Caption1>
             <div className={styles.roles}>
               {DEMO_USERS.map((u) => (
                 <form key={u.email} action={signInAsDemo} className={styles.roleForm}>

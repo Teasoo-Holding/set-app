@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { makeStyles, tokens, Title2, Title3, Body1, Caption1, Text, Avatar, Badge } from "@fluentui/react-components";
 import { AppShell } from "@/components/AppShell";
+import { EmptyState } from "@/components/EmptyState";
 import type { Role } from "@/lib/roles";
 
 type Kpi = { highRisk: number; openEscalations: number; dueThisWeek: number; pctSupportive: number };
@@ -74,7 +75,7 @@ export function FunctionDashboard({
     { label: "High risk", value: kpis.highRisk, color: tokens.colorStatusDangerForeground1 },
     { label: "Open escalations", value: kpis.openEscalations, color: tokens.colorStatusWarningForeground1 },
     { label: "Due this week", value: kpis.dueThisWeek, color: tokens.colorNeutralForeground1 },
-    { label: "% Supportive", value: `${kpis.pctSupportive}%`, color: tokens.colorStatusSuccessForeground1 },
+    { label: "% supportive", value: `${kpis.pctSupportive}%`, color: tokens.colorStatusSuccessForeground1 },
   ];
 
   return (
@@ -82,7 +83,7 @@ export function FunctionDashboard({
       <main className={styles.main}>
         <div className={styles.head}>
           <Title2>{`${functionName} dashboard`}</Title2>
-          <Body1>Your function&apos;s health, team, and what&apos;s urgent — at a glance.</Body1>
+          <Body1>Your function&apos;s health, team and priorities, at a glance.</Body1>
         </div>
 
         {/* E8-1 KPI cards */}
@@ -100,7 +101,12 @@ export function FunctionDashboard({
           <div className={styles.card}>
             <Title3>Sentiment mix</Title3>
             {mix.total === 0 ? (
-              <div className={styles.empty}>No stakeholders yet.</div>
+              <EmptyState
+                title="No stakeholders in your function yet"
+                hint="Add stakeholders in the directory to see how sentiment breaks down."
+                actionLabel="Go to the directory"
+                actionHref="/directory"
+              />
             ) : (
               <>
                 <div className={styles.bar}>
@@ -131,7 +137,7 @@ export function FunctionDashboard({
           <div className={styles.card}>
             <Title3>My team</Title3>
             {team.length === 0 ? (
-              <div className={styles.empty}>No direct reports on file.</div>
+              <EmptyState title="No one reports to you yet" hint="Your team appears here once standard users are added to your function." />
             ) : (
               team.map((m) => (
                 <div key={m.id} className={styles.row}>
@@ -142,7 +148,7 @@ export function FunctionDashboard({
                   <span className={styles.right}>
                     <Badge appearance="tint" color="informative" size="small">{`${m.stakeholderCount} stakeholders`}</Badge>
                     {m.escalationCount > 0 && (
-                      <Badge appearance="tint" color="danger" size="small">{`${m.escalationCount} esc.`}</Badge>
+                      <Badge appearance="tint" color="danger" size="small">{`${m.escalationCount} escalations`}</Badge>
                     )}
                   </span>
                 </div>
@@ -160,7 +166,7 @@ export function FunctionDashboard({
             </Link>
           </div>
           {escalations.length === 0 ? (
-            <div className={styles.empty}>Nothing on the board. 🎉</div>
+            <EmptyState title="Nothing on the board" hint="There are no active escalations in your function right now." />
           ) : (
             escalations.map((e) => (
               <div key={e.id} className={styles.row}>
@@ -182,7 +188,7 @@ export function FunctionDashboard({
         <div className={styles.card}>
           <Title3>Recent activity</Title3>
           {activity.length === 0 ? (
-            <div className={styles.empty}>No recent engagements in your function.</div>
+            <EmptyState title="No engagements logged yet" hint="Recent activity appears here as your team logs engagements in your function." />
           ) : (
             activity.map((a) => (
               <div key={a.id} className={styles.row}>

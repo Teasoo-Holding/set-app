@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { makeStyles, tokens, Title2, Title3, Body1, Caption1, Text, Badge, Button } from "@fluentui/react-components";
 import { AppShell } from "@/components/AppShell";
+import { EmptyState } from "@/components/EmptyState";
 import { StakeholderCard, type StakeholderSummary } from "@/components/StakeholderCard";
 import { LogEngagementDialog } from "@/components/LogEngagementDialog";
 import { RequestStakeholderDialog } from "@/components/RequestStakeholderDialog";
@@ -43,11 +44,21 @@ const useStyles = makeStyles({
   empty: { color: tokens.colorNeutralForeground3, paddingTop: "8px" },
 });
 
+type MyRequest = { id: string; name: string; category: string; status: string; createdAt: string };
+
+const REQ_BADGE: Record<string, "informative" | "success" | "danger"> = {
+  pending: "informative",
+  approved: "success",
+  rejected: "danger",
+};
+const REQ_LABEL: Record<string, string> = { pending: "Pending review", approved: "Approved", rejected: "Not approved" };
+
 export function FieldHome({
   viewer,
   dateLabel,
   myStakeholders,
   commitments,
+  myRequests,
   types,
   categories,
   today,
@@ -56,6 +67,7 @@ export function FieldHome({
   dateLabel: string;
   myStakeholders: StakeholderSummary[];
   commitments: Commitment[];
+  myRequests: MyRequest[];
   types: string[];
   categories: string[];
   today: string;
@@ -73,25 +85,29 @@ export function FieldHome({
         </div>
 
         <div className={styles.ctas}>
-          <LogEngagementDialog
-            stakeholders={picker}
-            types={types}
-            today={today}
-            triggerLabel="Log an engagement"
-          />
+          {/* Logging needs a stakeholder to log against — only offer it once the
+              user owns at least one, otherwise the primary action dead-ends. */}
+          {picker.length > 0 && (
+            <LogEngagementDialog
+              stakeholders={picker}
+              types={types}
+              today={today}
+              triggerLabel="Log an engagement"
+            />
+          )}
           <RequestStakeholderDialog categories={categories} />
         </div>
 
         <Link href="/directory" className={styles.statCard}>
           <span className={styles.statNum}>{myStakeholders.length}</span>
-          <Body1>my stakeholders</Body1>
-          <Caption1 className={styles.muted}>The relationships I own. Tap to open the directory.</Caption1>
+          <Body1>your stakeholders</Body1>
+          <Caption1 className={styles.muted}>The relationships you own. Open the directory.</Caption1>
         </Link>
 
         <div className={styles.card}>
           <Title3>My open commitments</Title3>
           {commitments.length === 0 ? (
-            <div className={styles.empty}>Nothing due — you&apos;re all caught up. 🎉</div>
+            <div className={styles.empty}>You have no open commitments. You&apos;re all caught up.</div>
           ) : (
             commitments.map((c) => (
               <div key={c.id} className={styles.commitRow}>
@@ -120,10 +136,30 @@ export function FieldHome({
           )}
         </div>
 
+        {myRequests.length > 0 && (
+          <div className={styles.section}>
+            <Title3>My requests</Title3>
+            {myRequests.map((r) => (
+              <div key={r.id} className={styles.commitRow}>
+                <span className={styles.commitDesc}>
+                  <Body1>{r.name}</Body1>
+                  <Caption1 className={styles.muted}>{r.category}</Caption1>
+                </span>
+                <Badge appearance="tint" color={REQ_BADGE[r.status] ?? "informative"}>
+                  {REQ_LABEL[r.status] ?? r.status}
+                </Badge>
+              </div>
+            ))}
+          </div>
+        )}
+
         <div className={styles.section}>
           <Title3>My stakeholders</Title3>
           {myStakeholders.length === 0 ? (
-            <div className={styles.empty}>You don&apos;t own any stakeholders yet.</div>
+            <EmptyState
+              title="No stakeholders assigned to you yet"
+              hint="When you own a stakeholder, it appears here. You can propose a new one with “Request a stakeholder” above."
+            />
           ) : (
             <div className={styles.list}>
               {myStakeholders.map((r) => (

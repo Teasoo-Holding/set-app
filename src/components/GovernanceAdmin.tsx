@@ -1,7 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { makeStyles, tokens, Title2, Title3, Body1, Caption1, Text, Button, Badge, Input, Select, Divider } from "@fluentui/react-components";
+import { useFormState } from "react-dom";
+import { makeStyles, tokens, Title2, Title3, Body1, Caption1, Text, Button, Badge, Input, Select, Divider, MessageBar, MessageBarBody, MessageBarTitle } from "@fluentui/react-components";
 import { AppShell } from "@/components/AppShell";
 import { approveRequest, rejectRequest, addTaxonomy, setTaxonomyActive, reassignStakeholders } from "@/app/actions/governance";
 import { inviteUser, revokeInvite } from "@/app/actions/invitations";
@@ -62,6 +63,7 @@ const useStyles = makeStyles({
   reassign: { display: "flex", columnGap: "12px", rowGap: "12px", flexWrap: "wrap", alignItems: "flex-end" },
   field: { display: "flex", flexDirection: "column", rowGap: "4px", minWidth: "200px" },
   empty: { color: tokens.colorNeutralForeground3, paddingTop: "4px" },
+  linkBox: { marginTop: "6px", padding: "8px 10px", borderRadius: tokens.borderRadiusMedium, backgroundColor: tokens.colorNeutralBackground3, wordBreak: "break-all", fontFamily: tokens.fontFamilyMonospace, fontSize: tokens.fontSizeBase200 },
   inviteRow: { display: "flex", columnGap: "12px", rowGap: "12px", flexWrap: "wrap", alignItems: "flex-end" },
   memberRow: { display: "flex", alignItems: "center", columnGap: "10px", flexWrap: "wrap", padding: "10px 0", borderTop: `1px solid ${tokens.colorNeutralStroke2}` },
   memberMain: { display: "flex", flexDirection: "column", rowGap: "2px", flexGrow: 1, minWidth: "180px" },
@@ -92,6 +94,7 @@ export function GovernanceAdmin({
   functions: string[];
 }) {
   const styles = useStyles();
+  const [inviteState, inviteAction] = useFormState(inviteUser, null);
   const owners = persons.filter((p) => p.owns > 0);
   const [fromId, setFromId] = React.useState<string>("");
   const [toId, setToId] = React.useState<string>("");
@@ -102,14 +105,31 @@ export function GovernanceAdmin({
       <main className={styles.main}>
         <div className={styles.head}>
           <Title2>Governance &amp; administration</Title2>
-          <Body1>Approve requests, manage the taxonomy, and reassign ownership.</Body1>
+          <Body1>Approve requests, manage your lists, and reassign ownership.</Body1>
         </div>
 
         {/* E12-6 people & invitations */}
         <div className={styles.card}>
           <Title3>People &amp; invitations</Title3>
-          <Caption1 className={styles.muted}>Invite teammates by email. They set their own password from the link — no account exists until they accept.</Caption1>
-          <form action={inviteUser} className={styles.inviteRow}>
+          <Caption1 className={styles.muted}>Invite teammates by email. They set their own password from the link. No account exists until they accept.</Caption1>
+
+          {inviteState?.error && (
+            <MessageBar intent="error"><MessageBarBody>{inviteState.error}</MessageBarBody></MessageBar>
+          )}
+          {inviteState?.invitedEmail && inviteState.emailed && (
+            <MessageBar intent="success"><MessageBarBody>{`Invitation emailed to ${inviteState.invitedEmail}.`}</MessageBarBody></MessageBar>
+          )}
+          {inviteState?.invitedEmail && !inviteState.emailed && inviteState.inviteLink && (
+            <MessageBar intent="warning">
+              <MessageBarBody>
+                <MessageBarTitle>{`Invited ${inviteState.invitedEmail}, but email not sent`}</MessageBarTitle>
+                Email isn&apos;t set up, so send this link to them yourself:
+                <div className={styles.linkBox}>{inviteState.inviteLink}</div>
+              </MessageBarBody>
+            </MessageBar>
+          )}
+
+          <form action={inviteAction} className={styles.inviteRow}>
             <label className={styles.field}>
               <Caption1>Email</Caption1>
               <Input name="email" type="email" required placeholder="teammate@company.com" />
@@ -125,7 +145,7 @@ export function GovernanceAdmin({
             <label className={styles.field}>
               <Caption1>Function</Caption1>
               <Select name="function" defaultValue="">
-                <option value="">— none —</option>
+                <option value="">None</option>
                 {functions.map((f) => (
                   <option key={f} value={f}>{f}</option>
                 ))}
@@ -182,7 +202,7 @@ export function GovernanceAdmin({
             <Caption1 className={styles.muted}>{requests.length}</Caption1>
           </div>
           {requests.length === 0 ? (
-            <div className={styles.empty}>No requests waiting. 🎉</div>
+            <div className={styles.empty}>No requests waiting.</div>
           ) : (
             requests.map((r) => (
               <div key={r.id} className={styles.reqRow}>
@@ -211,7 +231,7 @@ export function GovernanceAdmin({
 
         {/* E10-2 taxonomy editor */}
         <div className={styles.card}>
-          <Title3>Taxonomy</Title3>
+          <Title3>Categories, functions &amp; engagement types</Title3>
           {KINDS.map((k) => {
             const values = taxonomy.filter((t) => t.kind === k.key);
             return (
@@ -245,7 +265,7 @@ export function GovernanceAdmin({
         {/* E10-3 reassignment */}
         <div className={styles.card}>
           <Title3>Reassign ownership</Title3>
-          <Caption1 className={styles.muted}>Move every stakeholder from one owner to another — useful when someone leaves.</Caption1>
+          <Caption1 className={styles.muted}>Move every stakeholder from one owner to another. This is useful when someone leaves.</Caption1>
           <form action={reassignStakeholders} className={styles.reassign}>
             <label className={styles.field}>
               <Caption1>From</Caption1>

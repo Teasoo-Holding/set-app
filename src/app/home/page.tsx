@@ -11,7 +11,7 @@ export default async function FieldHomePage() {
   if (getLandingPath(profile.role) !== "/home") redirect(getLandingPath(profile.role));
 
   const supabase = createClient();
-  const [{ data: mine }, { data: commits }, { data: typeRows }, { data: catRows }] =
+  const [{ data: mine }, { data: commits }, { data: typeRows }, { data: catRows }, { data: reqRows }] =
     await Promise.all([
       supabase
         .from("stakeholders")
@@ -37,6 +37,12 @@ export default async function FieldHomePage() {
         .eq("kind", "category")
         .eq("is_active", true)
         .order("sort_order", { ascending: true }),
+      supabase
+        .from("stakeholder_requests")
+        .select("id, requested_name, category, status, created_at")
+        .eq("requested_by", profile.id)
+        .order("created_at", { ascending: false })
+        .limit(10),
     ]);
 
   const myStakeholders = (mine as StakeholderSummary[] | null) ?? [];
@@ -62,6 +68,9 @@ export default async function FieldHomePage() {
 
   const types = ((typeRows as { value: string }[] | null) ?? []).map((t) => t.value);
   const categories = ((catRows as { value: string }[] | null) ?? []).map((t) => t.value);
+  const myRequests = (
+    (reqRows as { id: string; requested_name: string; category: string; status: string; created_at: string }[] | null) ?? []
+  ).map((r) => ({ id: r.id, name: r.requested_name, category: r.category, status: r.status, createdAt: r.created_at }));
   const today = new Date().toISOString().slice(0, 10);
   const dateLabel = new Date().toLocaleDateString("en-GB", {
     weekday: "long",
@@ -76,6 +85,7 @@ export default async function FieldHomePage() {
       dateLabel={dateLabel}
       myStakeholders={myStakeholders}
       commitments={commitments}
+      myRequests={myRequests}
       types={types}
       categories={categories}
       today={today}

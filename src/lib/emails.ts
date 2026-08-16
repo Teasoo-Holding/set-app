@@ -56,12 +56,64 @@ export function commitmentReminderEmail(args: {
   const s = STATUS[args.type];
   const subject = `${s.subjectLead}: your commitment for ${args.stakeholderName}`;
   const html = layout(
-    `<p>Dear ${esc(firstName(args.ownerName))},</p>
+    `<p>Hi ${esc(firstName(args.ownerName))},</p>
 <p>This is a reminder about a commitment you made for <strong>${esc(args.stakeholderName)}</strong>.</p>
 <p><strong>${esc(args.description)}</strong></p>
 <p>${s.line(longDate(args.dueDate))}</p>
 <p>When you have done it, open the stakeholder and mark the commitment complete.</p>
 ${button(args.link, "Open in Teasoo SET")}
+<p>Thanks,<br>Teasoo SET</p>`,
+  );
+  return { subject, html };
+}
+
+/** Sent to the new owner when stakeholders are reassigned to them. */
+export function reassignmentEmail(args: { ownerName: string; link: string }): { subject: string; html: string } {
+  const subject = "Stakeholders have been assigned to you";
+  const html = layout(`<p>Hi ${esc(firstName(args.ownerName))},</p>
+<p>Some stakeholders and their open commitments have been assigned to you in Teasoo SET. Please review them and pick up any follow-ups.</p>
+${button(args.link, "Open your directory")}
+<p>Thanks,<br>Teasoo SET</p>`);
+  return { subject, html };
+}
+
+/** Sent to the person who requested a stakeholder, when an admin decides on it. */
+export function requestDecisionEmail(args: {
+  requesterName: string;
+  stakeholderName: string;
+  approved: boolean;
+  link?: string;
+}): { subject: string; html: string } {
+  const subject = args.approved
+    ? `Approved: ${args.stakeholderName}`
+    : `Update on your request: ${args.stakeholderName}`;
+  const body = args.approved
+    ? `<p>Good news. Your request to add <strong>${esc(args.stakeholderName)}</strong> has been approved, and it's now in your directory.</p>${
+        args.link ? button(args.link, "Open the stakeholder") : ""
+      }`
+    : `<p>Your request to add <strong>${esc(args.stakeholderName)}</strong> wasn't approved this time. If you think it should be tracked, talk to your administrator.</p>`;
+  const html = layout(`<p>Hi ${esc(firstName(args.requesterName))},</p>
+${body}
+<p>Thanks,<br>Teasoo SET</p>`);
+  return { subject, html };
+}
+
+/** Sent when an escalation opens — to the function Head, and Leadership if Critical. */
+export function escalationOpenedEmail(args: {
+  recipientName: string;
+  stakeholderName: string;
+  functionName: string;
+  severity: "critical" | "elevated";
+  link: string;
+}): { subject: string; html: string } {
+  const sev = args.severity === "critical" ? "Critical" : "Elevated";
+  const subject = `${sev} escalation: ${args.stakeholderName}`;
+  const html = layout(
+    `<p>Hi ${esc(firstName(args.recipientName))},</p>
+<p>A ${sev.toLowerCase()} escalation has just opened for a stakeholder in <strong>${esc(args.functionName)}</strong>.</p>
+<p><strong>${esc(args.stakeholderName)}</strong></p>
+<p>Open it to see what's happening and decide the next step.</p>
+${button(args.link, "Open the stakeholder")}
 <p>Thanks,<br>Teasoo SET</p>`,
   );
   return { subject, html };
@@ -99,7 +151,7 @@ export function headOverdueEmail(args: {
 }): { subject: string; html: string } {
   const subject = `Overdue Tier 1 commitment: ${args.stakeholderName}`;
   const html = layout(
-    `<p>Dear ${esc(firstName(args.headName))},</p>
+    `<p>Hi ${esc(firstName(args.headName))},</p>
 <p>A Tier 1 commitment in your function is overdue and needs attention.</p>
 <p><strong>Stakeholder:</strong> ${esc(args.stakeholderName)}<br>
 <strong>Owned by:</strong> ${esc(args.ownerName)}<br>

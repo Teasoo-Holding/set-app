@@ -11,37 +11,49 @@ import { getLandingPath, type Role } from "@/lib/roles";
 const TENANT_ROLES: Role[] = ["field", "head", "leadership", "admin"];
 const MIN_PASSWORD = 8;
 
+export type InviteState = {
+  error?: string;
+  invitedEmail?: string;
+  emailed?: boolean;
+  inviteLink?: string; // present only when the email couldn't be sent
+} | null;
+
 /**
  * E12-4/E12-6 — a tenant admin invites a teammate (role + function). Gated to
- * the caller's own tenant; the invitee joins only via the emailed link.
+ * the caller's own tenant. Returns a result so the People panel can confirm the
+ * invite and surface the link when email isn't delivering (never throws).
  */
-export async function inviteUser(formData: FormData) {
+export async function inviteUser(_prev: InviteState, formData: FormData): Promise<InviteState> {
   const me = await getCurrentProfile();
   if (!me || me.role !== "admin" || !me.tenant_id) {
-    throw new Error("Only a tenant administrator can invite people.");
+    return { error: "Only a tenant administrator can invite people." };
   }
 
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const role = String(formData.get("role") ?? "") as Role;
   const func = String(formData.get("function") ?? "").trim() || null;
-  if (!email || !TENANT_ROLES.includes(role)) throw new Error("A valid email and role are required.");
+  if (!email || !TENANT_ROLES.includes(role)) return { error: "A valid email and role are required." };
   if ((role === "field" || role === "head") && !func) {
-    throw new Error("Choose a function for a standard user or function head.");
+    return { error: "Choose a function for a standard user or function head." };
   }
 
-  const db = createAdminClient();
-  const { data: t } = await db.from("tenants").select("name").eq("id", me.tenant_id).single();
-
-  await createAndSendInvite(db, {
-    tenantId: me.tenant_id,
-    orgName: (t as { name: string } | null)?.name ?? "your organisation",
-    email,
-    role,
-    func: role === "admin" || role === "leadership" ? null : func,
-    invitedById: me.id,
-    inviterName: me.full_name,
-  });
-  revalidatePath("/governance");
+  try {
+    const db = createAdminClient();
+    const { data: t } = await db.from("tenants").select("name").eq("id", me.tenant_id).single();
+    const { link, emailed } = await createAndSendInvite(db, {
+      tenantId: me.tenant_id,
+      orgName: (t as { name: string } | null)?.name ?? "your organisation",
+      email,
+      role,
+      func: role === "admin" || role === "leadership" ? null : func,
+      invitedById: me.id,
+      inviterName: me.full_name,
+    });
+    revalidatePath("/governance");
+    return { invitedEmail: email, emailed, inviteLink: emailed ? undefined : link };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "Could not send the invitation." };
+  }
 }
 
 /** E12-4 — revoke a pending invitation (tenant admin: own tenant; platform admin: any). */
@@ -99,11 +111,46 @@ export async function acceptInvite(formData: FormData) {
     email_confirm: true,
     user_metadata: { full_name: fullName },
   });
-  const newUser = created?.user;
-  if (cErr || !newUser) {
-    return fail("We couldn't create your account — an account may already exist for this email. Try signing in.");
+
+  let uid: string;
+  if (created?.user) {
+    uid = created.user.id;
+  } else {
+    // createUser failed — most often because the email is already registered
+    // (e.g. an earlier test, or a half-finished accept). Recover: find the auth
+    // user; if it isn't already attached to a tenant, adopt it and set the
+    // password. If it already belongs to a tenant, they should just sign in.
+    const { data: list } = await db.auth.admin.listUsers({ page: 1, perPage: 1000 });
+    const existingUser = (list?.users ?? []).find(
+      (u) => (u.email ?? "").toLowerCase() === invite!.email.toLowerCase(),
+    );
+
+    if (!existingUser) {
+      console.error("acceptInvite createUser failed:", cErr?.message);
+      return fail(
+        cErr?.message
+          ? `We couldn't create your account: ${cErr.message}`
+          : "We couldn't create your account. Ask for a new invitation.",
+      );
+    }
+
+    const { data: prof } = await db
+      .from("profiles")
+      .select("tenant_id")
+      .eq("id", existingUser.id)
+      .maybeSingle();
+    if ((prof as { tenant_id: string | null } | null)?.tenant_id) {
+      return fail("An account for this email already exists. Please sign in instead.");
+    }
+
+    uid = existingUser.id;
+    const { error: upErr } = await db.auth.admin.updateUserById(uid, {
+      password,
+      email_confirm: true,
+      user_metadata: { full_name: fullName },
+    });
+    if (upErr) return fail("We couldn't finish setting up your account. Ask for a new invitation.");
   }
-  const uid = newUser.id;
 
   // handle_new_user created a tenant-less profile; bind it to the invitation.
   const { error: pErr } = await db.from("profiles").upsert({
@@ -123,7 +170,7 @@ export async function acceptInvite(formData: FormData) {
 
   const supabase = createClient();
   const { error: sErr } = await supabase.auth.signInWithPassword({ email: invite!.email, password });
-  if (sErr) redirect(`/login?message=${encodeURIComponent("Account created. Please sign in.")}`);
+  if (sErr) redirect(`/login?message=${encodeURIComponent("Account created. Sign in to continue.")}`);
 
   redirect(getLandingPath(invite!.role));
 }

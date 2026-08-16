@@ -2,9 +2,11 @@
 
 import * as React from "react";
 import { makeStyles, tokens, Title2, Caption1, Text, Button, SearchBox, Select } from "@fluentui/react-components";
-import { AddRegular } from "@fluentui/react-icons";
 import { AppShell } from "@/components/AppShell";
 import { StakeholderCard } from "@/components/StakeholderCard";
+import { AddStakeholderDialog, type MemberOption } from "@/components/AddStakeholderDialog";
+import { RequestStakeholderDialog } from "@/components/RequestStakeholderDialog";
+import { EmptyState } from "@/components/EmptyState";
 import type { Role } from "@/lib/roles";
 
 export type DirectoryRow = {
@@ -46,13 +48,24 @@ const useStyles = makeStyles({
 export function DirectoryView({
   profile,
   rows,
+  categories,
+  functions,
+  members,
   initialFunction = null,
 }: {
   profile: { id: string; full_name: string; role: Role; function: string | null };
   rows: DirectoryRow[];
+  categories: string[];
+  functions: string[];
+  members: MemberOption[];
   initialFunction?: string | null;
 }) {
   const styles = useStyles();
+
+  // Admin/Leadership/Head add stakeholders directly; a Head only in their own
+  // function. Field users propose via a request for admin approval.
+  const canAdd = profile.role === "admin" || profile.role === "leadership" || profile.role === "head";
+  const addFunctions = profile.role === "head" && profile.function ? [profile.function] : functions;
 
   // Who the viewer may flag — mirrors the stakeholders_update RLS policy.
   const canFlag = (r: DirectoryRow) =>
@@ -107,9 +120,16 @@ export function DirectoryView({
             <Title2>Directory</Title2>
             <Caption1>{`${rows.length} stakeholder${rows.length === 1 ? "" : "s"} in your scope`}</Caption1>
           </div>
-          <Button appearance="outline" icon={<AddRegular />} title="Coming with E4-3">
-            Request new
-          </Button>
+          {canAdd ? (
+            <AddStakeholderDialog
+              categories={categories}
+              functions={addFunctions}
+              members={members}
+              currentUserId={profile.id}
+            />
+          ) : (
+            <RequestStakeholderDialog categories={categories} />
+          )}
         </div>
 
         <SearchBox
@@ -153,9 +173,20 @@ export function DirectoryView({
         </div>
 
         {filtered.length === 0 ? (
-          <div className={styles.empty}>
-            <Text>No stakeholders match your filters.</Text>
-          </div>
+          rows.length === 0 ? (
+            <EmptyState
+              title="No stakeholders yet"
+              hint={
+                canAdd
+                  ? "Add your first stakeholder using the button above to start building your directory."
+                  : "Stakeholders in your scope will appear here once they're added."
+              }
+            />
+          ) : (
+            <div className={styles.empty}>
+              <Text>No stakeholders match your filters.</Text>
+            </div>
+          )
         ) : (
           <div className={styles.list}>
             {filtered.map((r) => (

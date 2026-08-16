@@ -6,6 +6,7 @@ import {
   MessageBar, MessageBarBody,
 } from "@fluentui/react-components";
 import { BrandMark } from "@/components/BrandMark";
+import { PasswordInput } from "@/components/PasswordInput";
 import { acceptInvite } from "@/app/actions/invitations";
 
 const useStyles = makeStyles({
@@ -70,7 +71,7 @@ export function AcceptInviteForm({
           <Input name="full_name" type="text" autoComplete="name" required placeholder="Ada Lovelace" />
         </Field>
         <Field label="Password" hint="At least 8 characters.">
-          <Input name="password" type="password" autoComplete="new-password" required minLength={8} />
+          <PasswordInput name="password" autoComplete="new-password" required minLength={8} />
         </Field>
         <Button type="submit" appearance="primary">Create account &amp; sign in</Button>
       </form>

@@ -3,7 +3,7 @@ import { LegalPage } from "@/components/LegalPage";
 import { COMPANY } from "@/lib/company";
 
 export const metadata: Metadata = {
-  title: "Privacy notice — Teasoo SET",
+  title: "Privacy notice · Teasoo SET",
   description: "How Teasoo SET handles personal data, and your rights.",
 };
 
@@ -36,20 +36,20 @@ export default function PrivacyPage() {
 
       <h2>What data we handle</h2>
       <ul>
-        <li><strong>Account data</strong> — your name, email address, role, and the organisation you belong to.</li>
+        <li><strong>Account data</strong>: your name, email address, role, and the organisation you belong to.</li>
         <li>
-          <strong>Stakeholder data your organisation enters</strong> — such as names, organisations, notes, engagement
+          <strong>Stakeholder data your organisation enters</strong>: such as names, organisations, notes, engagement
           history, commitments, risk and sentiment.
         </li>
         <li>
-          <strong>Technical data</strong> — sign-in records and basic logs we need to run and secure the service.
+          <strong>Technical data</strong>: sign-in records and basic logs we need to run and secure the service.
         </li>
       </ul>
 
       <h2>Why we handle it, and our legal basis</h2>
       <ul>
-        <li>To provide the service under our contract with your organisation — GDPR Article 6(1)(b); NDPA: performance of a contract.</li>
-        <li>To keep the service secure and working properly — our legitimate interests; NDPA: legitimate interest.</li>
+        <li>To provide the service under our contract with your organisation. Lawful basis: GDPR Article 6(1)(b); NDPA, performance of a contract.</li>
+        <li>To keep the service secure and working properly. Lawful basis: our legitimate interests; NDPA, legitimate interest.</li>
         <li>To meet legal obligations, where they apply.</li>
       </ul>
       <p>We do not sell your data, and we do not use it for advertising.</p>
@@ -57,16 +57,16 @@ export default function PrivacyPage() {
       <h2>Who we share it with</h2>
       <p>We use a small number of trusted providers to run the service. They only process data to provide their service to us, under contract:</p>
       <ul>
-        <li><strong>Supabase</strong> — database and sign-in hosting.</li>
-        <li><strong>Vercel</strong> — application hosting.</li>
-        <li><strong>Brevo</strong> — sending emails such as invitations and reminders.</li>
+        <li><strong>Supabase</strong>: database and sign-in hosting.</li>
+        <li><strong>Vercel</strong>: application hosting.</li>
+        <li><strong>Brevo</strong>: sending emails such as invitations and reminders.</li>
       </ul>
       <p>We don&apos;t share your data with anyone else unless the law requires it.</p>
 
       <h2>Where your data is processed</h2>
       <p>
         Our providers may process data on servers outside Nigeria and the European Economic Area. Where data is
-        transferred internationally, we rely on appropriate safeguards — such as standard contractual clauses — to keep
+        transferred internationally, we rely on appropriate safeguards, such as standard contractual clauses, to keep
         it protected.
       </p>
 
@@ -100,7 +100,7 @@ export default function PrivacyPage() {
 
       <h2>Cookies</h2>
       <p>
-        We only use essential cookies — the ones needed to sign you in and keep the service secure. We don&apos;t use
+        We only use essential cookies, the ones needed to sign you in and keep the service secure. We don&apos;t use
         advertising or tracking cookies.
       </p>
 

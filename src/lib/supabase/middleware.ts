@@ -69,5 +69,20 @@ export async function updateSession(request: NextRequest) {
     return redirectTo("/");
   }
 
+  // Tenant-suspension gate. A suspended organisation's members are blocked from
+  // the app and sent to /suspended; platform admins are exempt. One joined read
+  // under RLS, only on the private surface.
+  if (user && !isPublic) {
+    const { data: ctx } = await supabase
+      .from("profiles")
+      .select("role, tenant:tenants!profiles_tenant_id_fkey ( status )")
+      .eq("id", user.id)
+      .maybeSingle();
+    const c = ctx as { role: string; tenant: { status: string } | null } | null;
+    const suspended = !!c && c.role !== "platform_admin" && c.tenant?.status === "suspended";
+    if (suspended && pathname !== "/suspended") return redirectTo("/suspended");
+    if (!suspended && pathname === "/suspended") return redirectTo("/");
+  }
+
   return response;
 }
