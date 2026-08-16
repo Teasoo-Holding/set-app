@@ -67,6 +67,16 @@ ${button(args.link, "Open in Teasoo SET")}
   return { subject, html };
 }
 
+/** Sent to the new owner when stakeholders are reassigned to them. */
+export function reassignmentEmail(args: { ownerName: string; link: string }): { subject: string; html: string } {
+  const subject = "Stakeholders have been assigned to you";
+  const html = layout(`<p>Hi ${esc(firstName(args.ownerName))},</p>
+<p>Some stakeholders and their open commitments have been assigned to you in Teasoo SET. Please review them and pick up any follow-ups.</p>
+${button(args.link, "Open your directory")}
+<p>Thanks,<br>Teasoo SET</p>`);
+  return { subject, html };
+}
+
 /** Sent to the person who requested a stakeholder, when an admin decides on it. */
 export function requestDecisionEmail(args: {
   requesterName: string;

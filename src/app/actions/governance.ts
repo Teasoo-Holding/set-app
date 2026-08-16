@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { sendEmail } from "@/lib/brevo";
-import { requestDecisionEmail } from "@/lib/emails";
+import { requestDecisionEmail, reassignmentEmail } from "@/lib/emails";
 import { siteOrigin } from "@/lib/invite";
 
 function revalidate() {
@@ -158,5 +158,24 @@ export async function reassignStakeholders(formData: FormData) {
     .update({ owner_id: toId })
     .eq("owner_id", fromId);
   if (error) throw new Error(error.message);
+
+  // Move OPEN commitments too, so a departing owner stops getting reminders and
+  // the new owner inherits the follow-through (offboarding completeness).
+  await supabase.from("commitments").update({ owner_id: toId }).eq("owner_id", fromId).eq("status", "open");
+
+  // Let the new owner know they've inherited relationships (best-effort).
+  try {
+    const { data: to } = await supabase.from("profiles").select("full_name, email").eq("id", toId).maybeSingle();
+    const t = to as { full_name: string; email: string } | null;
+    if (t?.email) {
+      await sendEmail({
+        to: [{ email: t.email, name: t.full_name }],
+        ...reassignmentEmail({ ownerName: t.full_name, link: `${siteOrigin()}/directory` }),
+      });
+    }
+  } catch (e) {
+    console.error("Reassignment email failed:", e);
+  }
+
   revalidate();
 }
