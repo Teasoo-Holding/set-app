@@ -44,11 +44,21 @@ const useStyles = makeStyles({
   empty: { color: tokens.colorNeutralForeground3, paddingTop: "8px" },
 });
 
+type MyRequest = { id: string; name: string; category: string; status: string; createdAt: string };
+
+const REQ_BADGE: Record<string, "informative" | "success" | "danger"> = {
+  pending: "informative",
+  approved: "success",
+  rejected: "danger",
+};
+const REQ_LABEL: Record<string, string> = { pending: "Pending review", approved: "Approved", rejected: "Not approved" };
+
 export function FieldHome({
   viewer,
   dateLabel,
   myStakeholders,
   commitments,
+  myRequests,
   types,
   categories,
   today,
@@ -57,6 +67,7 @@ export function FieldHome({
   dateLabel: string;
   myStakeholders: StakeholderSummary[];
   commitments: Commitment[];
+  myRequests: MyRequest[];
   types: string[];
   categories: string[];
   today: string;
@@ -124,6 +135,23 @@ export function FieldHome({
             ))
           )}
         </div>
+
+        {myRequests.length > 0 && (
+          <div className={styles.section}>
+            <Title3>My requests</Title3>
+            {myRequests.map((r) => (
+              <div key={r.id} className={styles.commitRow}>
+                <span className={styles.commitDesc}>
+                  <Body1>{r.name}</Body1>
+                  <Caption1 className={styles.muted}>{r.category}</Caption1>
+                </span>
+                <Badge appearance="tint" color={REQ_BADGE[r.status] ?? "informative"}>
+                  {REQ_LABEL[r.status] ?? r.status}
+                </Badge>
+              </div>
+            ))}
+          </div>
+        )}
 
         <div className={styles.section}>
           <Title3>My stakeholders</Title3>

@@ -67,6 +67,27 @@ ${button(args.link, "Open in Teasoo SET")}
   return { subject, html };
 }
 
+/** Sent to the person who requested a stakeholder, when an admin decides on it. */
+export function requestDecisionEmail(args: {
+  requesterName: string;
+  stakeholderName: string;
+  approved: boolean;
+  link?: string;
+}): { subject: string; html: string } {
+  const subject = args.approved
+    ? `Approved: ${args.stakeholderName}`
+    : `Update on your request: ${args.stakeholderName}`;
+  const body = args.approved
+    ? `<p>Good news. Your request to add <strong>${esc(args.stakeholderName)}</strong> has been approved, and it's now in your directory.</p>${
+        args.link ? button(args.link, "Open the stakeholder") : ""
+      }`
+    : `<p>Your request to add <strong>${esc(args.stakeholderName)}</strong> wasn't approved this time. If you think it should be tracked, talk to your administrator.</p>`;
+  const html = layout(`<p>Hi ${esc(firstName(args.requesterName))},</p>
+${body}
+<p>Thanks,<br>Teasoo SET</p>`);
+  return { subject, html };
+}
+
 /** Sent when an escalation opens — to the function Head, and Leadership if Critical. */
 export function escalationOpenedEmail(args: {
   recipientName: string;
