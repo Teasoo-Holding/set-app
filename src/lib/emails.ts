@@ -67,6 +67,27 @@ ${button(args.link, "Open in Teasoo SET")}
   return { subject, html };
 }
 
+/** Sent when an escalation opens — to the function Head, and Leadership if Critical. */
+export function escalationOpenedEmail(args: {
+  recipientName: string;
+  stakeholderName: string;
+  functionName: string;
+  severity: "critical" | "elevated";
+  link: string;
+}): { subject: string; html: string } {
+  const sev = args.severity === "critical" ? "Critical" : "Elevated";
+  const subject = `${sev} escalation: ${args.stakeholderName}`;
+  const html = layout(
+    `<p>Hi ${esc(firstName(args.recipientName))},</p>
+<p>A ${sev.toLowerCase()} escalation has just opened for a stakeholder in <strong>${esc(args.functionName)}</strong>.</p>
+<p><strong>${esc(args.stakeholderName)}</strong></p>
+<p>Open it to see what's happening and decide the next step.</p>
+${button(args.link, "Open the stakeholder")}
+<p>Thanks,<br>Teasoo SET</p>`,
+  );
+  return { subject, html };
+}
+
 /** Invitation to join a tenant (E12-4). */
 export function invitationEmail(args: {
   orgName: string;

@@ -2,9 +2,21 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { notifyEscalationOpened } from "@/lib/escalation-notify";
 
 const RISKS = ["low", "medium", "high"];
 const SENTIMENTS = ["supportive", "neutral", "resistant"];
+
+/** Is there a live (non-resolved) escalation for this stakeholder right now? */
+async function hasActiveEscalation(supabase: ReturnType<typeof createClient>, stakeholderId: string): Promise<boolean> {
+  const { data } = await supabase
+    .from("escalations")
+    .select("id")
+    .eq("stakeholder_id", stakeholderId)
+    .neq("status", "resolved")
+    .maybeSingle();
+  return !!data;
+}
 
 function revalidateStakeholder(id: string) {
   revalidatePath(`/directory/${id}`);
@@ -36,8 +48,13 @@ export async function updateStakeholder(formData: FormData) {
 
   if (Object.keys(patch).length > 0) {
     const supabase = createClient();
+    // A risk/sentiment change can open an escalation (via the DB trigger). Note
+    // whether one was already active so we only notify on a fresh open.
+    const mayEscalate = "risk" in patch || "sentiment" in patch;
+    const wasActive = mayEscalate ? await hasActiveEscalation(supabase, id) : true;
     const { error } = await supabase.from("stakeholders").update(patch).eq("id", id);
     if (error) throw new Error("Sorry, that couldn't be saved. Please try again.");
+    if (mayEscalate && !wasActive) await notifyEscalationOpened(id);
   }
   revalidateStakeholder(id);
 }
@@ -122,11 +139,14 @@ export async function toggleFlag(formData: FormData) {
   const reason = String(formData.get("reason") ?? "").trim() || null;
 
   const supabase = createClient();
+  // Flagging opens an escalation (via the trigger); notify only on a fresh open.
+  const wasActive = flag ? await hasActiveEscalation(supabase, id) : true;
   const { error } = await supabase
     .from("stakeholders")
     .update({ flagged: flag, flag_reason: flag ? reason : null })
     .eq("id", id);
   if (error) throw new Error("Sorry, that couldn't be saved. Please try again.");
+  if (flag && !wasActive) await notifyEscalationOpened(id);
 
   revalidateStakeholder(id);
 }
