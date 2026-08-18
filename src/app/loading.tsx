@@ -1,3 +1,5 @@
+"use client";
+
 import { Spinner } from "@fluentui/react-components";
 
 export default function Loading() {
