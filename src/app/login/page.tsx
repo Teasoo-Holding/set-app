@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import {
   makeStyles,
   tokens,
@@ -8,24 +9,20 @@ import {
   Body1,
   Caption1,
   Text,
-  Avatar,
-  Divider,
   Field,
   Input,
   Button,
   MessageBar,
   MessageBarBody,
 } from "@fluentui/react-components";
-import { ArrowRightRegular } from "@fluentui/react-icons";
 import { BrandMark } from "@/components/BrandMark";
 import { PasswordInput } from "@/components/PasswordInput";
 import {
-  signInAsDemo,
   signInWithMicrosoft,
   signInWithPassword,
   requestPasswordReset,
 } from "@/app/actions/auth";
-import { DEMO_USERS, DEMO_MODE, ENTRA_ENABLED, ROLE_LABEL } from "@/lib/roles";
+import { DEMO_MODE, ENTRA_ENABLED } from "@/lib/roles";
 
 // Accounts are created by invitation only (E12), so there's no self-serve
 // sign-up here — just sign in and password reset.
@@ -108,30 +105,8 @@ const useStyles = makeStyles({
     color: tokens.colorNeutralForeground1,
     ":hover": { backgroundColor: tokens.colorNeutralBackground1Hover, border: `1px solid ${tokens.colorBrandStroke1}` },
   },
-  sectionLabel: {
-    color: tokens.colorNeutralForeground3,
-    textTransform: "uppercase",
-    letterSpacing: "0.04em",
-    fontWeight: tokens.fontWeightSemibold,
-  },
-  roles: { display: "flex", flexDirection: "column", rowGap: "8px" },
-  roleForm: { margin: 0 },
-  roleBtn: {
-    width: "100%",
-    display: "flex",
-    alignItems: "center",
-    columnGap: "12px",
-    textAlign: "left",
-    padding: "12px 14px",
-    borderRadius: tokens.borderRadiusMedium,
-    border: `1px solid ${tokens.colorNeutralStroke2}`,
-    backgroundColor: tokens.colorNeutralBackground1,
-    cursor: "pointer",
-    fontFamily: tokens.fontFamilyBase,
-    ":hover": { backgroundColor: tokens.colorNeutralBackground1Hover, border: `1px solid ${tokens.colorBrandStroke1}` },
-  },
-  roleText: { display: "flex", flexDirection: "column", flexGrow: 1, minWidth: 0 },
-  arrow: { color: tokens.colorNeutralForeground3, fontSize: "18px" },
+  demoHint: { color: tokens.colorNeutralForeground3, textAlign: "center" },
+  demoLink: { color: tokens.colorBrandForeground1, fontWeight: tokens.fontWeightSemibold, textDecoration: "none", ":hover": { textDecoration: "underline" } },
 });
 
 const COPY: Record<Mode, { title: string; blurb: string; cta: string }> = {
@@ -236,30 +211,9 @@ export default function LoginPage({
         )}
 
         {DEMO_MODE && (
-          <>
-            <Divider />
-            <Caption1 className={styles.sectionLabel}>Continue as a demo role</Caption1>
-            <div className={styles.roles}>
-              {DEMO_USERS.map((u) => (
-                <form key={u.email} action={signInAsDemo} className={styles.roleForm}>
-                  <input type="hidden" name="email" value={u.email} />
-                  <button type="submit" className={styles.roleBtn}>
-                    <Avatar name={u.name} color="colorful" />
-                    <span className={styles.roleText}>
-                      <Body1>
-                        <strong>{u.name}</strong>
-                      </Body1>
-                      <Caption1>
-                        {ROLE_LABEL[u.role]}
-                        {u.function ? ` · ${u.function}` : ""}
-                      </Caption1>
-                    </span>
-                    <ArrowRightRegular className={styles.arrow} />
-                  </button>
-                </form>
-              ))}
-            </div>
-          </>
+          <Caption1 className={styles.demoHint}>
+            Just exploring? <Link href="/demo" className={styles.demoLink}>See the demo</Link>.
+          </Caption1>
         )}
       </div>
     </main>

@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://set-app-olive.vercel.app";
-const PRIVATE = ["/home", "/dashboard", "/portfolio", "/governance", "/platform", "/directory", "/escalations", "/account", "/invite", "/api"];
+const PRIVATE = ["/home", "/dashboard", "/portfolio", "/governance", "/platform", "/directory", "/escalations", "/account", "/invite", "/api", "/demo"];
 
 export default function robots(): MetadataRoute.Robots {
   return {
