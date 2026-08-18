@@ -9,6 +9,7 @@ import { SignOutRegular } from "@fluentui/react-icons";
 import { BrandMark } from "@/components/BrandMark";
 import { signOut } from "@/app/actions/auth";
 import { SubmitButton } from "@/components/SubmitButton";
+import { ConfirmButton } from "@/components/ConfirmButton";
 import { createTenant, setTenantStatus, reinviteTenantAdmin } from "@/app/actions/tenants";
 
 export type TenantRow = {
@@ -168,12 +169,23 @@ export function PlatformConsole({
                       <SubmitButton size="small" appearance="subtle">Resend invite</SubmitButton>
                     </form>
                   )}
-                  <form action={setTenantStatus} className={styles.form}>
+                  <form id={`status-${t.id}`} action={setTenantStatus} className={styles.form}>
                     <input type="hidden" name="id" value={t.id} />
                     <input type="hidden" name="status" value={t.status === "active" ? "suspended" : "active"} />
-                    <SubmitButton size="small" appearance={t.status === "active" ? "subtle" : "primary"}>
-                      {t.status === "active" ? "Suspend" : "Reactivate"}
-                    </SubmitButton>
+                    {t.status === "active" ? (
+                      <ConfirmButton
+                        formId={`status-${t.id}`}
+                        size="small"
+                        appearance="subtle"
+                        confirmTitle={`Suspend ${t.name}?`}
+                        confirmBody={`Everyone in ${t.name} will lose access until you reactivate it.`}
+                        confirmLabel="Suspend"
+                      >
+                        Suspend
+                      </ConfirmButton>
+                    ) : (
+                      <SubmitButton size="small" appearance="primary">Reactivate</SubmitButton>
+                    )}
                   </form>
                 </div>
               </div>
