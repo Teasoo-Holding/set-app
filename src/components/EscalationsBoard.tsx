@@ -4,6 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { makeStyles, tokens, Title2, Title3, Body1, Caption1, Text, Button, Badge } from "@fluentui/react-components";
 import { AppShell } from "@/components/AppShell";
+import { SubmitButton } from "@/components/SubmitButton";
 import { setEscalationStatus } from "@/app/actions/escalation";
 import type { Role } from "@/lib/roles";
 
@@ -176,14 +177,14 @@ export function EscalationsBoard({
                       <form action={setEscalationStatus} className={styles.form}>
                         <input type="hidden" name="id" value={e.id} />
                         <input type="hidden" name="action" value={step.action} />
-                        <Button size="small" type="submit">{step.label}</Button>
+                        <SubmitButton size="small">{step.label}</SubmitButton>
                       </form>
                     )}
                     {canManage && (
                       <form action={setEscalationStatus} className={styles.form}>
                         <input type="hidden" name="id" value={e.id} />
                         <input type="hidden" name="action" value="resolve" />
-                        <Button size="small" type="submit" appearance="primary">Resolve</Button>
+                        <SubmitButton size="small" appearance="primary">Resolve</SubmitButton>
                       </form>
                     )}
                   </div>

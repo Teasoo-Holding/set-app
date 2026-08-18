@@ -4,6 +4,7 @@ import * as React from "react";
 import { useFormState } from "react-dom";
 import { makeStyles, tokens, Title2, Title3, Body1, Caption1, Text, Button, Badge, Input, Select, Divider, MessageBar, MessageBarBody, MessageBarTitle } from "@fluentui/react-components";
 import { AppShell } from "@/components/AppShell";
+import { SubmitButton } from "@/components/SubmitButton";
 import { approveRequest, rejectRequest, addTaxonomy, setTaxonomyActive, reassignStakeholders } from "@/app/actions/governance";
 import { inviteUser, revokeInvite } from "@/app/actions/invitations";
 import { ROLE_LABEL, type Role } from "@/lib/roles";
@@ -151,7 +152,7 @@ export function GovernanceAdmin({
                 ))}
               </Select>
             </label>
-            <Button type="submit" appearance="primary">Send invite</Button>
+            <SubmitButton appearance="primary">Send invite</SubmitButton>
           </form>
 
           {invites.length > 0 && (
@@ -171,7 +172,7 @@ export function GovernanceAdmin({
                   </div>
                   <form action={revokeInvite} className={styles.form}>
                     <input type="hidden" name="id" value={i.id} />
-                    <Button type="submit" size="small" appearance="subtle">Revoke</Button>
+                    <SubmitButton size="small" appearance="subtle">Revoke</SubmitButton>
                   </form>
                 </div>
               ))}
@@ -217,11 +218,11 @@ export function GovernanceAdmin({
                 <div className={styles.reqActions}>
                   <form action={rejectRequest} className={styles.form}>
                     <input type="hidden" name="id" value={r.id} />
-                    <Button type="submit" size="small" appearance="subtle">Reject</Button>
+                    <SubmitButton size="small" appearance="subtle">Reject</SubmitButton>
                   </form>
                   <form action={approveRequest} className={styles.form}>
                     <input type="hidden" name="id" value={r.id} />
-                    <Button type="submit" size="small" appearance="primary">Approve</Button>
+                    <SubmitButton size="small" appearance="primary">Approve</SubmitButton>
                   </form>
                 </div>
               </div>
@@ -244,9 +245,9 @@ export function GovernanceAdmin({
                       <form action={setTaxonomyActive} className={styles.form}>
                         <input type="hidden" name="id" value={t.id} />
                         <input type="hidden" name="active" value={t.is_active ? "false" : "true"} />
-                        <Button type="submit" size="small" appearance="subtle">
+                        <SubmitButton size="small" appearance="subtle">
                           {t.is_active ? "Disable" : "Enable"}
-                        </Button>
+                        </SubmitButton>
                       </form>
                     </span>
                   ))}
@@ -254,7 +255,7 @@ export function GovernanceAdmin({
                 <form action={addTaxonomy} className={styles.addRow}>
                   <input type="hidden" name="kind" value={k.key} />
                   <Input name="value" size="small" placeholder={k.addLabel} />
-                  <Button type="submit" size="small" appearance="outline">Add</Button>
+                  <SubmitButton size="small" appearance="outline">Add</SubmitButton>
                 </form>
                 <Divider />
               </div>
@@ -285,9 +286,9 @@ export function GovernanceAdmin({
                 ))}
               </Select>
             </label>
-            <Button type="submit" appearance="primary" disabled={!fromId || !toId || fromId === toId}>
+            <SubmitButton appearance="primary" disabled={!fromId || !toId || fromId === toId}>
               {movingCount > 0 ? `Reassign ${movingCount}` : "Reassign"}
-            </Button>
+            </SubmitButton>
           </form>
         </div>
       </main>
