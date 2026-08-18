@@ -4,6 +4,8 @@ import * as React from "react";
 import { useFormState } from "react-dom";
 import { makeStyles, tokens, Title2, Title3, Body1, Caption1, Text, Button, Badge, Input, Select, Divider, MessageBar, MessageBarBody, MessageBarTitle } from "@fluentui/react-components";
 import { AppShell } from "@/components/AppShell";
+import { SubmitButton } from "@/components/SubmitButton";
+import { ConfirmButton } from "@/components/ConfirmButton";
 import { approveRequest, rejectRequest, addTaxonomy, setTaxonomyActive, reassignStakeholders } from "@/app/actions/governance";
 import { inviteUser, revokeInvite } from "@/app/actions/invitations";
 import { ROLE_LABEL, type Role } from "@/lib/roles";
@@ -99,6 +101,8 @@ export function GovernanceAdmin({
   const [fromId, setFromId] = React.useState<string>("");
   const [toId, setToId] = React.useState<string>("");
   const movingCount = persons.find((p) => p.id === fromId)?.owns ?? 0;
+  const fromName = persons.find((p) => p.id === fromId)?.name ?? "";
+  const toName = persons.find((p) => p.id === toId)?.name ?? "";
 
   return (
     <AppShell profile={viewer} active="governance">
@@ -151,7 +155,7 @@ export function GovernanceAdmin({
                 ))}
               </Select>
             </label>
-            <Button type="submit" appearance="primary">Send invite</Button>
+            <SubmitButton appearance="primary">Send invite</SubmitButton>
           </form>
 
           {invites.length > 0 && (
@@ -169,9 +173,18 @@ export function GovernanceAdmin({
                     </div>
                     <Caption1 className={styles.muted}>{`Invited ${fmt(i.createdAt)} · expires ${fmt(i.expiresAt)}`}</Caption1>
                   </div>
-                  <form action={revokeInvite} className={styles.form}>
+                  <form id={`revoke-${i.id}`} action={revokeInvite} className={styles.form}>
                     <input type="hidden" name="id" value={i.id} />
-                    <Button type="submit" size="small" appearance="subtle">Revoke</Button>
+                    <ConfirmButton
+                      formId={`revoke-${i.id}`}
+                      size="small"
+                      appearance="subtle"
+                      confirmTitle="Revoke this invitation?"
+                      confirmBody={`The link sent to ${i.email} will stop working. You can send a new invite later.`}
+                      confirmLabel="Revoke"
+                    >
+                      Revoke
+                    </ConfirmButton>
                   </form>
                 </div>
               ))}
@@ -217,11 +230,11 @@ export function GovernanceAdmin({
                 <div className={styles.reqActions}>
                   <form action={rejectRequest} className={styles.form}>
                     <input type="hidden" name="id" value={r.id} />
-                    <Button type="submit" size="small" appearance="subtle">Reject</Button>
+                    <SubmitButton size="small" appearance="subtle">Reject</SubmitButton>
                   </form>
                   <form action={approveRequest} className={styles.form}>
                     <input type="hidden" name="id" value={r.id} />
-                    <Button type="submit" size="small" appearance="primary">Approve</Button>
+                    <SubmitButton size="small" appearance="primary">Approve</SubmitButton>
                   </form>
                 </div>
               </div>
@@ -244,9 +257,9 @@ export function GovernanceAdmin({
                       <form action={setTaxonomyActive} className={styles.form}>
                         <input type="hidden" name="id" value={t.id} />
                         <input type="hidden" name="active" value={t.is_active ? "false" : "true"} />
-                        <Button type="submit" size="small" appearance="subtle">
+                        <SubmitButton size="small" appearance="subtle">
                           {t.is_active ? "Disable" : "Enable"}
-                        </Button>
+                        </SubmitButton>
                       </form>
                     </span>
                   ))}
@@ -254,7 +267,7 @@ export function GovernanceAdmin({
                 <form action={addTaxonomy} className={styles.addRow}>
                   <input type="hidden" name="kind" value={k.key} />
                   <Input name="value" size="small" placeholder={k.addLabel} />
-                  <Button type="submit" size="small" appearance="outline">Add</Button>
+                  <SubmitButton size="small" appearance="outline">Add</SubmitButton>
                 </form>
                 <Divider />
               </div>
@@ -266,7 +279,7 @@ export function GovernanceAdmin({
         <div className={styles.card}>
           <Title3>Reassign ownership</Title3>
           <Caption1 className={styles.muted}>Move every stakeholder from one owner to another. This is useful when someone leaves.</Caption1>
-          <form action={reassignStakeholders} className={styles.reassign}>
+          <form id="reassign-form" action={reassignStakeholders} className={styles.reassign}>
             <label className={styles.field}>
               <Caption1>From</Caption1>
               <Select name="from" value={fromId} onChange={(_, d) => setFromId(d.value)}>
@@ -285,9 +298,16 @@ export function GovernanceAdmin({
                 ))}
               </Select>
             </label>
-            <Button type="submit" appearance="primary" disabled={!fromId || !toId || fromId === toId}>
+            <ConfirmButton
+              formId="reassign-form"
+              appearance="primary"
+              disabled={!fromId || !toId || fromId === toId}
+              confirmTitle="Reassign ownership?"
+              confirmBody={`This moves all ${movingCount} of ${fromName}'s stakeholders to ${toName}. It can't be undone in bulk.`}
+              confirmLabel={movingCount > 0 ? `Reassign ${movingCount}` : "Reassign"}
+            >
               {movingCount > 0 ? `Reassign ${movingCount}` : "Reassign"}
-            </Button>
+            </ConfirmButton>
           </form>
         </div>
       </main>

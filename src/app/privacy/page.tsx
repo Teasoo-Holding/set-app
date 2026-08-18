@@ -3,8 +3,9 @@ import { LegalPage } from "@/components/LegalPage";
 import { COMPANY } from "@/lib/company";
 
 export const metadata: Metadata = {
-  title: "Privacy notice · Teasoo SET",
+  title: "Privacy notice",
   description: "How Teasoo SET handles personal data, and your rights.",
+  alternates: { canonical: "/privacy" },
 };
 
 export default function PrivacyPage() {

@@ -8,6 +8,7 @@ export async function middleware(request: NextRequest) {
 export const config = {
   // Run on all routes except static assets and image files.
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    // Skip static assets and SEO/generated routes so crawlers aren't bounced to /login.
+    "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|manifest.webmanifest|opengraph-image|llms.txt|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

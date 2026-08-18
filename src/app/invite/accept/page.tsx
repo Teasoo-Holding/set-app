@@ -1,7 +1,11 @@
+import type { Metadata } from "next";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { hashToken } from "@/lib/invite";
 import { ROLE_LABEL, type Role } from "@/lib/roles";
 import { AcceptInviteForm, AcceptInviteInvalid } from "@/components/AcceptInviteForm";
+
+// Tokenised, single-use — must never be indexed.
+export const metadata: Metadata = { title: "Accept your invitation", robots: { index: false, follow: false } };
 
 /**
  * E12-5 — public invite-accept page. Validates the one-time token via the

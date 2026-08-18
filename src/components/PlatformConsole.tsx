@@ -8,6 +8,8 @@ import {
 import { SignOutRegular } from "@fluentui/react-icons";
 import { BrandMark } from "@/components/BrandMark";
 import { signOut } from "@/app/actions/auth";
+import { SubmitButton } from "@/components/SubmitButton";
+import { ConfirmButton } from "@/components/ConfirmButton";
 import { createTenant, setTenantStatus, reinviteTenantAdmin } from "@/app/actions/tenants";
 
 export type TenantRow = {
@@ -91,7 +93,7 @@ export function PlatformConsole({
             <Field label="First admin's email" className={styles.field}>
               <Input name="admin_email" type="email" required placeholder="admin@acme.com" />
             </Field>
-            <Button type="submit" appearance="primary">Create &amp; invite</Button>
+            <SubmitButton appearance="primary">Create &amp; invite</SubmitButton>
           </form>
 
           {createState?.error && (
@@ -164,15 +166,26 @@ export function PlatformConsole({
                       <input type="hidden" name="tenant_id" value={t.id} />
                       <input type="hidden" name="email" value={t.pendingAdminEmail} />
                       <input type="hidden" name="name" value={t.name} />
-                      <Button type="submit" size="small" appearance="subtle">Resend invite</Button>
+                      <SubmitButton size="small" appearance="subtle">Resend invite</SubmitButton>
                     </form>
                   )}
-                  <form action={setTenantStatus} className={styles.form}>
+                  <form id={`status-${t.id}`} action={setTenantStatus} className={styles.form}>
                     <input type="hidden" name="id" value={t.id} />
                     <input type="hidden" name="status" value={t.status === "active" ? "suspended" : "active"} />
-                    <Button type="submit" size="small" appearance={t.status === "active" ? "subtle" : "primary"}>
-                      {t.status === "active" ? "Suspend" : "Reactivate"}
-                    </Button>
+                    {t.status === "active" ? (
+                      <ConfirmButton
+                        formId={`status-${t.id}`}
+                        size="small"
+                        appearance="subtle"
+                        confirmTitle={`Suspend ${t.name}?`}
+                        confirmBody={`Everyone in ${t.name} will lose access until you reactivate it.`}
+                        confirmLabel="Suspend"
+                      >
+                        Suspend
+                      </ConfirmButton>
+                    ) : (
+                      <SubmitButton size="small" appearance="primary">Reactivate</SubmitButton>
+                    )}
                   </form>
                 </div>
               </div>

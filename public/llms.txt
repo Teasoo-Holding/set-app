@@ -1,0 +1,40 @@
+# Teasoo SET
+
+> Teasoo SET (Stakeholder Engagement Tracker) is a multi-tenant SaaS by Teasoo
+> Consulting that gives organisations one authoritative source of truth for
+> stakeholder relationships. Field teams log engagements in seconds; leadership
+> gets a live view of risk, sentiment and commitments across the portfolio.
+
+## What it is
+Teasoo SET is a web application for logging stakeholder engagements and tracking
+risk, sentiment and commitments, with strict database-level multi-tenant isolation.
+
+## Who it is for
+Multinational and multi-team organisations whose field teams engage regulators,
+government, community and commercial stakeholders, and whose leadership needs live
+risk visibility instead of monthly decks.
+
+## Key features
+- Central, tiered stakeholder directory (one record per stakeholder)
+- Fast engagement logging
+- Automatic risk scoring and escalations
+- Commitment tracking with reminders
+- Leadership portfolio dashboards
+- Role-based access enforced in the database
+
+## Access model
+Access is by invitation only. Contact Teasoo Consulting to arrange a pilot.
+
+## Company
+Teasoo Consulting — https://teasooconsulting.com — info@teasooconsulting.com
++234 803 443 3595 — Benin City, Edo State, Nigeria.
+
+## Compliance
+Built to the EU GDPR and the Nigeria Data Protection Act 2023 (NDPA). Strict
+tenant isolation; essential cookies only; no advertising or data sale.
+
+## Public pages
+- Home: /
+- Terms of service: /terms
+- Privacy notice: /privacy
+- Sign in: /login

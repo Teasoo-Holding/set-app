@@ -4,6 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { makeStyles, tokens, Title2, Title3, Body1, Caption1, Text, Button, Badge } from "@fluentui/react-components";
 import { AppShell } from "@/components/AppShell";
+import { SubmitButton } from "@/components/SubmitButton";
 import { setEscalationStatus } from "@/app/actions/escalation";
 import type { Role } from "@/lib/roles";
 
@@ -34,6 +35,7 @@ const statusLabel = {
 const riskLabel = { high: "High risk", medium: "Medium risk", low: "Low risk" } as const;
 const riskColor = { high: "danger", medium: "warning", low: "success" } as const;
 const sentLabel = { supportive: "Supportive", neutral: "Neutral", resistant: "Resistant" } as const;
+const sentColor = { supportive: "success", neutral: "warning", resistant: "danger" } as const;
 
 // The next lifecycle step for the current status (E6-5).
 function nextStep(status: EscalationItem["status"]): { action: string; label: string } | null {
@@ -162,7 +164,7 @@ export function EscalationsBoard({
 
                   <div className={styles.tags}>
                     <Badge appearance="tint" color={riskColor[e.risk]} size="small">{riskLabel[e.risk]}</Badge>
-                    <Badge appearance="tint" color="subtle" size="small">{sentLabel[e.sentiment]}</Badge>
+                    <Badge appearance="tint" color={sentColor[e.sentiment]} size="small">{sentLabel[e.sentiment]}</Badge>
                   </div>
 
                   {e.summary && <Body1 className={styles.meta}>{e.summary}</Body1>}
@@ -176,14 +178,14 @@ export function EscalationsBoard({
                       <form action={setEscalationStatus} className={styles.form}>
                         <input type="hidden" name="id" value={e.id} />
                         <input type="hidden" name="action" value={step.action} />
-                        <Button size="small" type="submit">{step.label}</Button>
+                        <SubmitButton size="small">{step.label}</SubmitButton>
                       </form>
                     )}
                     {canManage && (
                       <form action={setEscalationStatus} className={styles.form}>
                         <input type="hidden" name="id" value={e.id} />
                         <input type="hidden" name="action" value="resolve" />
-                        <Button size="small" type="submit" appearance="primary">Resolve</Button>
+                        <SubmitButton size="small" appearance="primary">Resolve</SubmitButton>
                       </form>
                     )}
                   </div>

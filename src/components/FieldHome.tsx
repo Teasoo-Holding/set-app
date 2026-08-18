@@ -4,6 +4,7 @@ import Link from "next/link";
 import { makeStyles, tokens, Title2, Title3, Body1, Caption1, Text, Badge, Button } from "@fluentui/react-components";
 import { AppShell } from "@/components/AppShell";
 import { EmptyState } from "@/components/EmptyState";
+import { SubmitButton } from "@/components/SubmitButton";
 import { StakeholderCard, type StakeholderSummary } from "@/components/StakeholderCard";
 import { LogEngagementDialog } from "@/components/LogEngagementDialog";
 import { RequestStakeholderDialog } from "@/components/RequestStakeholderDialog";
@@ -128,7 +129,7 @@ export function FieldHome({
                   </Badge>
                   <form action={completeCommitment} className={styles.form}>
                     <input type="hidden" name="id" value={c.id} />
-                    <Button type="submit" size="small" appearance="subtle">Done</Button>
+                    <SubmitButton size="small" appearance="subtle">Done</SubmitButton>
                   </form>
                 </span>
               </div>

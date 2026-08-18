@@ -24,7 +24,6 @@ export type DirectoryRow = {
   owner_id: string;
 };
 
-const CATEGORIES = ["Regulator", "Government", "Community", "Commercial"];
 const RISK_RANK = { high: 3, medium: 2, low: 1 } as const;
 
 function formatDate(iso: string | null): string {
@@ -154,7 +153,7 @@ export function DirectoryView({
 
         <div className={styles.chipRow}>
           {chip("All", category, setCategory, "All")}
-          {CATEGORIES.map((c) => chip(c, category, setCategory, c))}
+          {categories.map((c) => chip(c, category, setCategory, c))}
         </div>
 
         <div className={styles.chipRow}>
