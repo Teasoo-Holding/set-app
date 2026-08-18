@@ -5,20 +5,14 @@ import { commitmentReminderEmail, headOverdueEmail } from "@/lib/emails";
 
 export const dynamic = "force-dynamic";
 
-type Owner = {
-  id: string;
-  full_name: string;
-  email: string;
-  manager_id: string | null;
-  functional_manager_id: string | null;
-};
+type Owner = { id: string; full_name: string; email: string };
 type Row = {
   id: string;
   description: string;
   due_date: string;
   priority: string;
   owner: Owner | null;
-  stakeholder: { id: string; name: string; tier: number } | null;
+  stakeholder: { id: string; name: string; tier: number; function: string; tenant_id: string } | null;
 };
 
 function iso(d: Date): string {
@@ -52,8 +46,8 @@ export async function GET(request: Request) {
     .from("commitments")
     .select(
       "id, description, due_date, priority, " +
-        "owner:profiles!commitments_owner_id_fkey ( id, full_name, email, manager_id, functional_manager_id ), " +
-        "stakeholder:stakeholders!commitments_stakeholder_id_fkey ( id, name, tier )",
+        "owner:profiles!commitments_owner_id_fkey ( id, full_name, email ), " +
+        "stakeholder:stakeholders!commitments_stakeholder_id_fkey ( id, name, tier, function, tenant_id )",
     )
     .eq("status", "open")
     .lte("due_date", t3Str);
@@ -65,22 +59,25 @@ export async function GET(request: Request) {
 
   const rows = (data as unknown as Row[]) ?? [];
 
-  // Pre-fetch Head emails for Tier-1 overdue items.
-  const headIds = new Set<string>();
+  // Pre-fetch the Head of each function that has a Tier-1 overdue item. The
+  // Head of a function is the role='head' profile for that function in the
+  // tenant (function-scoped, matching how the rest of the app reasons).
+  const headKeys = new Set<string>(); // `${tenant_id}|${function}`
   for (const r of rows) {
-    if (r.stakeholder && r.stakeholder.tier === 1 && r.due_date < todayStr && r.owner) {
-      const head = r.owner.functional_manager_id ?? r.owner.manager_id;
-      if (head) headIds.add(head);
+    if (r.stakeholder && r.stakeholder.tier === 1 && r.due_date < todayStr) {
+      headKeys.add(`${r.stakeholder.tenant_id}|${r.stakeholder.function}`);
     }
   }
   const headEmail = new Map<string, { email: string; full_name: string }>();
-  if (headIds.size > 0) {
+  if (headKeys.size > 0) {
+    const tenantIds = [...new Set([...headKeys].map((k) => k.split("|")[0]))];
     const { data: heads } = await admin
       .from("profiles")
-      .select("id, full_name, email")
-      .in("id", [...headIds]);
-    for (const h of (heads as { id: string; full_name: string; email: string }[]) ?? []) {
-      headEmail.set(h.id, { email: h.email, full_name: h.full_name });
+      .select("full_name, email, function, tenant_id")
+      .eq("role", "head")
+      .in("tenant_id", tenantIds);
+    for (const h of (heads as { full_name: string; email: string; function: string; tenant_id: string }[]) ?? []) {
+      headEmail.set(`${h.tenant_id}|${h.function}`, { email: h.email, full_name: h.full_name });
     }
   }
 
@@ -136,8 +133,7 @@ export async function GET(request: Request) {
 
     // E7-3: Tier-1 overdue also emails the owner's Head (separately, addressed to them).
     if (type === "overdue" && r.stakeholder?.tier === 1) {
-      const headId = r.owner.functional_manager_id ?? r.owner.manager_id;
-      const head = headId ? headEmail.get(headId) : undefined;
+      const head = headEmail.get(`${r.stakeholder.tenant_id}|${r.stakeholder.function}`);
       if (head) {
         const headMail = headOverdueEmail({
           headName: head.full_name,
