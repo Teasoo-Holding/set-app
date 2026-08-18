@@ -192,7 +192,7 @@ export function FunctionDashboard({
           ) : (
             activity.map((a) => (
               <div key={a.id} className={styles.row}>
-                <span className={styles.dot} style={{ backgroundColor: sentDot[a.sentiment], marginTop: "6px" }} />
+                <span className={styles.dot} style={{ backgroundColor: sentDot[a.sentiment], marginTop: "6px" }} role="img" aria-label={`Sentiment: ${a.sentiment}`} />
                 <span className={styles.rowGrow}>
                   <div className={styles.actTop}>
                     <Text>

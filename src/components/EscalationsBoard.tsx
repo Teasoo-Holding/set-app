@@ -35,6 +35,7 @@ const statusLabel = {
 const riskLabel = { high: "High risk", medium: "Medium risk", low: "Low risk" } as const;
 const riskColor = { high: "danger", medium: "warning", low: "success" } as const;
 const sentLabel = { supportive: "Supportive", neutral: "Neutral", resistant: "Resistant" } as const;
+const sentColor = { supportive: "success", neutral: "warning", resistant: "danger" } as const;
 
 // The next lifecycle step for the current status (E6-5).
 function nextStep(status: EscalationItem["status"]): { action: string; label: string } | null {
@@ -163,7 +164,7 @@ export function EscalationsBoard({
 
                   <div className={styles.tags}>
                     <Badge appearance="tint" color={riskColor[e.risk]} size="small">{riskLabel[e.risk]}</Badge>
-                    <Badge appearance="tint" color="subtle" size="small">{sentLabel[e.sentiment]}</Badge>
+                    <Badge appearance="tint" color={sentColor[e.sentiment]} size="small">{sentLabel[e.sentiment]}</Badge>
                   </div>
 
                   {e.summary && <Body1 className={styles.meta}>{e.summary}</Body1>}
