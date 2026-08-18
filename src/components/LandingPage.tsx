@@ -9,6 +9,7 @@ import {
   ArrowRightRegular, CheckmarkCircleFilled, DismissCircleFilled, TableRegular,
 } from "@fluentui/react-icons";
 import { MarketingHeader, MarketingFooter, LogoMark } from "@/components/MarketingChrome";
+import { LandingJsonLd } from "@/components/JsonLd";
 import { COMPANY } from "@/lib/company";
 
 const ARCHIVO = "var(--font-archivo), -apple-system, Helvetica, Arial, sans-serif";
@@ -139,6 +140,7 @@ export function LandingPage() {
   const s = useStyles();
   return (
     <div className={s.page}>
+      <LandingJsonLd />
       <MarketingHeader />
 
       {/* Hero */}
