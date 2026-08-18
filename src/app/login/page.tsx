@@ -163,7 +163,7 @@ export default function LoginPage({
     <main className={styles.page}>
       <div className={styles.brand}>
         <BrandMark size="md" />
-        <Text as="h1" weight="semibold" size={500}>
+        <Text as="span" weight="semibold" size={500}>
           Teasoo SET
         </Text>
       </div>

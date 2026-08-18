@@ -25,7 +25,7 @@ function Shell({ children }: { children: React.ReactNode }) {
     <main className={styles.page}>
       <div className={styles.brand}>
         <BrandMark size="md" />
-        <Text as="h1" weight="semibold" size={500}>Teasoo SET</Text>
+        <Text as="span" weight="semibold" size={500}>Teasoo SET</Text>
       </div>
       <div className={styles.card}>{children}</div>
     </main>
