@@ -1,6 +1,6 @@
 import { COMPANY } from "@/lib/company";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://set-app-olive.vercel.app";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://set.teasooconsulting.com";
 
 /**
  * schema.org JSON-LD for the landing page: ties the product to Teasoo Consulting
