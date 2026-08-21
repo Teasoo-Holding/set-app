@@ -62,6 +62,7 @@ export default function PrivacyPage() {
         <li><strong>Vercel</strong>: application hosting.</li>
         <li><strong>Brevo</strong>: sending emails such as invitations and reminders.</li>
         <li><strong>PostHog</strong>: privacy-focused product analytics. It shows how the app is used, so we can improve it. It never records your screen, and links containing tokens are not sent.</li>
+        <li><strong>Sentry</strong>: error monitoring, so we can find and fix faults. It receives error details and technical diagnostics. It does not receive your name, email, cookies, or the contents of stakeholder records.</li>
       </ul>
       <p>We don&apos;t share your data with anyone else unless the law requires it.</p>
 
