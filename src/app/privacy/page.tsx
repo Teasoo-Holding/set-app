@@ -107,7 +107,7 @@ export default function PrivacyPage() {
       </p>
       <p>
         We also use privacy-focused analytics (PostHog) to understand how the app is used so we can improve it. This
-        runs <strong>only if you accept</strong> when we ask — you can decline, and nothing is collected. Our analytics
+        runs <strong>only if you accept</strong> when we ask. You can decline, and nothing is collected. Our analytics
         never records your screen, strips any tokens or links before sending, and identifies you only by a random
         identifier, never by your name or email. We don&apos;t use advertising cookies, and we don&apos;t sell your data.
       </p>
