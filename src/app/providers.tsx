@@ -10,6 +10,7 @@ import {
   renderToStyleElements,
 } from "@fluentui/react-components";
 import { sisLightTheme } from "@/lib/theme";
+import { PostHogProvider } from "@/components/PostHogProvider";
 
 /**
  * SSR-safe Fluent UI v9 provider for the Next.js App Router.
@@ -31,7 +32,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <RendererProvider renderer={renderer}>
       <SSRProvider>
-        <FluentProvider theme={sisLightTheme}>{children}</FluentProvider>
+        <FluentProvider theme={sisLightTheme}>
+          <PostHogProvider>{children}</PostHogProvider>
+        </FluentProvider>
       </SSRProvider>
     </RendererProvider>
   );

@@ -61,6 +61,7 @@ export default function PrivacyPage() {
         <li><strong>Supabase</strong>: database and sign-in hosting.</li>
         <li><strong>Vercel</strong>: application hosting.</li>
         <li><strong>Brevo</strong>: sending emails such as invitations and reminders.</li>
+        <li><strong>PostHog</strong>: privacy-focused product analytics. It shows how the app is used, so we can improve it. It never records your screen, and links containing tokens are not sent.</li>
       </ul>
       <p>We don&apos;t share your data with anyone else unless the law requires it.</p>
 
@@ -99,10 +100,16 @@ export default function PrivacyPage() {
         control, contact our Data Protection Officer at <a href={`mailto:${COMPANY.dpoEmail}`}>{COMPANY.dpoEmail}</a>.
       </p>
 
-      <h2>Cookies</h2>
+      <h2>Cookies and analytics</h2>
       <p>
-        We only use essential cookies, the ones needed to sign you in and keep the service secure. We don&apos;t use
-        advertising or tracking cookies.
+        We use essential cookies to sign you in and keep the service secure. These are always on because the service
+        can&apos;t work without them.
+      </p>
+      <p>
+        We also use privacy-focused analytics (PostHog) to understand how the app is used so we can improve it. This
+        runs <strong>only if you accept</strong> when we ask — you can decline, and nothing is collected. Our analytics
+        never records your screen, strips any tokens or links before sending, and identifies you only by a random
+        identifier, never by your name or email. We don&apos;t use advertising cookies, and we don&apos;t sell your data.
       </p>
 
       <h2>Complaints</h2>
