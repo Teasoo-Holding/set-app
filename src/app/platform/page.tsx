@@ -44,5 +44,11 @@ export default async function PlatformPage() {
     pendingAdminEmail: pendingAdmin.get(t.id) ?? null,
   }));
 
-  return <PlatformConsole viewer={{ full_name: me.full_name }} tenants={rows} />;
+  return (
+    <PlatformConsole
+      viewer={{ full_name: me.full_name }}
+      tenants={rows}
+      sentryTestEnabled={process.env.SENTRY_TEST === "1"}
+    />
+  );
 }

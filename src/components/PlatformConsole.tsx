@@ -11,6 +11,7 @@ import { signOut } from "@/app/actions/auth";
 import { SubmitButton } from "@/components/SubmitButton";
 import { ConfirmButton } from "@/components/ConfirmButton";
 import { createTenant, setTenantStatus, reinviteTenantAdmin } from "@/app/actions/tenants";
+import { SentryDiagnostics } from "@/components/SentryDiagnostics";
 
 export type TenantRow = {
   id: string;
@@ -53,9 +54,11 @@ const useStyles = makeStyles({
 export function PlatformConsole({
   viewer,
   tenants,
+  sentryTestEnabled = false,
 }: {
   viewer: { full_name: string };
   tenants: TenantRow[];
+  sentryTestEnabled?: boolean;
 }) {
   const styles = useStyles();
   const [createState, createAction] = useFormState(createTenant, null);
@@ -192,6 +195,18 @@ export function PlatformConsole({
             ))
           )}
         </div>
+
+        {/* Diagnostics — only when SENTRY_TEST is enabled */}
+        {sentryTestEnabled && (
+          <div className={styles.card}>
+            <Title3>Diagnostics</Title3>
+            <Caption1 className={styles.muted}>
+              Verify error monitoring by sending a test error to Sentry. This card is only shown while diagnostics are
+              enabled, and only to platform administrators.
+            </Caption1>
+            <SentryDiagnostics />
+          </div>
+        )}
       </main>
     </div>
   );
