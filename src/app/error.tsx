@@ -1,5 +1,7 @@
 "use client";
 
+import * as React from "react";
+import * as Sentry from "@sentry/nextjs";
 import { makeStyles, tokens, Title2, Body1, Button } from "@fluentui/react-components";
 
 const useStyles = makeStyles({
@@ -17,8 +19,11 @@ const useStyles = makeStyles({
   sub: { color: tokens.colorNeutralForeground2, maxWidth: "48ch" },
 });
 
-export default function Error({ reset }: { error: Error & { digest?: string }; reset: () => void }) {
+export default function Error({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   const styles = useStyles();
+  React.useEffect(() => {
+    Sentry.captureException(error);
+  }, [error]);
   return (
     <div className={styles.wrap}>
       <Title2>Something didn&apos;t load</Title2>
