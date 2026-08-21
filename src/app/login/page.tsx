@@ -52,6 +52,7 @@ const useStyles = makeStyles({
     justifyContent: "space-between",
     rowGap: "28px",
     padding: "52px 60px 48px",
+    "@media (min-width: 1440px)": { padding: "72px 88px 64px" },
     "@media (max-width: 999px)": { padding: "34px 34px 30px", rowGap: "18px" },
     "@media (max-width: 719px)": { display: "none" },
   },
@@ -73,6 +74,7 @@ const useStyles = makeStyles({
   brandH1: {
     fontFamily: ARCHIVO, fontWeight: 800, fontSize: "40px", lineHeight: 1.12, letterSpacing: "-0.02em",
     color: "#ffffff", margin: 0, maxWidth: "15ch",
+    "@media (min-width: 1440px)": { fontSize: "44px" },
     "@media (max-width: 999px)": { fontSize: "27px" },
   },
   points: { listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", rowGap: "14px", "@media (max-width: 999px)": { rowGap: "10px" } },
@@ -88,10 +90,11 @@ const useStyles = makeStyles({
     alignItems: "center",
     justifyContent: "center",
     padding: "48px 52px",
+    "@media (min-width: 1440px)": { padding: "64px 96px" },
     "@media (max-width: 999px)": { padding: "32px 36px" },
     "@media (max-width: 719px)": { padding: "40px 22px", alignItems: "flex-start" },
   },
-  formInner: { width: "100%", maxWidth: "420px" },
+  formInner: { width: "100%", maxWidth: "440px", "@media (min-width: 1440px)": { maxWidth: "460px" } },
 
   mobileBrand: {
     display: "none",
