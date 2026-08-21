@@ -95,8 +95,8 @@ function CookieConsent() {
   return (
     <div className={styles.bar} role="dialog" aria-label="Analytics consent">
       <Caption1 className={styles.text}>
-        We use privacy-focused analytics to improve Teasoo SET — no screen recording, and links are never sent. You can
-        decline. See our <a href="/privacy" className={styles.link}>Privacy notice</a>.
+        We use analytics to understand how people use Teasoo SET, so we can improve it. We do not record your screen, and
+        we never send links. You can decline. Read our <a href="/privacy" className={styles.link}>privacy notice</a>.
       </Caption1>
       <div className={styles.actions}>
         <Button size="small" appearance="subtle" onClick={() => choose("out")}>Decline</Button>
