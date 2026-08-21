@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Archivo, Figtree } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
+import { Analytics } from "@/components/Analytics";
 
 // Marketing-page display + body faces (design handoff). Exposed as CSS variables
 // only — the authenticated app keeps its Fluent font; marketing styles opt in
@@ -49,7 +50,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${archivo.variable} ${figtree.variable}`}>
-        <Providers>{children}</Providers>
+        <Providers>
+          <Analytics />
+          {children}
+        </Providers>
       </body>
     </html>
   );

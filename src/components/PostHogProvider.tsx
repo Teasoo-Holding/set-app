@@ -4,14 +4,15 @@ import * as React from "react";
 import posthog from "posthog-js";
 import { PostHogProvider as PHProvider } from "posthog-js/react";
 import { usePathname, useSearchParams } from "next/navigation";
+import { makeStyles, tokens, Button, Caption1 } from "@fluentui/react-components";
 
 const KEY = process.env.NEXT_PUBLIC_POSTHOG_KEY;
 const HOST = process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "https://us.i.posthog.com";
 
 /**
- * Strip query strings from any URL property before it leaves the browser.
- * Invite / password-reset links carry a token in the query, and we must never
- * send those (or any query param) to analytics.
+ * Strip query strings and hashes from any URL property before it leaves the
+ * browser. Invite / password-reset links carry a token in the query, and we
+ * must never send those (or any query param) to analytics.
  */
 function sanitize(properties: Record<string, unknown>): Record<string, unknown> {
   for (const k of ["$current_url", "$pathname", "$referrer", "$initial_current_url"]) {
@@ -24,12 +25,13 @@ function sanitize(properties: Record<string, unknown>): Record<string, unknown> 
 if (typeof window !== "undefined" && KEY && !posthog.__loaded) {
   posthog.init(KEY, {
     api_host: HOST,
-    // Privacy-first defaults for a product holding stakeholder data:
+    // Privacy-first for a product holding stakeholder data:
     person_profiles: "identified_only", // no anonymous person profiles
-    capture_pageview: false, // we send pageviews manually (App Router) with URLs sanitised
+    capture_pageview: false, // sent manually (App Router), path only
     capture_pageleave: true,
     disable_session_recording: true, // never record the screen
     respect_dnt: true,
+    opt_out_capturing_by_default: true, // nothing is captured until the user consents
     sanitize_properties: sanitize,
   });
 }
@@ -39,10 +41,69 @@ function PageviewTracker() {
   const searchParams = useSearchParams();
   React.useEffect(() => {
     if (!KEY || typeof window === "undefined") return;
-    // Path only — no query string (tokens live there).
-    posthog.capture("$pageview", { $current_url: window.location.origin + pathname });
+    posthog.capture("$pageview", { $current_url: window.location.origin + pathname }); // path only
   }, [pathname, searchParams]);
   return null;
+}
+
+const useConsentStyles = makeStyles({
+  bar: {
+    position: "fixed",
+    left: "16px",
+    right: "16px",
+    bottom: "16px",
+    zIndex: 1000,
+    maxWidth: "620px",
+    margin: "0 auto",
+    display: "flex",
+    alignItems: "center",
+    columnGap: "16px",
+    rowGap: "10px",
+    flexWrap: "wrap",
+    padding: "14px 18px",
+    borderRadius: tokens.borderRadiusLarge,
+    backgroundColor: tokens.colorNeutralBackground1,
+    border: `1px solid ${tokens.colorNeutralStroke1}`,
+    boxShadow: tokens.shadow16,
+  },
+  text: { flexGrow: 1, minWidth: "220px", color: tokens.colorNeutralForeground2 },
+  actions: { display: "flex", alignItems: "center", columnGap: "8px" },
+  link: { color: tokens.colorBrandForeground1 },
+});
+
+/** Opt-in cookie/analytics consent, persisted locally + reflected to PostHog. */
+function CookieConsent() {
+  const styles = useConsentStyles();
+  const [decided, setDecided] = React.useState(true); // hide until we've checked (no hydration flash)
+
+  React.useEffect(() => {
+    const choice = localStorage.getItem("ph_consent");
+    if (choice === "in") posthog.opt_in_capturing();
+    else if (choice === "out") posthog.opt_out_capturing();
+    setDecided(Boolean(choice));
+  }, []);
+
+  if (decided) return null;
+
+  const choose = (v: "in" | "out") => {
+    localStorage.setItem("ph_consent", v);
+    if (v === "in") posthog.opt_in_capturing();
+    else posthog.opt_out_capturing();
+    setDecided(true);
+  };
+
+  return (
+    <div className={styles.bar} role="dialog" aria-label="Analytics consent">
+      <Caption1 className={styles.text}>
+        We use privacy-focused analytics to improve Teasoo SET — no screen recording, and links are never sent. You can
+        decline. See our <a href="/privacy" className={styles.link}>Privacy notice</a>.
+      </Caption1>
+      <div className={styles.actions}>
+        <Button size="small" appearance="subtle" onClick={() => choose("out")}>Decline</Button>
+        <Button size="small" appearance="primary" onClick={() => choose("in")}>Accept</Button>
+      </div>
+    </div>
+  );
 }
 
 export function PostHogProvider({ children }: { children: React.ReactNode }) {
@@ -53,6 +114,7 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
         <PageviewTracker />
       </React.Suspense>
       {children}
+      <CookieConsent />
     </PHProvider>
   );
 }
