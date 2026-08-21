@@ -12,5 +12,5 @@ export const COMPANY = {
   dpoName: "Efeosasere Okoro",
   dpoEmail: "efeosasere.okoro@teasooconsulting.com",
   /** Last-reviewed date for the legal pages. */
-  legalUpdated: "14 August 2026",
+  legalUpdated: "21 August 2026",
 };
