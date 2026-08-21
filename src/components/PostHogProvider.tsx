@@ -30,6 +30,13 @@ if (typeof window !== "undefined" && KEY && !posthog.__loaded) {
     capture_pageview: false, // sent manually (App Router), path only
     capture_pageleave: true,
     disable_session_recording: true, // never record the screen
+    // No passive capture: this app shows stakeholder names on screen, so we
+    // never let PostHog read element text, click positions, or page timings.
+    // Only the pageviews and events we send explicitly are captured.
+    autocapture: false,
+    capture_heatmaps: false,
+    capture_dead_clicks: false,
+    capture_performance: false, // disables web vitals + network timing
     respect_dnt: true,
     opt_out_capturing_by_default: true, // nothing is captured until the user consents
     sanitize_properties: sanitize,

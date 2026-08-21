@@ -61,7 +61,7 @@ export default function PrivacyPage() {
         <li><strong>Supabase</strong>: database and sign-in hosting.</li>
         <li><strong>Vercel</strong>: application hosting.</li>
         <li><strong>Brevo</strong>: sending emails such as invitations and reminders.</li>
-        <li><strong>PostHog</strong>: privacy-focused product analytics — how the app is used, so we can improve it. It never records your screen, and links containing tokens are not sent.</li>
+        <li><strong>PostHog</strong>: privacy-focused product analytics. It shows how the app is used, so we can improve it. It never records your screen, and links containing tokens are not sent.</li>
       </ul>
       <p>We don&apos;t share your data with anyone else unless the law requires it.</p>
 
