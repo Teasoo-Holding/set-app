@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { sendEmail } from "@/lib/brevo";
+import { sendEmail } from "@/lib/email";
 import { requestDecisionEmail, reassignmentEmail } from "@/lib/emails";
 import { siteOrigin } from "@/lib/invite";
 

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { sendEmail } from "@/lib/brevo";
+import { sendEmail } from "@/lib/email";
 import { commitmentReminderEmail, headOverdueEmail } from "@/lib/emails";
 
 export const dynamic = "force-dynamic";

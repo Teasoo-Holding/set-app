@@ -3,7 +3,7 @@ import "server-only";
 import { randomBytes, createHash } from "crypto";
 import { headers } from "next/headers";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { sendEmail } from "@/lib/brevo";
+import { sendEmail } from "@/lib/email";
 import { invitationEmail } from "@/lib/emails";
 import { ROLE_LABEL, type Role } from "@/lib/roles";
 
