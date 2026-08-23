@@ -1,7 +1,7 @@
 import "server-only";
 
 import { createAdminClient } from "@/lib/supabase/admin";
-import { sendEmail } from "@/lib/brevo";
+import { sendEmail } from "@/lib/email";
 import { escalationOpenedEmail } from "@/lib/emails";
 import { siteOrigin } from "@/lib/invite";
 
