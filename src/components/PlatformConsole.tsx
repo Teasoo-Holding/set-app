@@ -20,17 +20,37 @@ export type TenantRow = {
   status: "active" | "suspended";
   createdAt: string;
   members: number;
+  byRole: { admin: number; leadership: number; head: number; field: number };
   hasAdmin: boolean;
   pendingAdminEmail: string | null;
-  byRole: { admin: number; leadership: number; head: number; field: number };
+  invitesAccepted: number;
+  invitesPending: number;
   stakeholders: number;
+  highRisk: number;
+  flagged: number;
+  negative: number;
+  supportive: number;
+  engagements7d: number;
   engagements30d: number;
+  engagementsTotal: number;
+  activeUsers30d: number;
+  lastActivityAt: string | null;
+  commitmentsTotal: number;
+  commitmentsCompleted: number;
   openCommitments: number;
+  escalationsTotal: number;
+  escalationsResolved: number;
   openEscalations: number;
+  escalationsCritical: number;
 };
 
 function fmt(iso: string): string {
   return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+}
+
+/** Whole-number percentage of n over d, or "—" when there's nothing to divide. */
+function pct(n: number, d: number): string {
+  return d > 0 ? `${Math.round((n / d) * 100)}%` : "n/a";
 }
 
 const useStyles = makeStyles({
@@ -41,7 +61,7 @@ const useStyles = makeStyles({
     position: "sticky", top: 0, zIndex: 10,
   },
   barSpacer: { flexGrow: 1 },
-  main: { maxWidth: "900px", margin: "0 auto", padding: "32px 24px", display: "flex", flexDirection: "column", rowGap: "20px", "@media (max-width: 640px)": { padding: "16px 12px" } },
+  main: { maxWidth: "1040px", margin: "0 auto", padding: "32px 24px", display: "flex", flexDirection: "column", rowGap: "20px", "@media (max-width: 640px)": { padding: "16px 12px" } },
   head: { display: "flex", flexDirection: "column", rowGap: "2px" },
   card: { padding: "20px", backgroundColor: tokens.colorNeutralBackground1, border: `1px solid ${tokens.colorNeutralStroke2}`, borderRadius: tokens.borderRadiusXLarge, display: "flex", flexDirection: "column", rowGap: "14px" },
   statGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "12px" },
@@ -50,6 +70,8 @@ const useStyles = makeStyles({
   statLabel: { color: tokens.colorNeutralForeground2 },
   statSub: { color: tokens.colorNeutralForeground3 },
   metrics: { color: tokens.colorNeutralForeground3 },
+  metricsRow: { display: "flex", flexDirection: "column", rowGap: "2px", marginTop: "2px" },
+  sectionLabel: { textTransform: "uppercase", letterSpacing: "0.06em", fontWeight: tokens.fontWeightSemibold, color: tokens.colorNeutralForeground3, marginTop: "4px" },
   postHogNote: { color: tokens.colorNeutralForeground3, marginTop: "2px" },
   createForm: { display: "flex", columnGap: "12px", rowGap: "12px", flexWrap: "wrap", alignItems: "flex-end" },
   field: { display: "flex", flexDirection: "column", minWidth: "240px", flexGrow: 1 },
@@ -62,6 +84,26 @@ const useStyles = makeStyles({
   empty: { color: tokens.colorNeutralForeground3, paddingTop: "4px" },
   linkBox: { marginTop: "6px", padding: "8px 10px", borderRadius: tokens.borderRadiusMedium, backgroundColor: tokens.colorNeutralBackground3, wordBreak: "break-all", fontFamily: tokens.fontFamilyMonospace, fontSize: tokens.fontSizeBase200 },
 });
+
+function Stat({
+  styles,
+  num,
+  label,
+  sub,
+}: {
+  styles: ReturnType<typeof useStyles>;
+  num: string | number;
+  label: string;
+  sub?: string;
+}) {
+  return (
+    <div className={styles.statCard}>
+      <Text className={styles.statNum}>{num}</Text>
+      <Caption1 className={styles.statLabel}>{label}</Caption1>
+      {sub ? <Caption1 className={styles.statSub}>{sub}</Caption1> : null}
+    </div>
+  );
+}
 
 export function PlatformConsole({
   viewer,
@@ -76,19 +118,37 @@ export function PlatformConsole({
   const [createState, createAction] = useFormState(createTenant, null);
   const [resendState, resendAction] = useFormState(reinviteTenantAdmin, null);
 
+  const sum = (f: (t: TenantRow) => number) => tenants.reduce((n, t) => n + f(t), 0);
+  const now = Date.now();
   const activeOrgs = tenants.filter((t) => t.status === "active").length;
-  const totalUsers = tenants.reduce((n, t) => n + t.members, 0);
-  const roleTotals = tenants.reduce(
-    (a, t) => ({
-      admin: a.admin + t.byRole.admin,
-      leadership: a.leadership + t.byRole.leadership,
-      head: a.head + t.byRole.head,
-      field: a.field + t.byRole.field,
-    }),
-    { admin: 0, leadership: 0, head: 0, field: 0 },
-  );
-  const pendingInvites = tenants.filter((t) => !t.hasAdmin && t.pendingAdminEmail).length;
-  const totalStakeholders = tenants.reduce((n, t) => n + t.stakeholders, 0);
+  const activeOrgs30d = tenants.filter(
+    (t) => t.lastActivityAt && now - new Date(t.lastActivityAt).getTime() <= 30 * 864e5,
+  ).length;
+  const roleTotals = {
+    admin: sum((t) => t.byRole.admin),
+    leadership: sum((t) => t.byRole.leadership),
+    head: sum((t) => t.byRole.head),
+    field: sum((t) => t.byRole.field),
+  };
+  const totalUsers = sum((t) => t.members);
+  const totalStakeholders = sum((t) => t.stakeholders);
+  const totalEng30d = sum((t) => t.engagements30d);
+  const totalEng7d = sum((t) => t.engagements7d);
+  const totalActiveUsers = sum((t) => t.activeUsers30d);
+  const invAccepted = sum((t) => t.invitesAccepted);
+  const invPending = sum((t) => t.invitesPending);
+  const comTotal = sum((t) => t.commitmentsTotal);
+  const comDone = sum((t) => t.commitmentsCompleted);
+  const comOpen = sum((t) => t.openCommitments);
+  const escTotal = sum((t) => t.escalationsTotal);
+  const escResolved = sum((t) => t.escalationsResolved);
+  const escOpen = sum((t) => t.openEscalations);
+  const escCritical = sum((t) => t.escalationsCritical);
+  const highRisk = sum((t) => t.highRisk);
+  const flaggedTotal = sum((t) => t.flagged);
+  const negativeTotal = sum((t) => t.negative);
+  const supportiveTotal = sum((t) => t.supportive);
+  const pendingAdminInvites = tenants.filter((t) => !t.hasAdmin && t.pendingAdminEmail).length;
 
   return (
     <div className={styles.page}>
@@ -108,31 +168,41 @@ export function PlatformConsole({
           <Body1>Create and manage organisations. You don&apos;t have access to any organisation&apos;s stakeholder data.</Body1>
         </div>
 
-        {/* Overview: aggregate counts across all organisations */}
+        {/* Overview: aggregate KPIs across all organisations */}
         <div className={styles.card}>
           <Title3>Overview</Title3>
+
+          <Caption1 className={styles.sectionLabel}>Adoption</Caption1>
           <div className={styles.statGrid}>
-            <div className={styles.statCard}>
-              <Text className={styles.statNum}>{tenants.length}</Text>
-              <Caption1 className={styles.statLabel}>Organisations</Caption1>
-              <Caption1 className={styles.statSub}>{`${activeOrgs} active · ${tenants.length - activeOrgs} suspended`}</Caption1>
-            </div>
-            <div className={styles.statCard}>
-              <Text className={styles.statNum}>{totalUsers}</Text>
-              <Caption1 className={styles.statLabel}>Users</Caption1>
-              <Caption1 className={styles.statSub}>{`${roleTotals.leadership} leadership · ${roleTotals.head} head · ${roleTotals.field} field · ${roleTotals.admin} admin`}</Caption1>
-            </div>
-            <div className={styles.statCard}>
-              <Text className={styles.statNum}>{totalStakeholders}</Text>
-              <Caption1 className={styles.statLabel}>Stakeholders tracked</Caption1>
-              <Caption1 className={styles.statSub}>across all organisations</Caption1>
-            </div>
-            <div className={styles.statCard}>
-              <Text className={styles.statNum}>{pendingInvites}</Text>
-              <Caption1 className={styles.statLabel}>Admin invites pending</Caption1>
-              <Caption1 className={styles.statSub}>awaiting acceptance</Caption1>
-            </div>
+            <Stat styles={styles} num={tenants.length} label="Organisations" sub={`${activeOrgs} active · ${tenants.length - activeOrgs} suspended`} />
+            <Stat styles={styles} num={`${activeOrgs30d}/${tenants.length}`} label="Active orgs (30d)" sub="logged activity recently" />
+            <Stat styles={styles} num={totalUsers} label="Users" sub={`${roleTotals.leadership} leadership · ${roleTotals.head} head · ${roleTotals.field} field · ${roleTotals.admin} admin`} />
+            <Stat styles={styles} num={pct(invAccepted, invAccepted + invPending)} label="Invite acceptance" sub={`${invAccepted} accepted · ${invPending} pending`} />
           </div>
+
+          <Caption1 className={styles.sectionLabel}>Activity</Caption1>
+          <div className={styles.statGrid}>
+            <Stat styles={styles} num={totalStakeholders} label="Stakeholders tracked" sub="across all organisations" />
+            <Stat styles={styles} num={totalEng30d} label="Engagements (30d)" sub={`${totalEng7d} in the last 7 days`} />
+            <Stat styles={styles} num={totalActiveUsers} label="Active contributors (30d)" sub="logged at least one engagement" />
+          </div>
+
+          <Caption1 className={styles.sectionLabel}>Delivery</Caption1>
+          <div className={styles.statGrid}>
+            <Stat styles={styles} num={pct(comDone, comTotal)} label="Commitments completed" sub={`${comDone} of ${comTotal} · ${comOpen} open`} />
+            <Stat styles={styles} num={pct(escResolved, escTotal)} label="Escalations resolved" sub={`${escResolved} of ${escTotal} · ${escOpen} open`} />
+            <Stat styles={styles} num={escCritical} label="Critical escalations open" sub="need attention now" />
+            <Stat styles={styles} num={pendingAdminInvites} label="Admin invites pending" sub="orgs awaiting first admin" />
+          </div>
+
+          <Caption1 className={styles.sectionLabel}>Risk snapshot</Caption1>
+          <div className={styles.statGrid}>
+            <Stat styles={styles} num={highRisk} label="High-risk stakeholders" />
+            <Stat styles={styles} num={flaggedTotal} label="Flagged" />
+            <Stat styles={styles} num={negativeTotal} label="Resistant sentiment" />
+            <Stat styles={styles} num={pct(supportiveTotal, totalStakeholders)} label="Supportive" sub={`${supportiveTotal} of ${totalStakeholders}`} />
+          </div>
+
           <Caption1 className={styles.postHogNote}>
             These are counts only, with no stakeholder details. Sign-ins, active users and feature usage live in PostHog, grouped by organisation.
           </Caption1>
@@ -218,9 +288,17 @@ export function PlatformConsole({
                     {`${t.slug} · ${t.members} member${t.members === 1 ? "" : "s"} · added ${fmt(t.createdAt)}`}
                     {!t.hasAdmin && t.pendingAdminEmail ? ` · invited ${t.pendingAdminEmail}` : ""}
                   </Caption1>
-                  <Caption1 className={styles.metrics}>
-                    {`${t.byRole.leadership} leadership · ${t.byRole.head} head · ${t.byRole.field} field · ${t.byRole.admin} admin · ${t.stakeholders} stakeholders · ${t.engagements30d} engagements (30d) · ${t.openCommitments} open commitments · ${t.openEscalations} open escalations`}
-                  </Caption1>
+                  <div className={styles.metricsRow}>
+                    <Caption1 className={styles.metrics}>
+                      {`${t.byRole.leadership} leadership · ${t.byRole.head} head · ${t.byRole.field} field · ${t.byRole.admin} admin · ${t.stakeholders} stakeholders · ${t.activeUsers30d} active (30d)${t.lastActivityAt ? ` · last active ${fmt(t.lastActivityAt)}` : " · no activity yet"}`}
+                    </Caption1>
+                    <Caption1 className={styles.metrics}>
+                      {`${t.engagements30d} engagements (30d) · commitments ${t.commitmentsCompleted}/${t.commitmentsTotal} done · escalations ${t.escalationsResolved}/${t.escalationsTotal} resolved${t.escalationsCritical ? ` · ${t.escalationsCritical} critical open` : ""}`}
+                    </Caption1>
+                    <Caption1 className={styles.metrics}>
+                      {`Risk: ${t.highRisk} high-risk · ${t.flagged} flagged · ${t.negative} resistant · ${t.supportive} supportive`}
+                    </Caption1>
+                  </div>
                 </div>
                 <div className={styles.actions}>
                   {!t.hasAdmin && t.pendingAdminEmail && (
