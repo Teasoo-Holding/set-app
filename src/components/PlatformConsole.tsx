@@ -22,6 +22,11 @@ export type TenantRow = {
   members: number;
   hasAdmin: boolean;
   pendingAdminEmail: string | null;
+  byRole: { admin: number; leadership: number; head: number; field: number };
+  stakeholders: number;
+  engagements30d: number;
+  openCommitments: number;
+  openEscalations: number;
 };
 
 function fmt(iso: string): string {
@@ -39,6 +44,13 @@ const useStyles = makeStyles({
   main: { maxWidth: "900px", margin: "0 auto", padding: "32px 24px", display: "flex", flexDirection: "column", rowGap: "20px", "@media (max-width: 640px)": { padding: "16px 12px" } },
   head: { display: "flex", flexDirection: "column", rowGap: "2px" },
   card: { padding: "20px", backgroundColor: tokens.colorNeutralBackground1, border: `1px solid ${tokens.colorNeutralStroke2}`, borderRadius: tokens.borderRadiusXLarge, display: "flex", flexDirection: "column", rowGap: "14px" },
+  statGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "12px" },
+  statCard: { padding: "14px 16px", backgroundColor: tokens.colorNeutralBackground1, border: `1px solid ${tokens.colorNeutralStroke2}`, borderRadius: tokens.borderRadiusLarge, display: "flex", flexDirection: "column", rowGap: "2px" },
+  statNum: { fontSize: tokens.fontSizeHero700, fontWeight: tokens.fontWeightSemibold, lineHeight: "1.1", color: tokens.colorNeutralForeground1 },
+  statLabel: { color: tokens.colorNeutralForeground2 },
+  statSub: { color: tokens.colorNeutralForeground3 },
+  metrics: { color: tokens.colorNeutralForeground3 },
+  postHogNote: { color: tokens.colorNeutralForeground3, marginTop: "2px" },
   createForm: { display: "flex", columnGap: "12px", rowGap: "12px", flexWrap: "wrap", alignItems: "flex-end" },
   field: { display: "flex", flexDirection: "column", minWidth: "240px", flexGrow: 1 },
   row: { display: "flex", alignItems: "flex-start", columnGap: "12px", rowGap: "8px", flexWrap: "wrap", padding: "14px 0", borderTop: `1px solid ${tokens.colorNeutralStroke2}` },
@@ -64,6 +76,20 @@ export function PlatformConsole({
   const [createState, createAction] = useFormState(createTenant, null);
   const [resendState, resendAction] = useFormState(reinviteTenantAdmin, null);
 
+  const activeOrgs = tenants.filter((t) => t.status === "active").length;
+  const totalUsers = tenants.reduce((n, t) => n + t.members, 0);
+  const roleTotals = tenants.reduce(
+    (a, t) => ({
+      admin: a.admin + t.byRole.admin,
+      leadership: a.leadership + t.byRole.leadership,
+      head: a.head + t.byRole.head,
+      field: a.field + t.byRole.field,
+    }),
+    { admin: 0, leadership: 0, head: 0, field: 0 },
+  );
+  const pendingInvites = tenants.filter((t) => !t.hasAdmin && t.pendingAdminEmail).length;
+  const totalStakeholders = tenants.reduce((n, t) => n + t.stakeholders, 0);
+
   return (
     <div className={styles.page}>
       <header className={styles.bar}>
@@ -80,6 +106,36 @@ export function PlatformConsole({
         <div className={styles.head}>
           <Title2>Platform administration</Title2>
           <Body1>Create and manage organisations. You don&apos;t have access to any organisation&apos;s stakeholder data.</Body1>
+        </div>
+
+        {/* Overview — aggregate counts across all organisations */}
+        <div className={styles.card}>
+          <Title3>Overview</Title3>
+          <div className={styles.statGrid}>
+            <div className={styles.statCard}>
+              <Text className={styles.statNum}>{tenants.length}</Text>
+              <Caption1 className={styles.statLabel}>Organisations</Caption1>
+              <Caption1 className={styles.statSub}>{`${activeOrgs} active · ${tenants.length - activeOrgs} suspended`}</Caption1>
+            </div>
+            <div className={styles.statCard}>
+              <Text className={styles.statNum}>{totalUsers}</Text>
+              <Caption1 className={styles.statLabel}>Users</Caption1>
+              <Caption1 className={styles.statSub}>{`${roleTotals.leadership} leadership · ${roleTotals.head} head · ${roleTotals.field} field · ${roleTotals.admin} admin`}</Caption1>
+            </div>
+            <div className={styles.statCard}>
+              <Text className={styles.statNum}>{totalStakeholders}</Text>
+              <Caption1 className={styles.statLabel}>Stakeholders tracked</Caption1>
+              <Caption1 className={styles.statSub}>across all organisations</Caption1>
+            </div>
+            <div className={styles.statCard}>
+              <Text className={styles.statNum}>{pendingInvites}</Text>
+              <Caption1 className={styles.statLabel}>Admin invites pending</Caption1>
+              <Caption1 className={styles.statSub}>awaiting acceptance</Caption1>
+            </div>
+          </div>
+          <Caption1 className={styles.postHogNote}>
+            These are counts only — no stakeholder details. Sign-ins, active users and feature usage live in PostHog, grouped by organisation.
+          </Caption1>
         </div>
 
         {/* Create tenant */}
@@ -161,6 +217,9 @@ export function PlatformConsole({
                   <Caption1 className={styles.muted}>
                     {`${t.slug} · ${t.members} member${t.members === 1 ? "" : "s"} · added ${fmt(t.createdAt)}`}
                     {!t.hasAdmin && t.pendingAdminEmail ? ` · invited ${t.pendingAdminEmail}` : ""}
+                  </Caption1>
+                  <Caption1 className={styles.metrics}>
+                    {`${t.byRole.leadership} leadership · ${t.byRole.head} head · ${t.byRole.field} field · ${t.byRole.admin} admin · ${t.stakeholders} stakeholders · ${t.engagements30d} engagements (30d) · ${t.openCommitments} open commitments · ${t.openEscalations} open escalations`}
                   </Caption1>
                 </div>
                 <div className={styles.actions}>
