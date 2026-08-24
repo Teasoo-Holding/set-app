@@ -3,7 +3,7 @@ import "server-only";
 /**
  * Email copy, written in plain English (GDS content-design style): active
  * voice, "you", the key fact first, one clear action, no jargon. Returns
- * { subject, html } ready for Brevo.
+ * { subject, html } ready for Resend.
  */
 
 function firstName(full: string): string {

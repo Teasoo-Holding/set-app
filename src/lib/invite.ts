@@ -89,7 +89,7 @@ export async function createAndSendInvite(
 
   const link = `${siteOrigin()}/invite/accept?token=${token}`;
 
-  // Email is best-effort: a Brevo misconfiguration must NOT fail the invite.
+  // Email is best-effort: a Resend misconfiguration must NOT fail the invite.
   // The caller surfaces the link so onboarding works even before email is set up.
   let emailed = false;
   try {

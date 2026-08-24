@@ -23,7 +23,7 @@ function iso(d: Date): string {
  * E7-2/E7-3 — commitment reminder cron. Runs daily (Vercel Cron). Emails the
  * owner at T-3, on the due date, and daily while overdue; Tier-1 overdue also
  * emails the owner's Head. Idempotent via reminder_sends. Uses the service
- * role (system-owned; bypasses RLS). No-ops safely until Brevo is configured.
+ * role (system-owned; bypasses RLS). No-ops safely until Resend is configured.
  *
  * Protected by CRON_SECRET (Vercel Cron sends it as a Bearer token).
  */
