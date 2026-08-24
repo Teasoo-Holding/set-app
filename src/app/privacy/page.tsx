@@ -80,7 +80,7 @@ const sections: LegalSection[] = [
         <ul>
           <li><strong>Supabase</strong>: database and sign-in hosting.</li>
           <li><strong>Vercel</strong>: application hosting.</li>
-          <li><strong>Brevo</strong>: sending emails such as invitations and reminders.</li>
+          <li><strong>Resend</strong>: sending our emails, such as invitations, reminders, and password resets.</li>
           <li><strong>PostHog</strong>: privacy-focused product analytics. It shows how the app is used, so we can improve it. It never records your screen, and links containing tokens are not sent.</li>
           <li><strong>Sentry</strong>: error monitoring, so we can find and fix faults. It receives error details and technical diagnostics. It does not receive your name, email, cookies, or the contents of stakeholder records.</li>
         </ul>
@@ -93,9 +93,9 @@ const sections: LegalSection[] = [
     title: "Where your data is processed",
     body: (
       <p>
-        Our providers may process data on servers outside Nigeria and the European Economic Area. Where data is
-        transferred internationally, we rely on appropriate safeguards, such as standard contractual clauses, to keep
-        it protected.
+        We and our main providers process your data in the European Economic Area (EU). Some providers may process
+        limited technical data in other regions; where data is transferred internationally, we rely on appropriate
+        safeguards, such as standard contractual clauses, to keep it protected.
       </p>
     ),
   },
