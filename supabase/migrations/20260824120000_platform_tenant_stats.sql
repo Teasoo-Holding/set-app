@@ -30,6 +30,9 @@ stable
 security definer
 set search_path = public
 as $$
+-- OUT column names (tenant_id, status, …) would otherwise be ambiguous against
+-- the same-named columns in the subqueries below; prefer the columns.
+#variable_conflict use_column
 begin
   if not public.is_platform_admin() then
     raise exception 'Only platform admins may read platform statistics' using errcode = '42501';
