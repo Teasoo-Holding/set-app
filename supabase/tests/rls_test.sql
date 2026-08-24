@@ -13,7 +13,7 @@
 -- to an authenticated JWT so RLS applies. Everything rolls back.
 -- ─────────────────────────────────────────────────────────────
 begin;
-select plan(20);
+select plan(24);
 
 -- Clean slate: truncating tenants cascades to every tenant-scoped table.
 -- audit_log has no FK to tenants, so clear it explicitly.
@@ -155,6 +155,30 @@ select is(
   (select count(*)::int from public.tenants),
   2,
   'platform admin can see all tenants (management scope)'
+);
+
+-- Platform stats: aggregate COUNTS across tenants, without exposing rows.
+select is(
+  (select count(*)::int from public.platform_tenant_stats()),
+  (select count(*)::int from public.tenants),
+  'PLATFORM STATS: one aggregate row per tenant'
+);
+select is(
+  (select coalesce(sum(members_total), 0)::int from public.platform_tenant_stats()),
+  (select count(*)::int from public.profiles where tenant_id is not null),
+  'PLATFORM STATS: member counts match the tenant profiles'
+);
+select ok(
+  (select coalesce(sum(stakeholders), 0) from public.platform_tenant_stats()) > 0,
+  'PLATFORM STATS: aggregates stakeholder counts the admin cannot read directly'
+);
+
+-- A non-platform-admin is refused outright.
+select tests.act_as('11111111-1111-1111-1111-111111111111');
+select throws_ok(
+  $$ select * from public.platform_tenant_stats() $$,
+  '42501', null,
+  'PLATFORM STATS: a non-platform-admin is refused (42501)'
 );
 
 -- ── audit_log closed to client writes ────────────────────────

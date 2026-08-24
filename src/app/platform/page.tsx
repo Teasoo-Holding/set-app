@@ -3,45 +3,55 @@ import { getCurrentProfile, getLandingPath } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { PlatformConsole, type TenantRow } from "@/components/PlatformConsole";
 
+// One row per tenant returned by the platform_tenant_stats() SECURITY DEFINER
+// function — aggregate counts only, never stakeholder rows or content.
+type StatRow = {
+  tenant_id: string;
+  name: string;
+  slug: string;
+  status: "active" | "suspended";
+  created_at: string;
+  members_total: number;
+  members_admin: number;
+  members_leadership: number;
+  members_head: number;
+  members_field: number;
+  pending_admin_email: string | null;
+  stakeholders: number;
+  engagements_30d: number;
+  open_commitments: number;
+  open_escalations: number;
+};
+
 export default async function PlatformPage() {
   const me = await getCurrentProfile();
   if (!me) redirect("/login");
   if (me.role !== "platform_admin") redirect(getLandingPath(me.role));
 
   const supabase = createClient();
-  const [{ data: tenants }, { data: profiles }, { data: invites }] = await Promise.all([
-    supabase.from("tenants").select("id, name, slug, status, created_at").order("created_at", { ascending: false }),
-    supabase.from("profiles").select("tenant_id, role"),
-    supabase
-      .from("invitations")
-      .select("tenant_id, email")
-      .eq("role", "admin")
-      .eq("status", "pending"),
-  ]);
+  // Privileged aggregation in the DB (the function enforces platform-admin, and
+  // returns counts only), so isolation holds and no tenant rows reach the client.
+  const { data } = await supabase.rpc("platform_tenant_stats");
 
-  const members = new Map<string, number>();
-  const admins = new Map<string, number>();
-  for (const p of (profiles as { tenant_id: string | null; role: string }[]) ?? []) {
-    if (!p.tenant_id) continue;
-    members.set(p.tenant_id, (members.get(p.tenant_id) ?? 0) + 1);
-    if (p.role === "admin") admins.set(p.tenant_id, (admins.get(p.tenant_id) ?? 0) + 1);
-  }
-  const pendingAdmin = new Map<string, string>();
-  for (const i of (invites as { tenant_id: string; email: string }[]) ?? []) {
-    if (!pendingAdmin.has(i.tenant_id)) pendingAdmin.set(i.tenant_id, i.email);
-  }
-
-  const rows: TenantRow[] = ((tenants as {
-    id: string; name: string; slug: string; status: "active" | "suspended"; created_at: string;
-  }[]) ?? []).map((t) => ({
-    id: t.id,
-    name: t.name,
-    slug: t.slug,
-    status: t.status,
-    createdAt: t.created_at,
-    members: members.get(t.id) ?? 0,
-    hasAdmin: (admins.get(t.id) ?? 0) > 0,
-    pendingAdminEmail: pendingAdmin.get(t.id) ?? null,
+  const rows: TenantRow[] = ((data as StatRow[] | null) ?? []).map((r) => ({
+    id: r.tenant_id,
+    name: r.name,
+    slug: r.slug,
+    status: r.status,
+    createdAt: r.created_at,
+    members: r.members_total,
+    hasAdmin: r.members_admin > 0,
+    pendingAdminEmail: r.pending_admin_email,
+    byRole: {
+      admin: r.members_admin,
+      leadership: r.members_leadership,
+      head: r.members_head,
+      field: r.members_field,
+    },
+    stakeholders: r.stakeholders,
+    engagements30d: r.engagements_30d,
+    openCommitments: r.open_commitments,
+    openEscalations: r.open_escalations,
   }));
 
   return (
