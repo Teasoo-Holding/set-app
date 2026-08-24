@@ -41,24 +41,30 @@ export async function GET(request: NextRequest) {
   const { error } = await supabase.auth.exchangeCodeForSession(code);
   if (error) return bounce(error.message);
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return bounce("Sign-in didn't complete. Please try again.");
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role, tenant_id")
+    .eq("id", user.id)
+    .maybeSingle();
+  const p = profile as { role: Role; tenant_id: string | null } | null;
+
+  // Invite-only: an OAuth sign-in (e.g. Google) that doesn't map to an onboarded,
+  // tenant-scoped profile was never invited. Platform admins are the one
+  // tenant-less role that's allowed. Anyone else is signed out, so social sign-in
+  // never becomes an open sign-up.
+  if (!p || (!p.tenant_id && p.role !== "platform_admin")) {
+    await supabase.auth.signOut();
+    return bounce("Access to Teasoo SET is by invitation. Ask your administrator to invite you.");
+  }
+
   // A password-reset link carries next=/account/update-password → go set the
   // new password. Otherwise land on the role's home.
   if (next) return NextResponse.redirect(`${base}${next}`);
 
-  // Land on the role's home. A brand-new user is provisioned as 'field' by the
-  // handle_new_user trigger; an Admin can adjust role/function afterwards.
-  let role: Role = "field";
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (user) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", user.id)
-      .maybeSingle();
-    role = ((profile as { role: Role } | null)?.role ?? "field") as Role;
-  }
-
-  return NextResponse.redirect(`${base}${getLandingPath(role)}`);
+  return NextResponse.redirect(`${base}${getLandingPath(p.role)}`);
 }
