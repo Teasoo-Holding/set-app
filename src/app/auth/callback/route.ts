@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { getLandingPath, type Role } from "@/lib/roles";
 
 /**
@@ -59,6 +60,16 @@ export async function GET(request: NextRequest) {
   // never becomes an open sign-up.
   if (!p || (!p.tenant_id && p.role !== "platform_admin")) {
     await supabase.auth.signOut();
+    // Delete the tenant-less auth user this sign-in just created (cascades to its
+    // orphan profile), so an uninvited social sign-in leaves nothing behind.
+    // Only reachable for a user with no tenant who isn't a platform admin, so
+    // this can never remove an invited user or a platform admin. Best-effort:
+    // a failure here must not block the bounce.
+    try {
+      await createAdminClient().auth.admin.deleteUser(user.id);
+    } catch {
+      // Ignore — the user is signed out and has no access regardless.
+    }
     return bounce("Access to Teasoo SET is by invitation. Ask your administrator to invite you.");
   }
 
