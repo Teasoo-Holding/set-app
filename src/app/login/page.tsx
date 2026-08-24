@@ -11,7 +11,7 @@ import {
   signInWithPassword,
   requestPasswordReset,
 } from "@/app/actions/auth";
-import { DEMO_MODE, ENTRA_ENABLED } from "@/lib/roles";
+import { DEMO_MODE } from "@/lib/roles";
 
 const ARCHIVO = "var(--font-archivo), -apple-system, Helvetica, Arial, sans-serif";
 const FIGTREE = "var(--font-figtree), -apple-system, Helvetica, Arial, sans-serif";
@@ -317,14 +317,12 @@ export default function LoginPage({
                   Sign in with Google
                 </button>
               </form>
-              {ENTRA_ENABLED && (
-                <form action={signInWithMicrosoft} className={styles.msForm}>
-                  <button type="submit" className={styles.msBtn}>
-                    <MicrosoftLogo />
-                    Sign in with Microsoft
-                  </button>
-                </form>
-              )}
+              <form action={signInWithMicrosoft} className={styles.msForm}>
+                <button type="submit" className={styles.msBtn}>
+                  <MicrosoftLogo />
+                  Sign in with Microsoft
+                </button>
+              </form>
             </>
           )}
 
