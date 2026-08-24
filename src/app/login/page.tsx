@@ -11,7 +11,7 @@ import {
   signInWithPassword,
   requestPasswordReset,
 } from "@/app/actions/auth";
-import { DEMO_MODE, ENTRA_ENABLED, GOOGLE_ENABLED } from "@/lib/roles";
+import { DEMO_MODE, ENTRA_ENABLED } from "@/lib/roles";
 
 const ARCHIVO = "var(--font-archivo), -apple-system, Helvetica, Arial, sans-serif";
 const FIGTREE = "var(--font-figtree), -apple-system, Helvetica, Arial, sans-serif";
@@ -308,17 +308,15 @@ export default function LoginPage({
 
           {/* Social sign-in. Access stays invite-only — the OAuth callback
               signs out anyone without an onboarded profile. */}
-          {mode === "signin" && (GOOGLE_ENABLED || ENTRA_ENABLED) && (
+          {mode === "signin" && (
             <>
               <div className={styles.divider}>or</div>
-              {GOOGLE_ENABLED && (
-                <form action={signInWithGoogle} className={styles.msForm}>
-                  <button type="submit" className={styles.msBtn}>
-                    <GoogleLogo />
-                    Sign in with Google
-                  </button>
-                </form>
-              )}
+              <form action={signInWithGoogle} className={styles.msForm}>
+                <button type="submit" className={styles.msBtn}>
+                  <GoogleLogo />
+                  Sign in with Google
+                </button>
+              </form>
               {ENTRA_ENABLED && (
                 <form action={signInWithMicrosoft} className={styles.msForm}>
                   <button type="submit" className={styles.msBtn}>
