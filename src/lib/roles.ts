@@ -64,3 +64,10 @@ export const DEMO_MODE = process.env.NEXT_PUBLIC_DEMO_MODE === "true";
  * bring it back without touching code.
  */
 export const ENTRA_ENABLED = process.env.NEXT_PUBLIC_ENTRA_ENABLED === "true";
+
+/**
+ * Show the "Sign in with Google" button. The Google provider is enabled in
+ * Supabase; flip NEXT_PUBLIC_GOOGLE_ENABLED=true to surface it. Sign-in stays
+ * invite-only — the OAuth callback rejects anyone without an onboarded profile.
+ */
+export const GOOGLE_ENABLED = process.env.NEXT_PUBLIC_GOOGLE_ENABLED === "true";

@@ -45,16 +45,22 @@ const sections: LegalSection[] = [
     id: "what-data",
     title: "What data we handle",
     body: (
-      <ul>
-        <li><strong>Account data</strong>: your name, email address, role, and the organisation you belong to.</li>
-        <li>
-          <strong>Stakeholder data your organisation enters</strong>: such as names, organisations, notes, engagement
-          history, commitments, risk and sentiment.
-        </li>
-        <li>
-          <strong>Technical data</strong>: sign-in records and basic logs we need to run and secure the service.
-        </li>
-      </ul>
+      <>
+        <ul>
+          <li><strong>Account data</strong>: your name, email address, role, and the organisation you belong to.</li>
+          <li>
+            <strong>Stakeholder data your organisation enters</strong>: such as names, organisations, notes, engagement
+            history, commitments, risk and sentiment.
+          </li>
+          <li>
+            <strong>Technical data</strong>: sign-in records and basic logs we need to run and secure the service.
+          </li>
+        </ul>
+        <p>
+          You can sign in with a password or with Google. When you use Google, Google verifies your identity under its
+          own privacy policy; we only receive your name and email address.
+        </p>
+      </>
     ),
   },
   {
