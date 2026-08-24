@@ -108,7 +108,7 @@ export function PlatformConsole({
           <Body1>Create and manage organisations. You don&apos;t have access to any organisation&apos;s stakeholder data.</Body1>
         </div>
 
-        {/* Overview — aggregate counts across all organisations */}
+        {/* Overview: aggregate counts across all organisations */}
         <div className={styles.card}>
           <Title3>Overview</Title3>
           <div className={styles.statGrid}>
@@ -134,7 +134,7 @@ export function PlatformConsole({
             </div>
           </div>
           <Caption1 className={styles.postHogNote}>
-            These are counts only — no stakeholder details. Sign-ins, active users and feature usage live in PostHog, grouped by organisation.
+            These are counts only, with no stakeholder details. Sign-ins, active users and feature usage live in PostHog, grouped by organisation.
           </Caption1>
         </div>
 
@@ -255,7 +255,7 @@ export function PlatformConsole({
           )}
         </div>
 
-        {/* Diagnostics — only when SENTRY_TEST is enabled */}
+        {/* Diagnostics: only when SENTRY_TEST is enabled */}
         {sentryTestEnabled && (
           <div className={styles.card}>
             <Title3>Diagnostics</Title3>
