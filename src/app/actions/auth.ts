@@ -11,6 +11,16 @@ const MIN_PASSWORD = 8;
 function siteOrigin(): string {
   const configured = process.env.NEXT_PUBLIC_SITE_URL;
   if (configured) return configured.replace(/\/$/, "");
+  return requestOrigin();
+}
+
+/**
+ * The origin of the CURRENT request (never the configured site URL). OAuth must
+ * return to the exact domain the flow started on — the PKCE code-verifier cookie
+ * is scoped to that domain, so a preview deploy must come back to itself, not to
+ * production. Used only for the OAuth redirectTo.
+ */
+function requestOrigin(): string {
   const h = headers();
   const host = h.get("x-forwarded-host") ?? h.get("host") ?? "localhost:3000";
   const proto = h.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
@@ -115,7 +125,7 @@ export async function signInWithMicrosoft() {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "azure",
     options: {
-      redirectTo: `${siteOrigin()}/auth/callback`,
+      redirectTo: `${requestOrigin()}/auth/callback`,
       scopes: "openid email profile",
     },
   });
@@ -137,7 +147,7 @@ export async function signInWithGoogle() {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo: `${siteOrigin()}/auth/callback`,
+      redirectTo: `${requestOrigin()}/auth/callback`,
     },
   });
   if (error || !data?.url) {
