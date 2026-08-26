@@ -4,7 +4,7 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import {
   Dialog, DialogTrigger, DialogSurface, DialogBody, DialogTitle, DialogContent, DialogActions,
-  Button, Field, Select, Input, MessageBar, MessageBarBody, makeStyles,
+  Button, Caption1, Field, Select, Input, MessageBar, MessageBarBody, makeStyles, tokens,
 } from "@fluentui/react-components";
 import { AddRegular } from "@fluentui/react-icons";
 import { createStakeholder } from "@/app/actions/stakeholder";
@@ -13,6 +13,15 @@ const useStyles = makeStyles({
   form: { display: "flex", flexDirection: "column", rowGap: "14px", paddingTop: "4px" },
   row: { display: "flex", columnGap: "12px", flexWrap: "wrap" },
   half: { flexGrow: 1, minWidth: "160px" },
+  tierHelp: {
+    color: tokens.colorNeutralForeground2,
+    backgroundColor: tokens.colorNeutralBackground2,
+    border: `1px solid ${tokens.colorNeutralStroke2}`,
+    borderRadius: tokens.borderRadiusMedium,
+    padding: "8px 10px",
+    lineHeight: tokens.lineHeightBase300,
+  },
+  tierName: { color: tokens.colorNeutralForeground1, fontWeight: tokens.fontWeightSemibold },
 });
 
 export type MemberOption = { id: string; name: string };
@@ -85,12 +94,7 @@ export function AddStakeholderDialog({
                   </Field>
                 </div>
                 <div className={styles.row}>
-                  <Field
-                    label="Tier"
-                    required
-                    className={styles.half}
-                    hint="Tier 1 (strategic): highest-priority relationships you actively manage. Tier 2 (standard): everyone else you track."
-                  >
+                  <Field label="Tier" required className={styles.half}>
                     <Select name="tier" defaultValue="2" required>
                       <option value="1">Tier 1 (strategic)</option>
                       <option value="2">Tier 2 (standard)</option>
@@ -104,6 +108,10 @@ export function AddStakeholderDialog({
                     </Select>
                   </Field>
                 </div>
+                <Caption1 className={styles.tierHelp}>
+                  <span className={styles.tierName}>Tier 1 (strategic):</span> highest-priority relationships you actively manage.{" "}
+                  <span className={styles.tierName}>Tier 2 (standard):</span> everyone else you track.
+                </Caption1>
               </div>
             </form>
           </DialogContent>
