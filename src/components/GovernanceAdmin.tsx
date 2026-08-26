@@ -8,7 +8,7 @@ import { SubmitButton } from "@/components/SubmitButton";
 import { ConfirmButton } from "@/components/ConfirmButton";
 import { approveRequest, rejectRequest, addTaxonomy, setTaxonomyActive, reassignStakeholders } from "@/app/actions/governance";
 import { inviteUser, revokeInvite } from "@/app/actions/invitations";
-import { ROLE_LABEL, type Role } from "@/lib/roles";
+import { ROLE_LABEL, ROLE_DESCRIPTION, type Role } from "@/lib/roles";
 
 export type PendingRequest = {
   id: string;
@@ -67,6 +67,7 @@ const useStyles = makeStyles({
   empty: { color: tokens.colorNeutralForeground3, paddingTop: "4px" },
   linkBox: { marginTop: "6px", padding: "8px 10px", borderRadius: tokens.borderRadiusMedium, backgroundColor: tokens.colorNeutralBackground3, wordBreak: "break-all", fontFamily: tokens.fontFamilyMonospace, fontSize: tokens.fontSizeBase200 },
   inviteRow: { display: "flex", columnGap: "12px", rowGap: "12px", flexWrap: "wrap", alignItems: "flex-end" },
+  roleLegend: { display: "flex", flexDirection: "column", rowGap: "4px", marginTop: "10px" },
   memberRow: { display: "flex", alignItems: "center", columnGap: "10px", flexWrap: "wrap", padding: "10px 0", borderTop: `1px solid ${tokens.colorNeutralStroke2}` },
   memberMain: { display: "flex", flexDirection: "column", rowGap: "2px", flexGrow: 1, minWidth: "180px" },
 });
@@ -157,6 +158,15 @@ export function GovernanceAdmin({
             </label>
             <SubmitButton appearance="primary">Send invite</SubmitButton>
           </form>
+
+          <div className={styles.roleLegend}>
+            <Caption1 className={styles.muted}>What each role can access:</Caption1>
+            {INVITE_ROLES.map((r) => (
+              <Caption1 key={r.value} className={styles.muted}>
+                <strong>{r.label}</strong> — {ROLE_DESCRIPTION[r.value]}
+              </Caption1>
+            ))}
+          </div>
 
           {invites.length > 0 && (
             <>
