@@ -85,7 +85,12 @@ export function AddStakeholderDialog({
                   </Field>
                 </div>
                 <div className={styles.row}>
-                  <Field label="Tier" required className={styles.half}>
+                  <Field
+                    label="Tier"
+                    required
+                    className={styles.half}
+                    hint="Tier 1 (strategic): highest-priority relationships you actively manage. Tier 2 (standard): everyone else you track."
+                  >
                     <Select name="tier" defaultValue="2" required>
                       <option value="1">Tier 1 (strategic)</option>
                       <option value="2">Tier 2 (standard)</option>
