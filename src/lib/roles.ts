@@ -46,9 +46,9 @@ export const ROLE_LABEL: Record<Role, string> = {
  */
 export const ROLE_DESCRIPTION: Record<Role, string> = {
   field: "Logs engagements and sees stakeholders in their own function only.",
-  head: "Leads a function — sees that function's stakeholders, team and escalations.",
+  head: "Leads a function. Sees that function's stakeholders, team and escalations.",
   leadership: "Organisation-wide view of the full stakeholder portfolio and risk.",
-  admin: "Manages the organisation — users, categories/functions/engagement types, and all stakeholders.",
+  admin: "Manages the organisation: users, categories, functions, engagement types, and all stakeholders.",
   platform_admin: "Cross-tenant operator with no access to any organisation's data.",
 };
 
