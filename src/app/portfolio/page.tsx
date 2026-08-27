@@ -85,6 +85,7 @@ export default async function PortfolioPage() {
     orgName: (tenantRow as { name: string } | null)?.name ?? "your organisation",
     memberCount: (memberRows as { id: string }[] | null)?.length ?? 0,
     stakeholderCount: total,
+    engagementCount: (activity as unknown[] | null)?.length ?? 0,
   };
 
   return (

@@ -71,13 +71,13 @@ export function LeadershipPortfolio({
   functions: Fn[];
   escalations: Esc[];
   activity: Activity[];
-  onboarding?: { orgName: string; memberCount: number; stakeholderCount: number } | null;
+  onboarding?: { orgName: string; memberCount: number; stakeholderCount: number; engagementCount: number } | null;
 }) {
   const styles = useStyles();
 
-  // First-run guide for a brand-new tenant admin (empty tenant) instead of a
-  // wall of empty cards.
-  const showOnboarding = viewer.role === "admin" && onboarding && onboarding.stakeholderCount === 0;
+  // Setup guide for a tenant admin. It persists through setup and hides itself
+  // once every step is done (or the admin dismisses it) — see TenantOnboarding.
+  const showOnboarding = viewer.role === "admin" && onboarding;
 
   const kpiCards = [
     { label: "High risk", value: kpis.highRisk, color: tokens.colorStatusDangerForeground1 },
@@ -100,6 +100,7 @@ export function LeadershipPortfolio({
             adminFirstName={viewer.full_name.split(" ")[0]}
             memberCount={onboarding.memberCount}
             stakeholderCount={onboarding.stakeholderCount}
+            engagementCount={onboarding.engagementCount}
           />
         )}
 

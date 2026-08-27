@@ -2,8 +2,10 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { makeStyles, tokens, Title2, Body1, Caption1 } from "@fluentui/react-components";
-import { CheckmarkCircleFilled, CircleRegular, ArrowRightRegular } from "@fluentui/react-icons";
+import { makeStyles, tokens, Title2, Body1, Caption1, Button } from "@fluentui/react-components";
+import { CheckmarkCircleFilled, CircleRegular, ArrowRightRegular, DismissRegular } from "@fluentui/react-icons";
+
+const DISMISS_KEY = "teasoo_onboarding_dismissed";
 
 const useStyles = makeStyles({
   card: {
@@ -15,6 +17,7 @@ const useStyles = makeStyles({
     flexDirection: "column",
     rowGap: "12px",
   },
+  headRow: { display: "flex", alignItems: "flex-start", justifyContent: "space-between", columnGap: "12px" },
   head: { display: "flex", flexDirection: "column", rowGap: "4px" },
   muted: { color: tokens.colorNeutralForeground3 },
   bar: { height: "6px", borderRadius: tokens.borderRadiusCircular, backgroundColor: tokens.colorNeutralBackground4, overflow: "hidden" },
@@ -39,28 +42,48 @@ const useStyles = makeStyles({
   },
 });
 
-type Step = { done: boolean; title: string; body: string; actionLabel?: string; actionHref?: string };
+type Step = { done: boolean; title: string; body: string; actionLabel?: string; actionHref?: string; alwaysLink?: boolean };
 
 /**
- * First-run guide for a new tenant admin. Instead of a bare empty screen, it
- * welcomes them and walks through setting up their organisation, with live
- * progress. Shown until the tenant has stakeholders.
+ * Setup guide for a tenant admin. Instead of a bare screen, it welcomes them and
+ * walks through setting up their organisation with live progress. It persists
+ * through setup and hides itself automatically once every step is done, or when
+ * the admin dismisses it (remembered per browser).
  */
 export function TenantOnboarding({
   orgName,
   adminFirstName,
   memberCount,
   stakeholderCount,
+  engagementCount,
 }: {
   orgName: string;
   adminFirstName: string;
   memberCount: number;
   stakeholderCount: number;
+  engagementCount: number;
 }) {
   const styles = useStyles();
+  const [dismissed, setDismissed] = React.useState(false);
+
+  React.useEffect(() => {
+    try {
+      if (localStorage.getItem(DISMISS_KEY) === "1") setDismissed(true);
+    } catch {
+      // ignore — storage may be unavailable; just show the guide.
+    }
+  }, []);
 
   const steps: Step[] = [
     { done: true, title: "Create your organisation", body: `You're set up as the administrator of ${orgName}.` },
+    {
+      done: true,
+      alwaysLink: true,
+      title: "Set up your categories & functions",
+      body: "We've added starter lists. Customise your categories, functions and engagement types any time.",
+      actionLabel: "Manage lists",
+      actionHref: "/governance",
+    },
     {
       done: memberCount > 1,
       title: "Invite your team",
@@ -76,21 +99,38 @@ export function TenantOnboarding({
       actionHref: "/directory",
     },
     {
-      done: false,
+      done: engagementCount > 0,
       title: "Log your first engagement",
       body: "Capture what happens in a relationship, so nothing gets lost.",
       actionLabel: "Open the directory",
       actionHref: "/directory",
     },
   ];
+
   const doneCount = steps.filter((s) => s.done).length;
   const pct = Math.round((doneCount / steps.length) * 100);
+  const allDone = steps.every((s) => s.done);
+
+  // Nothing to show once setup is complete or the admin has hidden it.
+  if (allDone || dismissed) return null;
+
+  const dismiss = () => {
+    setDismissed(true);
+    try {
+      localStorage.setItem(DISMISS_KEY, "1");
+    } catch {
+      // ignore
+    }
+  };
 
   return (
     <div className={styles.card}>
-      <div className={styles.head}>
-        <Title2>{`Welcome, ${adminFirstName}. Let's get ${orgName} ready.`}</Title2>
-        <Caption1 className={styles.muted}>{`A few steps to set up your organisation. ${doneCount} of ${steps.length} done.`}</Caption1>
+      <div className={styles.headRow}>
+        <div className={styles.head}>
+          <Title2>{`Welcome, ${adminFirstName}. Let's get ${orgName} ready.`}</Title2>
+          <Caption1 className={styles.muted}>{`A few steps to set up your organisation. ${doneCount} of ${steps.length} done.`}</Caption1>
+        </div>
+        <Button appearance="subtle" size="small" icon={<DismissRegular />} aria-label="Hide setup guide" onClick={dismiss} />
       </div>
       <div className={styles.bar}>
         <div className={styles.fill} style={{ width: `${pct}%` }} />
@@ -105,7 +145,7 @@ export function TenantOnboarding({
             <span className={styles.body}>
               <Body1 className={s.done ? styles.titleDone : undefined}>{s.title}</Body1>
               <Caption1 className={styles.muted}>{s.body}</Caption1>
-              {!s.done && s.actionLabel && s.actionHref && (
+              {(!s.done || s.alwaysLink) && s.actionLabel && s.actionHref && (
                 <Link href={s.actionHref} className={styles.action}>
                   {s.actionLabel}
                   <ArrowRightRegular />
