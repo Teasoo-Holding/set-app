@@ -5,6 +5,7 @@ import { makeStyles, tokens, Title2, Caption1, Text, Button, SearchBox, Select }
 import { AppShell } from "@/components/AppShell";
 import { StakeholderCard } from "@/components/StakeholderCard";
 import { AddStakeholderDialog, type MemberOption } from "@/components/AddStakeholderDialog";
+import { ImportStakeholdersDialog } from "@/components/ImportStakeholdersDialog";
 import { RequestStakeholderDialog } from "@/components/RequestStakeholderDialog";
 import { EmptyState } from "@/components/EmptyState";
 import type { Role } from "@/lib/roles";
@@ -35,6 +36,7 @@ function formatDate(iso: string | null): string {
 const useStyles = makeStyles({
   main: { maxWidth: "960px", margin: "0 auto", padding: "28px 24px", display: "flex", flexDirection: "column", rowGap: "16px", "@media (max-width: 640px)": { padding: "16px 12px" } },
   header: { display: "flex", alignItems: "flex-start", columnGap: "12px" },
+  headerActions: { display: "flex", alignItems: "center", columnGap: "8px", flexWrap: "wrap" },
   headText: { display: "flex", flexDirection: "column", flexGrow: 1 },
   search: { width: "100%" },
   chipRow: { display: "flex", alignItems: "center", columnGap: "8px", rowGap: "8px", flexWrap: "wrap" },
@@ -120,12 +122,15 @@ export function DirectoryView({
             <Caption1>{`${rows.length} stakeholder${rows.length === 1 ? "" : "s"} in your scope`}</Caption1>
           </div>
           {canAdd ? (
-            <AddStakeholderDialog
-              categories={categories}
-              functions={addFunctions}
-              members={members}
-              currentUserId={profile.id}
-            />
+            <div className={styles.headerActions}>
+              {profile.role === "admin" && <ImportStakeholdersDialog categories={categories} functions={functions} />}
+              <AddStakeholderDialog
+                categories={categories}
+                functions={addFunctions}
+                members={members}
+                currentUserId={profile.id}
+              />
+            </div>
           ) : (
             <RequestStakeholderDialog categories={categories} />
           )}

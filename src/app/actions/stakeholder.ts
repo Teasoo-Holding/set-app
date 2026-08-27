@@ -126,6 +126,165 @@ export async function createStakeholder(formData: FormData) {
   }
 }
 
+// ── Bulk CSV import (#115) ───────────────────────────────────
+export type ImportResult = { imported: number; total: number; errors: { row: number; message: string }[] };
+
+/** Minimal RFC-4180 CSV parser: handles quoted fields with embedded commas, quotes and newlines. */
+function parseCsv(text: string): string[][] {
+  const rows: string[][] = [];
+  let row: string[] = [];
+  let field = "";
+  let inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (inQuotes) {
+      if (c === '"') {
+        if (text[i + 1] === '"') {
+          field += '"';
+          i++;
+        } else {
+          inQuotes = false;
+        }
+      } else {
+        field += c;
+      }
+    } else if (c === '"') {
+      inQuotes = true;
+    } else if (c === ",") {
+      row.push(field);
+      field = "";
+    } else if (c === "\n") {
+      row.push(field);
+      rows.push(row);
+      row = [];
+      field = "";
+    } else if (c !== "\r") {
+      field += c;
+    }
+  }
+  if (field !== "" || row.length > 0) {
+    row.push(field);
+    rows.push(row);
+  }
+  return rows;
+}
+
+/**
+ * Bulk-import stakeholders from CSV. Columns: name, category, function, tier,
+ * owner (optional name/email), risk (optional), sentiment (optional), notes
+ * (optional). Each row is validated against the tenant's active taxonomy, tier
+ * and (if given) owner; RLS scopes everything to the tenant. Valid rows are
+ * imported; invalid rows are reported by row number so the admin can fix them.
+ */
+export async function importStakeholders(formData: FormData): Promise<ImportResult> {
+  const text = String(formData.get("csv") ?? "").replace(/^﻿/, "").trim();
+  if (!text) return { imported: 0, total: 0, errors: [{ row: 0, message: "Paste some CSV first." }] };
+
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { imported: 0, total: 0, errors: [{ row: 0, message: "Not signed in." }] };
+
+  const [{ data: taxRows }, { data: peopleRows }] = await Promise.all([
+    supabase.from("taxonomy").select("kind, value").eq("is_active", true),
+    supabase.from("profiles").select("id, full_name, email"),
+  ]);
+
+  // lowercase → canonical, so matching is case-insensitive but we store the canonical value.
+  const cat = new Map<string, string>();
+  const fn = new Map<string, string>();
+  for (const t of (taxRows as { kind: string; value: string }[]) ?? []) {
+    if (t.kind === "category") cat.set(t.value.toLowerCase(), t.value);
+    else if (t.kind === "function") fn.set(t.value.toLowerCase(), t.value);
+  }
+  const ownerBy = new Map<string, string>();
+  for (const p of (peopleRows as { id: string; full_name: string; email: string }[]) ?? []) {
+    ownerBy.set(p.full_name.toLowerCase(), p.id);
+    ownerBy.set(p.email.toLowerCase(), p.id);
+  }
+
+  const parsed = parseCsv(text);
+  const start = parsed[0]?.[0]?.trim().toLowerCase() === "name" ? 1 : 0;
+  const dataRows = parsed.slice(start).filter((r) => r.some((c) => c.trim() !== ""));
+  if (dataRows.length === 0) return { imported: 0, total: 0, errors: [{ row: 0, message: "No data rows found." }] };
+
+  const errors: { row: number; message: string }[] = [];
+  const toInsert: Record<string, unknown>[] = [];
+
+  dataRows.forEach((cols, idx) => {
+    const rowNo = idx + 1;
+    const name = (cols[0] ?? "").trim();
+    const category = (cols[1] ?? "").trim();
+    const func = (cols[2] ?? "").trim();
+    const tier = Number((cols[3] ?? "").trim());
+    const owner = (cols[4] ?? "").trim();
+    const risk = (cols[5] ?? "").trim().toLowerCase() || "low";
+    const sentiment = (cols[6] ?? "").trim().toLowerCase() || "neutral";
+    const notes = (cols[7] ?? "").trim();
+
+    if (!name) {
+      errors.push({ row: rowNo, message: "Missing name." });
+      return;
+    }
+    if (!cat.has(category.toLowerCase())) {
+      errors.push({ row: rowNo, message: `Unknown category "${category}".` });
+      return;
+    }
+    if (!fn.has(func.toLowerCase())) {
+      errors.push({ row: rowNo, message: `Unknown function "${func}".` });
+      return;
+    }
+    if (tier !== 1 && tier !== 2) {
+      errors.push({ row: rowNo, message: "Tier must be 1 or 2." });
+      return;
+    }
+    if (!RISKS.includes(risk)) {
+      errors.push({ row: rowNo, message: `Invalid risk "${risk}".` });
+      return;
+    }
+    if (!SENTIMENTS.includes(sentiment)) {
+      errors.push({ row: rowNo, message: `Invalid sentiment "${sentiment}".` });
+      return;
+    }
+    let ownerId = user.id;
+    if (owner) {
+      const found = ownerBy.get(owner.toLowerCase());
+      if (!found) {
+        errors.push({ row: rowNo, message: `Unknown owner "${owner}".` });
+        return;
+      }
+      ownerId = found;
+    }
+    toInsert.push({
+      name,
+      category: cat.get(category.toLowerCase()),
+      function: fn.get(func.toLowerCase()),
+      tier,
+      owner_id: ownerId,
+      risk,
+      sentiment,
+      notes: notes || null,
+    });
+  });
+
+  let imported = 0;
+  if (toInsert.length > 0) {
+    const { error } = await supabase.from("stakeholders").insert(toInsert);
+    if (error) {
+      errors.push({
+        row: 0,
+        message: "Some rows couldn't be saved. Check that you have permission and that categories/functions match your organisation.",
+      });
+    } else {
+      imported = toInsert.length;
+      for (const p of ["/directory", "/home", "/dashboard", "/portfolio", "/governance"]) revalidatePath(p);
+    }
+  }
+
+  return { imported, total: dataRows.length, errors };
+}
+
 /**
  * E5-2 / E5-3 — flag or unflag a stakeholder. Flagging sets `flagged` (and an
  * optional reason); the sync_escalation trigger opens/closes the escalation.
