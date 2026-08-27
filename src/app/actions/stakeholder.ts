@@ -187,7 +187,10 @@ export async function importStakeholders(formData: FormData): Promise<ImportResu
   if (!user) return { imported: 0, total: 0, errors: [{ row: 0, message: "Not signed in." }] };
 
   const [{ data: taxRows }, { data: peopleRows }] = await Promise.all([
-    supabase.from("taxonomy").select("kind, value").eq("is_active", true),
+    // Match any category/function that EXISTS in the tenant (the stakeholder FK
+    // allows disabled values too) — not just the ones currently active in the
+    // pickers, so a value the admin knows isn't wrongly rejected as "unknown".
+    supabase.from("taxonomy").select("kind, value"),
     supabase.from("profiles").select("id, full_name, email"),
   ]);
 
