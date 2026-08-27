@@ -73,7 +73,10 @@ export default async function GovernancePage() {
     function: p.function,
   }));
 
-  const functions = taxonomy.filter((t) => t.kind === "function" && t.is_active).map((t) => t.value);
+  const functions = taxonomy
+    .filter((t) => t.kind === "function" && t.is_active)
+    .map((t) => t.value)
+    .sort((a, b) => a.localeCompare(b));
 
   const invites: PendingInvite[] = (
     (inviteRows as { id: string; email: string; role: string; function: string | null; created_at: string; expires_at: string }[]) ?? []

@@ -275,7 +275,7 @@ export function GovernanceAdmin({
         <div className={styles.card}>
           <Title3>Categories, functions &amp; engagement types</Title3>
           {KINDS.map((k) => {
-            const values = taxonomy.filter((t) => t.kind === k.key);
+            const values = taxonomy.filter((t) => t.kind === k.key).sort((a, b) => a.value.localeCompare(b.value));
             return (
               <div key={k.key} className={styles.taxGroup}>
                 <Caption1 className={styles.muted}>{k.label}</Caption1>
