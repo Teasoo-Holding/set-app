@@ -75,6 +75,7 @@ const useStyles = makeStyles({
   roleLegendHead: { fontWeight: tokens.fontWeightSemibold, color: tokens.colorNeutralForeground2, marginBottom: "2px" },
   roleLegendItem: { color: tokens.colorNeutralForeground2 },
   roleLegendName: { color: tokens.colorNeutralForeground1, fontWeight: tokens.fontWeightSemibold },
+  inlineAddFn: { display: "flex", flexDirection: "column", rowGap: "6px", marginTop: "12px" },
   memberRow: { display: "flex", alignItems: "center", columnGap: "10px", flexWrap: "wrap", padding: "10px 0", borderTop: `1px solid ${tokens.colorNeutralStroke2}` },
   memberMain: { display: "flex", flexDirection: "column", rowGap: "2px", flexGrow: 1, minWidth: "180px" },
 });
@@ -164,6 +165,17 @@ export function GovernanceAdmin({
               </Select>
             </label>
             <SubmitButton appearance="primary">Send invite</SubmitButton>
+          </form>
+
+          {/* Create-during-invite: add a function without leaving the form. It
+              becomes selectable above (and everywhere) once added. */}
+          <form action={addTaxonomy} className={styles.inlineAddFn}>
+            <input type="hidden" name="kind" value="function" />
+            <Caption1 className={styles.muted}>Function not listed? Add one and it&apos;s ready to assign:</Caption1>
+            <div className={styles.addRow}>
+              <Input name="value" size="small" placeholder="New function name" />
+              <SubmitButton size="small" appearance="outline">Add function</SubmitButton>
+            </div>
           </form>
 
           <div className={styles.roleLegend}>
@@ -263,7 +275,7 @@ export function GovernanceAdmin({
         <div className={styles.card}>
           <Title3>Categories, functions &amp; engagement types</Title3>
           {KINDS.map((k) => {
-            const values = taxonomy.filter((t) => t.kind === k.key);
+            const values = taxonomy.filter((t) => t.kind === k.key).sort((a, b) => a.value.localeCompare(b.value));
             return (
               <div key={k.key} className={styles.taxGroup}>
                 <Caption1 className={styles.muted}>{k.label}</Caption1>

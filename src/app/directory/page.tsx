@@ -23,8 +23,8 @@ export default async function DirectoryPage({
   ]);
 
   const tax = (taxRows as { kind: string; value: string }[]) ?? [];
-  const categories = tax.filter((t) => t.kind === "category").map((t) => t.value);
-  const functions = tax.filter((t) => t.kind === "function").map((t) => t.value);
+  const categories = tax.filter((t) => t.kind === "category").map((t) => t.value).sort((a, b) => a.localeCompare(b));
+  const functions = tax.filter((t) => t.kind === "function").map((t) => t.value).sort((a, b) => a.localeCompare(b));
   const members = ((memberRows as { id: string; full_name: string }[]) ?? []).map((m) => ({ id: m.id, name: m.full_name }));
 
   const rows: DirectoryRow[] = (
