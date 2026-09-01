@@ -8,6 +8,7 @@ import { SubmitButton } from "@/components/SubmitButton";
 import { ConfirmButton } from "@/components/ConfirmButton";
 import { approveRequest, rejectRequest, addTaxonomy, setTaxonomyActive, reassignStakeholders } from "@/app/actions/governance";
 import { inviteUser, revokeInvite } from "@/app/actions/invitations";
+import { InfoTip } from "@/components/InfoTip";
 import { ROLE_LABEL, ROLE_DESCRIPTION, type Role } from "@/lib/roles";
 
 export type PendingRequest = {
@@ -51,6 +52,7 @@ const useStyles = makeStyles({
   head: { display: "flex", flexDirection: "column", rowGap: "2px" },
   card: { padding: "20px", backgroundColor: tokens.colorNeutralBackground1, border: `1px solid ${tokens.colorNeutralStroke2}`, borderRadius: tokens.borderRadiusXLarge, display: "flex", flexDirection: "column", rowGap: "12px" },
   sectionHead: { display: "flex", alignItems: "center", justifyContent: "space-between", columnGap: "8px" },
+  cardTitleRow: { display: "flex", alignItems: "center", columnGap: "6px" },
   reqRow: { display: "flex", alignItems: "flex-start", columnGap: "12px", rowGap: "10px", flexWrap: "wrap", padding: "12px 0", borderTop: `1px solid ${tokens.colorNeutralStroke2}` },
   reqBody: { display: "flex", flexDirection: "column", rowGap: "3px", flexGrow: 1, minWidth: "220px" },
   reqActions: { display: "flex", alignItems: "center", columnGap: "8px", flexShrink: 0 },
@@ -273,7 +275,13 @@ export function GovernanceAdmin({
 
         {/* E10-2 taxonomy editor */}
         <div className={styles.card}>
-          <Title3>Categories, functions &amp; engagement types</Title3>
+          <div className={styles.cardTitleRow}>
+            <Title3>Categories, functions &amp; engagement types</Title3>
+            <InfoTip
+              content="These lists power the pickers when adding stakeholders and logging engagements. Disable hides a value from new pickers but keeps it on stakeholders that already use it; Enable brings it back."
+              label="How categories, functions and engagement types work"
+            />
+          </div>
           {KINDS.map((k) => {
             const values = taxonomy.filter((t) => t.kind === k.key).sort((a, b) => a.value.localeCompare(b.value));
             return (

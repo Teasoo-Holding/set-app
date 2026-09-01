@@ -6,6 +6,7 @@ import { ChevronRightRegular } from "@fluentui/react-icons";
 import { AppShell } from "@/components/AppShell";
 import { EmptyState } from "@/components/EmptyState";
 import { TenantOnboarding } from "@/components/TenantOnboarding";
+import { InfoTip } from "@/components/InfoTip";
 import type { Role } from "@/lib/roles";
 
 type Kpi = { highRisk: number; openEscalations: number; dueThisWeek: number; pctSupportive: number };
@@ -36,6 +37,7 @@ const useStyles = makeStyles({
   kpis: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", columnGap: "12px", rowGap: "12px" },
   kpi: { padding: "16px 18px", backgroundColor: tokens.colorNeutralBackground1, border: `1px solid ${tokens.colorNeutralStroke2}`, borderRadius: tokens.borderRadiusLarge, display: "flex", flexDirection: "column", rowGap: "2px" },
   kpiNum: { fontSize: "28px", fontWeight: tokens.fontWeightBold },
+  kpiLabel: { display: "flex", alignItems: "center", columnGap: "4px" },
   grid2: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))", columnGap: "16px", rowGap: "16px" },
   card: { padding: "20px", backgroundColor: tokens.colorNeutralBackground1, border: `1px solid ${tokens.colorNeutralStroke2}`, borderRadius: tokens.borderRadiusXLarge, display: "flex", flexDirection: "column", rowGap: "12px" },
   sectionHead: { display: "flex", alignItems: "center", justifyContent: "space-between", columnGap: "8px" },
@@ -80,10 +82,10 @@ export function LeadershipPortfolio({
   const showOnboarding = viewer.role === "admin" && onboarding;
 
   const kpiCards = [
-    { label: "High risk", value: kpis.highRisk, color: tokens.colorStatusDangerForeground1 },
-    { label: "Open escalations", value: kpis.openEscalations, color: tokens.colorStatusWarningForeground1 },
-    { label: "Due this week", value: kpis.dueThisWeek, color: tokens.colorNeutralForeground1 },
-    { label: "% supportive", value: `${kpis.pctSupportive}%`, color: tokens.colorStatusSuccessForeground1 },
+    { label: "High risk", value: kpis.highRisk, color: tokens.colorStatusDangerForeground1, tip: "Stakeholders rated high risk right now. Risk reflects how likely a relationship is to cause a problem." },
+    { label: "Open escalations", value: kpis.openEscalations, color: tokens.colorStatusWarningForeground1, tip: "Escalations that are open and not yet resolved. One opens when a stakeholder is flagged, or set to high risk and resistant." },
+    { label: "Due this week", value: kpis.dueThisWeek, color: tokens.colorNeutralForeground1, tip: "Open commitments with a due date in the next 7 days." },
+    { label: "% supportive", value: `${kpis.pctSupportive}%`, color: tokens.colorStatusSuccessForeground1, tip: "Share of your stakeholders whose current sentiment is supportive." },
   ];
 
   return (
@@ -108,7 +110,10 @@ export function LeadershipPortfolio({
           {kpiCards.map((k) => (
             <div key={k.label} className={styles.kpi}>
               <span className={styles.kpiNum} style={{ color: k.color }}>{k.value}</span>
-              <Caption1>{k.label}</Caption1>
+              <span className={styles.kpiLabel}>
+                <Caption1>{k.label}</Caption1>
+                <InfoTip content={k.tip} label={`What "${k.label}" means`} />
+              </span>
             </div>
           ))}
         </div>
