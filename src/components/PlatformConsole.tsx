@@ -12,6 +12,7 @@ import { SubmitButton } from "@/components/SubmitButton";
 import { ConfirmButton } from "@/components/ConfirmButton";
 import { createTenant, setTenantStatus, reinviteTenantAdmin } from "@/app/actions/tenants";
 import { SentryDiagnostics } from "@/components/SentryDiagnostics";
+import { InfoTip } from "@/components/InfoTip";
 
 export type TenantRow = {
   id: string;
@@ -67,6 +68,7 @@ const useStyles = makeStyles({
   statGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "12px" },
   statCard: { padding: "14px 16px", backgroundColor: tokens.colorNeutralBackground1, border: `1px solid ${tokens.colorNeutralStroke2}`, borderRadius: tokens.borderRadiusLarge, display: "flex", flexDirection: "column", rowGap: "2px" },
   statNum: { fontSize: tokens.fontSizeHero700, fontWeight: tokens.fontWeightSemibold, lineHeight: "1.1", color: tokens.colorNeutralForeground1 },
+  statLabelRow: { display: "flex", alignItems: "center", columnGap: "4px" },
   statLabel: { color: tokens.colorNeutralForeground2 },
   statSub: { color: tokens.colorNeutralForeground3 },
   metrics: { color: tokens.colorNeutralForeground3 },
@@ -90,16 +92,21 @@ function Stat({
   num,
   label,
   sub,
+  tip,
 }: {
   styles: ReturnType<typeof useStyles>;
   num: string | number;
   label: string;
   sub?: string;
+  tip?: string;
 }) {
   return (
     <div className={styles.statCard}>
       <Text className={styles.statNum}>{num}</Text>
-      <Caption1 className={styles.statLabel}>{label}</Caption1>
+      <span className={styles.statLabelRow}>
+        <Caption1 className={styles.statLabel}>{label}</Caption1>
+        {tip ? <InfoTip content={tip} label={`What "${label}" means`} /> : null}
+      </span>
       {sub ? <Caption1 className={styles.statSub}>{sub}</Caption1> : null}
     </div>
   );
@@ -175,32 +182,32 @@ export function PlatformConsole({
           <Caption1 className={styles.sectionLabel}>Adoption</Caption1>
           <div className={styles.statGrid}>
             <Stat styles={styles} num={tenants.length} label="Organisations" sub={`${activeOrgs} active · ${tenants.length - activeOrgs} suspended`} />
-            <Stat styles={styles} num={`${activeOrgs30d}/${tenants.length}`} label="Active orgs (30d)" sub="logged activity recently" />
+            <Stat styles={styles} num={`${activeOrgs30d}/${tenants.length}`} label="Active orgs (30d)" sub="logged activity recently" tip="Organisations that have logged at least one engagement in the last 30 days, out of all organisations." />
             <Stat styles={styles} num={totalUsers} label="Users" sub={`${roleTotals.leadership} leadership · ${roleTotals.head} head · ${roleTotals.field} field · ${roleTotals.admin} admin`} />
-            <Stat styles={styles} num={pct(invAccepted, invAccepted + invPending)} label="Invite acceptance" sub={`${invAccepted} accepted · ${invPending} pending`} />
+            <Stat styles={styles} num={pct(invAccepted, invAccepted + invPending)} label="Invite acceptance" sub={`${invAccepted} accepted · ${invPending} pending`} tip="Share of invitations that have been accepted, out of all invitations sent." />
           </div>
 
           <Caption1 className={styles.sectionLabel}>Activity</Caption1>
           <div className={styles.statGrid}>
             <Stat styles={styles} num={totalStakeholders} label="Stakeholders tracked" sub="across all organisations" />
-            <Stat styles={styles} num={totalEng30d} label="Engagements (30d)" sub={`${totalEng7d} in the last 7 days`} />
-            <Stat styles={styles} num={totalActiveUsers} label="Active contributors (30d)" sub="logged at least one engagement" />
+            <Stat styles={styles} num={totalEng30d} label="Engagements (30d)" sub={`${totalEng7d} in the last 7 days`} tip="Engagements logged across all organisations in the last 30 days." />
+            <Stat styles={styles} num={totalActiveUsers} label="Active contributors (30d)" sub="logged at least one engagement" tip="People who logged at least one engagement in the last 30 days." />
           </div>
 
           <Caption1 className={styles.sectionLabel}>Delivery</Caption1>
           <div className={styles.statGrid}>
-            <Stat styles={styles} num={pct(comDone, comTotal)} label="Commitments completed" sub={`${comDone} of ${comTotal} · ${comOpen} open`} />
-            <Stat styles={styles} num={pct(escResolved, escTotal)} label="Escalations resolved" sub={`${escResolved} of ${escTotal} · ${escOpen} open`} />
-            <Stat styles={styles} num={escCritical} label="Critical escalations open" sub="need attention now" />
-            <Stat styles={styles} num={pendingAdminInvites} label="Admin invites pending" sub="orgs awaiting first admin" />
+            <Stat styles={styles} num={pct(comDone, comTotal)} label="Commitments completed" sub={`${comDone} of ${comTotal} · ${comOpen} open`} tip="Share of all commitments marked done, across every organisation." />
+            <Stat styles={styles} num={pct(escResolved, escTotal)} label="Escalations resolved" sub={`${escResolved} of ${escTotal} · ${escOpen} open`} tip="Share of all escalations that have been resolved, across every organisation." />
+            <Stat styles={styles} num={escCritical} label="Critical escalations open" sub="need attention now" tip="Open escalations at critical severity. These are the most urgent relationships across the platform." />
+            <Stat styles={styles} num={pendingAdminInvites} label="Admin invites pending" sub="orgs awaiting first admin" tip="Organisations where the first administrator has been invited but has not yet accepted." />
           </div>
 
           <Caption1 className={styles.sectionLabel}>Risk snapshot</Caption1>
           <div className={styles.statGrid}>
-            <Stat styles={styles} num={highRisk} label="High-risk stakeholders" />
-            <Stat styles={styles} num={flaggedTotal} label="Flagged" />
-            <Stat styles={styles} num={negativeTotal} label="Resistant sentiment" />
-            <Stat styles={styles} num={pct(supportiveTotal, totalStakeholders)} label="Supportive" sub={`${supportiveTotal} of ${totalStakeholders}`} />
+            <Stat styles={styles} num={highRisk} label="High-risk stakeholders" tip="Stakeholders rated high risk right now, across every organisation." />
+            <Stat styles={styles} num={flaggedTotal} label="Flagged" tip="Stakeholders someone has flagged for attention, across every organisation." />
+            <Stat styles={styles} num={negativeTotal} label="Resistant sentiment" tip="Stakeholders whose current sentiment is resistant, across every organisation." />
+            <Stat styles={styles} num={pct(supportiveTotal, totalStakeholders)} label="Supportive" sub={`${supportiveTotal} of ${totalStakeholders}`} tip="Share of all tracked stakeholders whose current sentiment is supportive." />
           </div>
 
           <Caption1 className={styles.postHogNote}>

@@ -16,6 +16,7 @@ import {
   Input,
   Field,
   Divider,
+  Tooltip,
 } from "@fluentui/react-components";
 import { ArrowLeftRegular, FlagFilled, FlagRegular } from "@fluentui/react-icons";
 import { AppShell } from "@/components/AppShell";
@@ -150,7 +151,14 @@ export function ProfileView({
             <div className={styles.headMid}>
               <div className={styles.nameRow}>
                 <Title2>{s.name}</Title2>
-                <Badge appearance="tint" color="informative" size="small">{`Tier ${s.tier}`}</Badge>
+                <Tooltip
+                  relationship="description"
+                  withArrow
+                  positioning="above"
+                  content="Tier 1 is a strategic, high-priority relationship you actively manage. Tier 2 is a standard relationship you keep track of."
+                >
+                  <Badge appearance="tint" color="informative" size="small" tabIndex={0}>{`Tier ${s.tier}`}</Badge>
+                </Tooltip>
                 {s.flagged && (
                   <Badge appearance="tint" color="danger" size="small">
                     <FlagFilled fontSize={12} /> Flagged
@@ -159,8 +167,22 @@ export function ProfileView({
               </div>
               <Caption1 className={styles.muted}>{`${s.category} · ${s.function}`}</Caption1>
               <div className={styles.pillRow}>
-                <Badge appearance="filled" color={riskColor[s.risk]}>{riskLabel[s.risk]}</Badge>
-                <Badge appearance="tint" color={sentColor[s.sentiment]}>{sentLabel[s.sentiment]}</Badge>
+                <Tooltip
+                  relationship="description"
+                  withArrow
+                  positioning="above"
+                  content="Risk is how likely this relationship is to cause a problem: low, medium or high."
+                >
+                  <Badge appearance="filled" color={riskColor[s.risk]} tabIndex={0}>{riskLabel[s.risk]}</Badge>
+                </Tooltip>
+                <Tooltip
+                  relationship="description"
+                  withArrow
+                  positioning="above"
+                  content="Sentiment is how the stakeholder currently feels about your work: supportive, neutral or resistant."
+                >
+                  <Badge appearance="tint" color={sentColor[s.sentiment]} tabIndex={0}>{sentLabel[s.sentiment]}</Badge>
+                </Tooltip>
                 <span className={styles.ownerPill}>{`Owner · ${s.ownerName ?? "Unassigned"}`}</span>
               </div>
             </div>
