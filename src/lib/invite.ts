@@ -57,7 +57,7 @@ export const DEFAULT_TAXONOMY: { kind: string; value: string; label: string; sor
 export async function createAndSendInvite(
   db: SupabaseClient,
   args: {
-    tenantId: string;
+    tenantId: string | null; // null = a platform-admin invite (no tenant)
     orgName: string;
     email: string;
     role: Role;
@@ -69,12 +69,15 @@ export async function createAndSendInvite(
   const { token, hash } = newInviteToken();
   const expiresAt = new Date(Date.now() + INVITE_TTL_DAYS * 86_400_000).toISOString();
 
-  await db
+  // Revoke any existing pending invite for the same scope + email so old links
+  // stop working and the one-pending-per-email index is satisfied.
+  let revoke = db
     .from("invitations")
     .update({ status: "revoked" })
-    .eq("tenant_id", args.tenantId)
     .eq("email", args.email)
     .eq("status", "pending");
+  revoke = args.tenantId === null ? revoke.is("tenant_id", null) : revoke.eq("tenant_id", args.tenantId);
+  await revoke;
 
   const { error } = await db.from("invitations").insert({
     tenant_id: args.tenantId,
