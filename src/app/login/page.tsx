@@ -170,6 +170,7 @@ const useStyles = makeStyles({
     "::before": { content: '""', flexGrow: 1, height: "1px", backgroundColor: "#ebedf2" },
     "::after": { content: '""', flexGrow: 1, height: "1px", backgroundColor: "#ebedf2" },
   },
+  socialButtons: { display: "flex", flexDirection: "column", rowGap: "10px" },
   msForm: { margin: 0 },
   msBtn: {
     width: "100%", minHeight: "44px", display: "flex", alignItems: "center", justifyContent: "center", columnGap: "10px",
@@ -311,18 +312,20 @@ export default function LoginPage({
           {mode === "signin" && (
             <>
               <div className={styles.divider}>or</div>
-              <form action={signInWithGoogle} className={styles.msForm}>
-                <button type="submit" className={styles.msBtn}>
-                  <GoogleLogo />
-                  Sign in with Google
-                </button>
-              </form>
-              <form action={signInWithMicrosoft} className={styles.msForm}>
-                <button type="submit" className={styles.msBtn}>
-                  <MicrosoftLogo />
-                  Sign in with Microsoft
-                </button>
-              </form>
+              <div className={styles.socialButtons}>
+                <form action={signInWithGoogle} className={styles.msForm}>
+                  <button type="submit" className={styles.msBtn}>
+                    <GoogleLogo />
+                    Sign in with Google
+                  </button>
+                </form>
+                <form action={signInWithMicrosoft} className={styles.msForm}>
+                  <button type="submit" className={styles.msBtn}>
+                    <MicrosoftLogo />
+                    Sign in with Microsoft
+                  </button>
+                </form>
+              </div>
             </>
           )}
 
