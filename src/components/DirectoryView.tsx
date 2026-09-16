@@ -1,7 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { makeStyles, tokens, Title2, Caption1, Text, Button, SearchBox, Select } from "@fluentui/react-components";
+import { makeStyles, tokens, Title2, Caption1, Text, Button, SearchBox, Select, MessageBar, MessageBarBody, MessageBarActions } from "@fluentui/react-components";
+import { DismissRegular } from "@fluentui/react-icons";
 import { AppShell } from "@/components/AppShell";
 import { StakeholderCard } from "@/components/StakeholderCard";
 import { AddStakeholderDialog, type MemberOption } from "@/components/AddStakeholderDialog";
@@ -74,6 +75,7 @@ export function DirectoryView({
     profile.role === "admin" ||
     r.owner_id === profile.id ||
     (profile.role === "head" && r.function === profile.function);
+  const [added, setAdded] = React.useState<string | null>(null);
   const [query, setQuery] = React.useState("");
   const [category, setCategory] = React.useState<string>("All");
   const [tier, setTier] = React.useState<string>("All");
@@ -129,12 +131,24 @@ export function DirectoryView({
                 functions={addFunctions}
                 members={members}
                 currentUserId={profile.id}
+                onAdded={(name) => setAdded(name)}
               />
             </div>
           ) : (
             <RequestStakeholderDialog categories={categories} />
           )}
         </div>
+
+        {added && (
+          <MessageBar intent="success">
+            <MessageBarBody>{`Added ${added} to the directory. Sort by “Name (A → Z)” to find it.`}</MessageBarBody>
+            <MessageBarActions
+              containerAction={
+                <Button appearance="transparent" size="small" icon={<DismissRegular />} aria-label="Dismiss" onClick={() => setAdded(null)} />
+              }
+            />
+          </MessageBar>
+        )}
 
         <SearchBox
           className={styles.search}

@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useFormStatus } from "react-dom";
 import Link from "next/link";
 import { makeStyles } from "@fluentui/react-components";
 import { EyeRegular, EyeOffRegular, CheckmarkCircle20Filled } from "@fluentui/react-icons";
@@ -157,6 +158,7 @@ const useStyles = makeStyles({
     backgroundColor: "#17235b", color: "#ffffff",
     fontFamily: FIGTREE, fontSize: "15px", fontWeight: 600, cursor: "pointer",
     ":hover": { backgroundColor: "#101a4a" },
+    ":disabled": { opacity: 0.65, cursor: "default" },
   },
   backLink: {
     alignSelf: "center", background: "transparent", border: "none", padding: 0, cursor: "pointer",
@@ -177,6 +179,7 @@ const useStyles = makeStyles({
     padding: "12px 16px", border: "1px solid #d7dbe6", borderRadius: "9px", backgroundColor: "#ffffff",
     fontFamily: FIGTREE, fontSize: "15px", fontWeight: 600, color: "#131829", cursor: "pointer",
     ":hover": { border: "1px solid #17235b", backgroundColor: "#fafbfc" },
+    ":disabled": { opacity: 0.65, cursor: "default" },
   },
 
   demoHint: { marginTop: "24px", textAlign: "center", fontSize: "14px", color: "#9199a6", "@media (max-width: 999px)": { marginTop: "16px" } },
@@ -195,6 +198,28 @@ const COPY: Record<Mode, { title: string; blurb: string; cta: string }> = {
     cta: "Send reset link",
   },
 };
+
+/**
+ * Submit button that reflects the form's pending state, so a click gives
+ * immediate feedback (disabled + "…" label) instead of looking like nothing
+ * happened — which was prompting repeat clicks. Must live inside its `<form>`.
+ */
+function PendingButton({
+  className,
+  pendingLabel,
+  children,
+}: {
+  className: string;
+  pendingLabel: string;
+  children: React.ReactNode;
+}) {
+  const { pending } = useFormStatus();
+  return (
+    <button type="submit" className={className} disabled={pending} aria-busy={pending}>
+      {pending ? pendingLabel : children}
+    </button>
+  );
+}
 
 function PasswordField({ styles }: { styles: ReturnType<typeof useStyles> }) {
   const [show, setShow] = React.useState(false);
@@ -289,7 +314,7 @@ export default function LoginPage({
                 </div>
                 <PasswordField styles={styles} />
               </div>
-              <button type="submit" className={styles.primaryBtn}>{copy.cta}</button>
+              <PendingButton className={styles.primaryBtn} pendingLabel="Signing in…">{copy.cta}</PendingButton>
             </form>
           )}
 
@@ -302,7 +327,7 @@ export default function LoginPage({
                 </div>
                 <input id="email" name="email" type="email" autoComplete="email" required placeholder="you@company.com" className={styles.input} />
               </div>
-              <button type="submit" className={styles.primaryBtn}>{copy.cta}</button>
+              <PendingButton className={styles.primaryBtn} pendingLabel="Sending…">{copy.cta}</PendingButton>
               <button type="button" className={styles.backLink} onClick={() => setMode("signin")}>Back to sign in</button>
             </form>
           )}
@@ -314,16 +339,16 @@ export default function LoginPage({
               <div className={styles.divider}>or</div>
               <div className={styles.socialButtons}>
                 <form action={signInWithGoogle} className={styles.msForm}>
-                  <button type="submit" className={styles.msBtn}>
+                  <PendingButton className={styles.msBtn} pendingLabel="Connecting…">
                     <GoogleLogo />
                     Sign in with Google
-                  </button>
+                  </PendingButton>
                 </form>
                 <form action={signInWithMicrosoft} className={styles.msForm}>
-                  <button type="submit" className={styles.msBtn}>
+                  <PendingButton className={styles.msBtn} pendingLabel="Connecting…">
                     <MicrosoftLogo />
                     Sign in with Microsoft
-                  </button>
+                  </PendingButton>
                 </form>
               </div>
             </>
