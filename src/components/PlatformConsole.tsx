@@ -285,6 +285,7 @@ export function PlatformConsole({
                         formId={`prevoke-${i.id}`}
                         size="small"
                         appearance="subtle"
+                        destructive
                         confirmTitle="Revoke this invitation?"
                         confirmBody={`The link sent to ${i.email} will stop working. You can invite them again later.`}
                         confirmLabel="Revoke"

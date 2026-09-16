@@ -1,10 +1,13 @@
 "use client";
 
+import * as React from "react";
 import Link from "next/link";
-import { makeStyles, tokens, Title2, Title3, Body1, Caption1, Text, Avatar, Badge } from "@fluentui/react-components";
+import { makeStyles, tokens, Title2, Title3, Body1, Caption1, Text, Avatar, Badge, Button, MessageBar, MessageBarBody, MessageBarActions } from "@fluentui/react-components";
+import { DismissRegular } from "@fluentui/react-icons";
 import { AppShell } from "@/components/AppShell";
 import { EmptyState } from "@/components/EmptyState";
 import { InfoTip } from "@/components/InfoTip";
+import { AddStakeholderDialog, type MemberOption } from "@/components/AddStakeholderDialog";
 import type { Role } from "@/lib/roles";
 
 type Kpi = { highRisk: number; openEscalations: number; dueThisWeek: number; pctSupportive: number };
@@ -28,6 +31,7 @@ function fmt(iso: string): string {
 
 const useStyles = makeStyles({
   main: { maxWidth: "1040px", margin: "0 auto", padding: "32px 24px", display: "flex", flexDirection: "column", rowGap: "20px", "@media (max-width: 640px)": { padding: "16px 12px" } },
+  headRow: { display: "flex", alignItems: "flex-start", justifyContent: "space-between", columnGap: "12px", rowGap: "10px", flexWrap: "wrap" },
   head: { display: "flex", flexDirection: "column", rowGap: "2px" },
   kpis: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", columnGap: "12px", rowGap: "12px" },
   kpi: { padding: "16px 18px", backgroundColor: tokens.colorNeutralBackground1, border: `1px solid ${tokens.colorNeutralStroke2}`, borderRadius: tokens.borderRadiusLarge, display: "flex", flexDirection: "column", rowGap: "2px" },
@@ -62,6 +66,10 @@ export function FunctionDashboard({
   team,
   escalations,
   activity,
+  canAdd = false,
+  categories = [],
+  members = [],
+  currentUserId = "",
 }: {
   viewer: { full_name: string; role: Role; function: string | null };
   functionName: string;
@@ -70,8 +78,13 @@ export function FunctionDashboard({
   team: TeamMember[];
   escalations: Esc[];
   activity: Activity[];
+  canAdd?: boolean;
+  categories?: string[];
+  members?: MemberOption[];
+  currentUserId?: string;
 }) {
   const styles = useStyles();
+  const [added, setAdded] = React.useState<string | null>(null);
 
   const kpiCards = [
     { label: "High risk", value: kpis.highRisk, color: tokens.colorStatusDangerForeground1, tip: "Stakeholders in your function rated high risk right now. Risk reflects how likely a relationship is to cause a problem." },
@@ -83,10 +96,32 @@ export function FunctionDashboard({
   return (
     <AppShell profile={viewer} active="home">
       <main className={styles.main}>
-        <div className={styles.head}>
-          <Title2>{`${functionName} dashboard`}</Title2>
-          <Body1>Your function&apos;s health, team and priorities, at a glance.</Body1>
+        <div className={styles.headRow}>
+          <div className={styles.head}>
+            <Title2>{`${functionName} dashboard`}</Title2>
+            <Body1>Your function&apos;s health, team and priorities, at a glance.</Body1>
+          </div>
+          {canAdd && (
+            <AddStakeholderDialog
+              categories={categories}
+              functions={[viewer.function ?? functionName]}
+              members={members}
+              currentUserId={currentUserId}
+              onAdded={(name) => setAdded(name)}
+            />
+          )}
         </div>
+
+        {added && (
+          <MessageBar intent="success">
+            <MessageBarBody>{`Added ${added}. You’ll find it in the directory.`}</MessageBarBody>
+            <MessageBarActions
+              containerAction={
+                <Button appearance="transparent" size="small" icon={<DismissRegular />} aria-label="Dismiss" onClick={() => setAdded(null)} />
+              }
+            />
+          </MessageBar>
+        )}
 
         {/* E8-1 KPI cards */}
         <div className={styles.kpis}>

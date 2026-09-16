@@ -20,6 +20,7 @@ export default async function HeadDashboardPage() {
     { data: dueRows },
     { data: activity },
     { data: teamRows },
+    { data: categoryRows },
   ] = await Promise.all([
     // RLS scopes all of these to the Head's function.
     supabase.from("stakeholders").select("id, risk, sentiment, owner_id"),
@@ -45,6 +46,13 @@ export default async function HeadDashboardPage() {
       .select("id, full_name")
       .eq("function", profile.function ?? "")
       .neq("id", profile.id),
+    // Active categories, so a Head can add a stakeholder straight from here.
+    supabase
+      .from("taxonomy")
+      .select("value")
+      .eq("kind", "category")
+      .eq("is_active", true)
+      .order("sort_order", { ascending: true }),
   ]);
 
   const sh = (stakeholders as { id: string; risk: string; sentiment: string; owner_id: string }[]) ?? [];
@@ -81,10 +89,22 @@ export default async function HeadDashboardPage() {
     escalationCount: escalations.filter((e) => e.ownerId === m.id).length,
   }));
 
+  // A Head can add stakeholders in their own function. Owner options are the
+  // Head plus their team; categories come from the tenant's active taxonomy.
+  const categories = ((categoryRows as { value: string }[]) ?? []).map((c) => c.value);
+  const members = [
+    { id: profile.id, name: profile.full_name },
+    ...((teamRows as { id: string; full_name: string }[]) ?? []).map((m) => ({ id: m.id, name: m.full_name })),
+  ];
+
   return (
     <FunctionDashboard
       viewer={{ full_name: profile.full_name, role: profile.role, function: profile.function }}
       functionName={profile.function ?? "Function"}
+      canAdd={profile.role === "head" && !!profile.function}
+      categories={categories}
+      members={members}
+      currentUserId={profile.id}
       kpis={{
         highRisk,
         openEscalations: escalations.length,

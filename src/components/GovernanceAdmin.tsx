@@ -210,6 +210,7 @@ export function GovernanceAdmin({
                       formId={`revoke-${i.id}`}
                       size="small"
                       appearance="subtle"
+                      destructive
                       confirmTitle="Revoke this invitation?"
                       confirmBody={`The link sent to ${i.email} will stop working. You can send a new invite later.`}
                       confirmLabel="Revoke"

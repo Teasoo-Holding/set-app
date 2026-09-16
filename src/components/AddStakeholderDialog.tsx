@@ -31,11 +31,13 @@ export function AddStakeholderDialog({
   functions,
   members,
   currentUserId,
+  onAdded,
 }: {
   categories: string[];
   functions: string[];
   members: MemberOption[];
   currentUserId: string;
+  onAdded?: (name: string) => void;
 }) {
   const styles = useStyles();
   const router = useRouter();
@@ -47,11 +49,13 @@ export function AddStakeholderDialog({
     e.preventDefault();
     setError(null);
     const fd = new FormData(e.currentTarget);
+    const name = String(fd.get("name") ?? "").trim();
     setPending(true);
     createStakeholder(fd)
       .then(() => {
         setPending(false);
         setOpen(false);
+        onAdded?.(name);
         router.refresh();
       })
       .catch((err: unknown) => {
