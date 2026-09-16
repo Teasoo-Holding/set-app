@@ -10,6 +10,8 @@ export type Profile = {
   email: string;
   role: Role;
   function: string | null;
+  is_platform_owner?: boolean; // the one protected super platform admin
+  deactivated_at?: string | null; // set when the account is deactivated (sign-in blocked)
 };
 
 /** E1-2 / E12-3 — where each role lands after sign-in. */

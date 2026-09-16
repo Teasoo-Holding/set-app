@@ -80,12 +80,13 @@ update auth.users set
   email_change_confirm_status = coalesce(email_change_confirm_status, 0)
 where email like '%@example.com' or email like '%@teasooconsulting.com';
 
--- Platform admin: no tenant, no function.
-insert into public.profiles (id, tenant_id, full_name, email, role, function, manager_id) values
-  ('00000000-0000-0000-0000-0000000000f0', null, 'Efeosasere Okoro', 'efeosasere.okoro@teasooconsulting.com', 'platform_admin', null, null)
+-- Platform admin: no tenant, no function. The bootstrap operator is the
+-- protected super admin (is_platform_owner) — it can never be deactivated.
+insert into public.profiles (id, tenant_id, full_name, email, role, function, manager_id, is_platform_owner) values
+  ('00000000-0000-0000-0000-0000000000f0', null, 'Efeosasere Okoro', 'efeosasere.okoro@teasooconsulting.com', 'platform_admin', null, null, true)
 on conflict (id) do update set
   tenant_id = excluded.tenant_id, full_name = excluded.full_name, role = excluded.role,
-  function = excluded.function, manager_id = excluded.manager_id;
+  function = excluded.function, manager_id = excluded.manager_id, is_platform_owner = excluded.is_platform_owner;
 
 -- Demo tenant cast.
 insert into public.profiles (id, tenant_id, full_name, email, role, function, manager_id) values

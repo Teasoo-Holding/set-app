@@ -11,6 +11,8 @@ import { signOut } from "@/app/actions/auth";
 import { SubmitButton } from "@/components/SubmitButton";
 import { ConfirmButton } from "@/components/ConfirmButton";
 import { createTenant, setTenantStatus, reinviteTenantAdmin } from "@/app/actions/tenants";
+import { invitePlatformAdmin, setPlatformAdminActive } from "@/app/actions/platform-admins";
+import { revokeInvite } from "@/app/actions/invitations";
 import { SentryDiagnostics } from "@/components/SentryDiagnostics";
 import { InfoTip } from "@/components/InfoTip";
 
@@ -45,6 +47,16 @@ export type TenantRow = {
   escalationsCritical: number;
 };
 
+export type PlatformAdminRow = {
+  id: string;
+  name: string;
+  email: string;
+  isOwner: boolean;
+  deactivated: boolean;
+  createdAt: string;
+};
+export type PlatformInviteRow = { id: string; email: string; createdAt: string; expiresAt: string };
+
 function fmt(iso: string): string {
   return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 }
@@ -65,6 +77,7 @@ const useStyles = makeStyles({
   main: { maxWidth: "1040px", margin: "0 auto", padding: "32px 24px", display: "flex", flexDirection: "column", rowGap: "20px", "@media (max-width: 640px)": { padding: "16px 12px" } },
   head: { display: "flex", flexDirection: "column", rowGap: "2px" },
   card: { padding: "20px", backgroundColor: tokens.colorNeutralBackground1, border: `1px solid ${tokens.colorNeutralStroke2}`, borderRadius: tokens.borderRadiusXLarge, display: "flex", flexDirection: "column", rowGap: "14px" },
+  cardTitleRow: { display: "flex", alignItems: "center", columnGap: "6px" },
   statGrid: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: "12px" },
   statCard: { padding: "14px 16px", backgroundColor: tokens.colorNeutralBackground1, border: `1px solid ${tokens.colorNeutralStroke2}`, borderRadius: tokens.borderRadiusLarge, display: "flex", flexDirection: "column", rowGap: "2px" },
   statNum: { fontSize: tokens.fontSizeHero700, fontWeight: tokens.fontWeightSemibold, lineHeight: "1.1", color: tokens.colorNeutralForeground1 },
@@ -115,15 +128,20 @@ function Stat({
 export function PlatformConsole({
   viewer,
   tenants,
+  admins,
+  platformInvites,
   sentryTestEnabled = false,
 }: {
-  viewer: { full_name: string };
+  viewer: { full_name: string; id: string };
   tenants: TenantRow[];
+  admins: PlatformAdminRow[];
+  platformInvites: PlatformInviteRow[];
   sentryTestEnabled?: boolean;
 }) {
   const styles = useStyles();
   const [createState, createAction] = useFormState(createTenant, null);
   const [resendState, resendAction] = useFormState(reinviteTenantAdmin, null);
+  const [teamState, teamAction] = useFormState(invitePlatformAdmin, null);
 
   const sum = (f: (t: TenantRow) => number) => tenants.reduce((n, t) => n + f(t), 0);
   const now = Date.now();
@@ -213,6 +231,113 @@ export function PlatformConsole({
           <Caption1 className={styles.postHogNote}>
             These are counts only, with no stakeholder details. Sign-ins, active users and feature usage live in PostHog, grouped by organisation.
           </Caption1>
+        </div>
+
+        {/* Platform team: add & manage platform admins */}
+        <div className={styles.card}>
+          <div className={styles.cardTitleRow}>
+            <Title3>Platform team</Title3>
+            <InfoTip
+              content="People who operate the whole platform: they create and manage organisations but see no organisation's stakeholder data. Invited admins can do everything you do, except the super admin can't be deactivated."
+              label="What the platform team is"
+            />
+          </div>
+          <Caption1 className={styles.muted}>
+            Invite another platform administrator by email. They set their own password from the link, then have the same access you do.
+          </Caption1>
+
+          <form action={teamAction} className={styles.createForm}>
+            <Field label="Email" className={styles.field}>
+              <Input name="email" type="email" required placeholder="operator@teasooconsulting.com" />
+            </Field>
+            <SubmitButton appearance="primary">Send invite</SubmitButton>
+          </form>
+
+          {teamState?.error && (
+            <MessageBar intent="error"><MessageBarBody>{teamState.error}</MessageBarBody></MessageBar>
+          )}
+          {teamState?.invitedEmail && teamState.emailed && (
+            <MessageBar intent="success"><MessageBarBody>{`Invitation emailed to ${teamState.invitedEmail}.`}</MessageBarBody></MessageBar>
+          )}
+          {teamState?.invitedEmail && !teamState.emailed && teamState.inviteLink && (
+            <MessageBar intent="warning">
+              <MessageBarBody>
+                <MessageBarTitle>{`Invited ${teamState.invitedEmail}, but email not sent`}</MessageBarTitle>
+                Email isn&apos;t delivering, so send this link to them yourself:
+                <div className={styles.linkBox}>{teamState.inviteLink}</div>
+              </MessageBarBody>
+            </MessageBar>
+          )}
+
+          {platformInvites.length > 0 && (
+            <>
+              <Caption1 className={styles.sectionLabel}>Pending invitations</Caption1>
+              {platformInvites.map((i) => (
+                <div key={i.id} className={styles.row}>
+                  <div className={styles.rowMain}>
+                    <Text weight="semibold">{i.email}</Text>
+                    <Caption1 className={styles.muted}>{`Invited ${fmt(i.createdAt)} · expires ${fmt(i.expiresAt)}`}</Caption1>
+                  </div>
+                  <div className={styles.actions}>
+                    <form id={`prevoke-${i.id}`} action={revokeInvite} className={styles.form}>
+                      <input type="hidden" name="id" value={i.id} />
+                      <ConfirmButton
+                        formId={`prevoke-${i.id}`}
+                        size="small"
+                        appearance="subtle"
+                        confirmTitle="Revoke this invitation?"
+                        confirmBody={`The link sent to ${i.email} will stop working. You can invite them again later.`}
+                        confirmLabel="Revoke"
+                      >
+                        Revoke
+                      </ConfirmButton>
+                    </form>
+                  </div>
+                </div>
+              ))}
+            </>
+          )}
+
+          <Caption1 className={styles.sectionLabel}>{`Administrators (${admins.length})`}</Caption1>
+          {admins.map((a) => (
+            <div key={a.id} className={styles.row}>
+              <div className={styles.rowMain}>
+                <div className={styles.nameRow}>
+                  <Text weight="semibold">{a.name}</Text>
+                  {a.isOwner && <Badge appearance="tint" color="brand" size="small">Super admin</Badge>}
+                  {a.id === viewer.id && <Badge appearance="tint" color="informative" size="small">You</Badge>}
+                  {a.deactivated && <Badge appearance="tint" color="danger" size="small">Deactivated</Badge>}
+                </div>
+                <Caption1 className={styles.muted}>{a.email}</Caption1>
+              </div>
+              <div className={styles.actions}>
+                {a.isOwner || a.id === viewer.id ? (
+                  <Caption1 className={styles.muted}>{a.isOwner ? "Protected" : "This is you"}</Caption1>
+                ) : a.deactivated ? (
+                  <form action={setPlatformAdminActive} className={styles.form}>
+                    <input type="hidden" name="id" value={a.id} />
+                    <input type="hidden" name="active" value="true" />
+                    <SubmitButton size="small" appearance="primary">Reactivate</SubmitButton>
+                  </form>
+                ) : (
+                  <form id={`pdeact-${a.id}`} action={setPlatformAdminActive} className={styles.form}>
+                    <input type="hidden" name="id" value={a.id} />
+                    <input type="hidden" name="active" value="false" />
+                    <ConfirmButton
+                      formId={`pdeact-${a.id}`}
+                      size="small"
+                      appearance="subtle"
+                      confirmTitle={`Deactivate ${a.name}?`}
+                      confirmBody={`${a.name} will be signed out and blocked from signing in until you reactivate them. Nothing is deleted.`}
+                      confirmLabel="Deactivate"
+                    >
+                      Deactivate
+                    </ConfirmButton>
+                  </form>
+                )}
+              </div>
+            </div>
+          ))}
         </div>
 
         {/* Create tenant */}
