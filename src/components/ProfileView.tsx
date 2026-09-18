@@ -302,7 +302,7 @@ export function ProfileView({
                       <input type="hidden" name="id" value={c.id} />
                       <input type="hidden" name="stakeholderId" value={s.id} />
                       <Button type="submit" size="small" appearance="subtle">
-                        Done
+                        Mark done
                       </Button>
                     </form>
                   )}
