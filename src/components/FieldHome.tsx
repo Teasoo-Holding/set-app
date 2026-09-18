@@ -129,7 +129,7 @@ export function FieldHome({
                   </Badge>
                   <form action={completeCommitment} className={styles.form}>
                     <input type="hidden" name="id" value={c.id} />
-                    <SubmitButton size="small" appearance="subtle">Done</SubmitButton>
+                    <SubmitButton size="small" appearance="subtle">Mark done</SubmitButton>
                   </form>
                 </span>
               </div>
