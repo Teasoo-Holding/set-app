@@ -143,6 +143,28 @@ export async function setTaxonomyActive(formData: FormData) {
 }
 
 /**
+ * E10-2 (follow-up #112) — permanently delete a taxonomy value. RLS
+ * (taxonomy_admin_write) gates it to the tenant's admin. Referential integrity
+ * is the safety net: if any stakeholder, request, profile or invitation still
+ * uses the value, the foreign key refuses the delete (code 23503) and we tell
+ * the admin to disable it instead. Use this only for values added by mistake or
+ * never used; disable is the right tool for retiring a value that's in play.
+ */
+export async function deleteTaxonomy(formData: FormData) {
+  const id = String(formData.get("id") ?? "");
+  if (!id) throw new Error("Missing taxonomy id.");
+  const supabase = createClient();
+  const { error } = await supabase.from("taxonomy").delete().eq("id", id);
+  if (error) {
+    if (error.code === "23503") {
+      throw new Error("This value is in use, so it can't be deleted. Disable it instead to hide it from new pickers.");
+    }
+    throw new Error(error.message);
+  }
+  revalidate();
+}
+
+/**
  * E10-3 — bulk-reassign every stakeholder owned by one person to another.
  * RLS gates the update (Admin = global); audit-logged per row.
  */

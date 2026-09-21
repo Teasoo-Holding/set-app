@@ -38,8 +38,11 @@ export type StakeholderProfile = {
   flag_reason: string | null;
   last_contact_at: string | null;
   notes: string | null;
+  owner_id: string;
   ownerName: string | null;
 };
+
+export type OwnerOption = { id: string; name: string };
 
 type Engagement = {
   id: string;
@@ -125,6 +128,8 @@ export function ProfileView({
   types,
   today,
   canEdit,
+  canReassign = false,
+  owners = [],
 }: {
   viewer: { full_name: string; role: Role; function: string | null };
   stakeholder: StakeholderProfile;
@@ -134,6 +139,8 @@ export function ProfileView({
   types: string[];
   today: string;
   canEdit: boolean;
+  canReassign?: boolean;
+  owners?: OwnerOption[];
 }) {
   const styles = useStyles();
 
@@ -216,6 +223,15 @@ export function ProfileView({
                     <option value="resistant">Resistant</option>
                   </Select>
                 </Field>
+                {canReassign && owners.length > 0 && (
+                  <Field label="Owner" className={styles.field}>
+                    <Select name="owner_id" defaultValue={s.owner_id}>
+                      {owners.map((o) => (
+                        <option key={o.id} value={o.id}>{o.name}</option>
+                      ))}
+                    </Select>
+                  </Field>
+                )}
                 <Button type="submit" appearance="primary">
                   Save
                 </Button>
