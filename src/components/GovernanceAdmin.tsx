@@ -1,12 +1,17 @@
 "use client";
 
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { useFormState } from "react-dom";
-import { makeStyles, tokens, Title2, Title3, Body1, Caption1, Text, Button, Badge, Input, Select, Divider, MessageBar, MessageBarBody, MessageBarTitle } from "@fluentui/react-components";
+import {
+  makeStyles, tokens, Title2, Title3, Body1, Caption1, Text, Button, Badge, Input, Select, Divider, Spinner,
+  TabList, Tab, Dialog, DialogSurface, DialogBody, DialogTitle, DialogContent, DialogActions,
+  MessageBar, MessageBarBody, MessageBarTitle,
+} from "@fluentui/react-components";
 import { AppShell } from "@/components/AppShell";
 import { SubmitButton } from "@/components/SubmitButton";
 import { ConfirmButton } from "@/components/ConfirmButton";
-import { approveRequest, rejectRequest, addTaxonomy, setTaxonomyActive, reassignStakeholders } from "@/app/actions/governance";
+import { approveRequest, rejectRequest, addTaxonomy, setTaxonomyActive, deleteTaxonomy, reassignStakeholders } from "@/app/actions/governance";
 import { inviteUser, revokeInvite } from "@/app/actions/invitations";
 import { InfoTip } from "@/components/InfoTip";
 import { ROLE_LABEL, ROLE_DESCRIPTION, type Role } from "@/lib/roles";
@@ -61,8 +66,12 @@ const useStyles = makeStyles({
   form: { margin: 0, display: "flex" },
   taxGroup: { display: "flex", flexDirection: "column", rowGap: "6px" },
   taxRow: { display: "flex", alignItems: "center", columnGap: "8px", flexWrap: "wrap" },
-  taxValues: { display: "flex", columnGap: "8px", rowGap: "8px", flexWrap: "wrap" },
+  taxValues: { display: "flex", alignItems: "flex-start", columnGap: "8px", rowGap: "8px", flexWrap: "wrap" },
+  taxChipWrap: { display: "inline-flex", flexDirection: "column", rowGap: "2px" },
   taxChip: { display: "inline-flex", alignItems: "center", columnGap: "6px", padding: "4px 6px 4px 12px", borderRadius: tokens.borderRadiusCircular, border: `1px solid ${tokens.colorNeutralStroke2}` },
+  taxError: { color: tokens.colorPaletteRedForeground1, maxWidth: "240px" },
+  destructiveText: { color: tokens.colorPaletteRedForeground1 },
+  tabs: { marginBottom: "4px" },
   addRow: { display: "flex", columnGap: "8px", marginTop: "4px" },
   reassign: { display: "flex", columnGap: "12px", rowGap: "12px", flexWrap: "wrap", alignItems: "flex-end" },
   field: { display: "flex", flexDirection: "column", rowGap: "4px", minWidth: "200px" },
@@ -89,6 +98,72 @@ const ROLE_BADGE: Record<string, "brand" | "informative" | "success" | "warning"
   field: "informative",
 };
 
+/** One taxonomy value: Disable/Enable (safe) plus Delete (only when unused). The
+ *  delete runs client-side so an "in use" refusal shows inline instead of an
+ *  error page. */
+function TaxonomyChip({ t }: { t: TaxonomyValue }) {
+  const styles = useStyles();
+  const router = useRouter();
+  const [confirm, setConfirm] = React.useState(false);
+  const [busy, setBusy] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+
+  const doDelete = () => {
+    setConfirm(false);
+    setError(null);
+    setBusy(true);
+    const fd = new FormData();
+    fd.set("id", t.id);
+    deleteTaxonomy(fd)
+      .then(() => {
+        setBusy(false);
+        router.refresh();
+      })
+      .catch((e: unknown) => {
+        setBusy(false);
+        setError(e instanceof Error ? e.message : "Could not delete that value.");
+      });
+  };
+
+  return (
+    <span className={styles.taxChipWrap}>
+      <span className={styles.taxChip} style={{ opacity: t.is_active ? 1 : 0.5 }}>
+        <Text>{t.value}</Text>
+        <form action={setTaxonomyActive} className={styles.form}>
+          <input type="hidden" name="id" value={t.id} />
+          <input type="hidden" name="active" value={t.is_active ? "false" : "true"} />
+          <SubmitButton size="small" appearance="subtle">{t.is_active ? "Disable" : "Enable"}</SubmitButton>
+        </form>
+        <Button
+          size="small"
+          appearance="subtle"
+          className={styles.destructiveText}
+          disabled={busy}
+          icon={busy ? <Spinner size="tiny" /> : undefined}
+          onClick={() => setConfirm(true)}
+        >
+          Delete
+        </Button>
+      </span>
+      {error && <Caption1 className={styles.taxError}>{error}</Caption1>}
+      <Dialog open={confirm} onOpenChange={(_, d) => setConfirm(d.open)}>
+        <DialogSurface>
+          <DialogBody>
+            <DialogTitle>{`Delete “${t.value}”?`}</DialogTitle>
+            <DialogContent>
+              This permanently removes the value. It only works if nothing uses it; otherwise disable it instead.
+            </DialogContent>
+            <DialogActions>
+              <Button appearance="secondary" onClick={() => setConfirm(false)}>Cancel</Button>
+              <Button appearance="primary" onClick={doDelete}>Delete</Button>
+            </DialogActions>
+          </DialogBody>
+        </DialogSurface>
+      </Dialog>
+    </span>
+  );
+}
+
 export function GovernanceAdmin({
   viewer,
   requests,
@@ -107,6 +182,7 @@ export function GovernanceAdmin({
   functions: string[];
 }) {
   const styles = useStyles();
+  const [tab, setTab] = React.useState<string>("people");
   const [inviteState, inviteAction] = useFormState(inviteUser, null);
   const owners = persons.filter((p) => p.owns > 0);
   const [fromId, setFromId] = React.useState<string>("");
@@ -123,7 +199,15 @@ export function GovernanceAdmin({
           <Body1>Approve requests, manage your lists, and reassign ownership.</Body1>
         </div>
 
+        <TabList className={styles.tabs} selectedValue={tab} onTabSelect={(_, d) => setTab(d.value as string)}>
+          <Tab value="people">People &amp; invitations</Tab>
+          <Tab value="requests">{requests.length > 0 ? `Requests (${requests.length})` : "Requests"}</Tab>
+          <Tab value="lists">Lists</Tab>
+          <Tab value="reassign">Reassign</Tab>
+        </TabList>
+
         {/* E12-6 people & invitations */}
+        {tab === "people" && (
         <div className={styles.card}>
           <Title3>People &amp; invitations</Title3>
           <Caption1 className={styles.muted}>Invite teammates by email. They set their own password from the link. No account exists until they accept.</Caption1>
@@ -240,7 +324,10 @@ export function GovernanceAdmin({
           ))}
         </div>
 
+        )}
+
         {/* E10-1 approval queue */}
+        {tab === "requests" && (
         <div className={styles.card}>
           <div className={styles.sectionHead}>
             <Title3>Pending stakeholder requests</Title3>
@@ -274,7 +361,10 @@ export function GovernanceAdmin({
           )}
         </div>
 
+        )}
+
         {/* E10-2 taxonomy editor */}
+        {tab === "lists" && (
         <div className={styles.card}>
           <div className={styles.cardTitleRow}>
             <Title3>Categories, functions &amp; engagement types</Title3>
@@ -290,16 +380,7 @@ export function GovernanceAdmin({
                 <Caption1 className={styles.muted}>{k.label}</Caption1>
                 <div className={styles.taxValues}>
                   {values.map((t) => (
-                    <span key={t.id} className={styles.taxChip} style={{ opacity: t.is_active ? 1 : 0.5 }}>
-                      <Text>{t.value}</Text>
-                      <form action={setTaxonomyActive} className={styles.form}>
-                        <input type="hidden" name="id" value={t.id} />
-                        <input type="hidden" name="active" value={t.is_active ? "false" : "true"} />
-                        <SubmitButton size="small" appearance="subtle">
-                          {t.is_active ? "Disable" : "Enable"}
-                        </SubmitButton>
-                      </form>
-                    </span>
+                    <TaxonomyChip key={t.id} t={t} />
                   ))}
                 </div>
                 <form action={addTaxonomy} className={styles.addRow}>
@@ -313,7 +394,10 @@ export function GovernanceAdmin({
           })}
         </div>
 
+        )}
+
         {/* E10-3 reassignment */}
+        {tab === "reassign" && (
         <div className={styles.card}>
           <Title3>Reassign ownership</Title3>
           <Caption1 className={styles.muted}>Move every stakeholder from one owner to another. This is useful when someone leaves.</Caption1>
@@ -348,6 +432,7 @@ export function GovernanceAdmin({
             </ConfirmButton>
           </form>
         </div>
+        )}
       </main>
     </AppShell>
   );

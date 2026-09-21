@@ -9,6 +9,9 @@ import { StakeholderCard, type StakeholderSummary } from "@/components/Stakehold
 import { LogEngagementDialog } from "@/components/LogEngagementDialog";
 import { RequestStakeholderDialog } from "@/components/RequestStakeholderDialog";
 import { completeCommitment } from "@/app/actions/commitment";
+import { withdrawRequest } from "@/app/actions/stakeholder";
+import { EditRequestDialog } from "@/components/EditRequestDialog";
+import { ConfirmButton } from "@/components/ConfirmButton";
 import type { Role } from "@/lib/roles";
 
 type Commitment = {
@@ -45,7 +48,7 @@ const useStyles = makeStyles({
   empty: { color: tokens.colorNeutralForeground3, paddingTop: "8px" },
 });
 
-type MyRequest = { id: string; name: string; category: string; status: string; createdAt: string };
+type MyRequest = { id: string; name: string; category: string; reason: string; status: string; createdAt: string };
 
 const REQ_BADGE: Record<string, "informative" | "success" | "danger"> = {
   pending: "informative",
@@ -146,9 +149,33 @@ export function FieldHome({
                   <Body1>{r.name}</Body1>
                   <Caption1 className={styles.muted}>{r.category}</Caption1>
                 </span>
-                <Badge appearance="tint" color={REQ_BADGE[r.status] ?? "informative"}>
-                  {REQ_LABEL[r.status] ?? r.status}
-                </Badge>
+                <span className={styles.badges}>
+                  <Badge appearance="tint" color={REQ_BADGE[r.status] ?? "informative"}>
+                    {REQ_LABEL[r.status] ?? r.status}
+                  </Badge>
+                  {r.status === "pending" && (
+                    <>
+                      <EditRequestDialog
+                        request={{ id: r.id, name: r.name, category: r.category, reason: r.reason }}
+                        categories={categories}
+                      />
+                      <form id={`withdraw-${r.id}`} action={withdrawRequest} className={styles.form}>
+                        <input type="hidden" name="id" value={r.id} />
+                        <ConfirmButton
+                          formId={`withdraw-${r.id}`}
+                          size="small"
+                          appearance="subtle"
+                          destructive
+                          confirmTitle="Withdraw this request?"
+                          confirmBody={`Your request for “${r.name}” will be removed. You can request it again later.`}
+                          confirmLabel="Withdraw"
+                        >
+                          Withdraw
+                        </ConfirmButton>
+                      </form>
+                    </>
+                  )}
+                </span>
               </div>
             ))}
           </div>

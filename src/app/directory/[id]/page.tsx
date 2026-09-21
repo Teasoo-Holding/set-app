@@ -33,7 +33,14 @@ export default async function StakeholderProfilePage({
     (profile.role === "head" && profile.function === sFn) ||
     sOwner === profile.id;
 
-  const [{ data: engagements }, { data: commitments }, { data: escalation }, { data: typeRows }] =
+  // Owner options for per-stakeholder reassignment (#120). Only Head/Leadership/
+  // Admin may reassign; RLS scopes which profiles they can see (a Head sees their
+  // own function, Leadership/Admin the whole tenant), so this list is safe as-is.
+  const canReassign =
+    profile.role === "leadership" || profile.role === "admin" ||
+    (profile.role === "head" && profile.function === sFn);
+
+  const [{ data: engagements }, { data: commitments }, { data: escalation }, { data: typeRows }, { data: ownerRows }] =
     await Promise.all([
       supabase
         .from("engagements")
@@ -61,6 +68,9 @@ export default async function StakeholderProfilePage({
         .eq("kind", "engagement_type")
         .eq("is_active", true)
         .order("sort_order", { ascending: true }),
+      canReassign
+        ? supabase.from("profiles").select("id, full_name").order("full_name", { ascending: true })
+        : Promise.resolve({ data: [] as { id: string; full_name: string }[] }),
     ]);
 
   const types = ((typeRows as { value: string }[] | null) ?? []).map((t) => t.value);
@@ -82,8 +92,14 @@ export default async function StakeholderProfilePage({
     flag_reason: data.flag_reason,
     last_contact_at: data.last_contact_at,
     notes: data.notes,
+    owner_id: data.owner_id,
     ownerName: data.owner?.full_name ?? null,
   };
+
+  const owners = ((ownerRows as { id: string; full_name: string }[] | null) ?? []).map((o) => ({
+    id: o.id,
+    name: o.full_name,
+  }));
 
   return (
     <ProfileView
@@ -120,6 +136,8 @@ export default async function StakeholderProfilePage({
       types={types}
       today={today}
       canEdit={canEdit}
+      canReassign={canReassign}
+      owners={owners}
     />
   );
 }

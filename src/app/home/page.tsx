@@ -39,7 +39,7 @@ export default async function FieldHomePage() {
         .order("sort_order", { ascending: true }),
       supabase
         .from("stakeholder_requests")
-        .select("id, requested_name, category, status, created_at")
+        .select("id, requested_name, category, reason, status, created_at")
         .eq("requested_by", profile.id)
         .order("created_at", { ascending: false })
         .limit(10),
@@ -69,8 +69,8 @@ export default async function FieldHomePage() {
   const types = ((typeRows as { value: string }[] | null) ?? []).map((t) => t.value);
   const categories = ((catRows as { value: string }[] | null) ?? []).map((t) => t.value);
   const myRequests = (
-    (reqRows as { id: string; requested_name: string; category: string; status: string; created_at: string }[] | null) ?? []
-  ).map((r) => ({ id: r.id, name: r.requested_name, category: r.category, status: r.status, createdAt: r.created_at }));
+    (reqRows as { id: string; requested_name: string; category: string; reason: string; status: string; created_at: string }[] | null) ?? []
+  ).map((r) => ({ id: r.id, name: r.requested_name, category: r.category, reason: r.reason, status: r.status, createdAt: r.created_at }));
   const today = new Date().toISOString().slice(0, 10);
   const dateLabel = new Date().toLocaleDateString("en-GB", {
     weekday: "long",

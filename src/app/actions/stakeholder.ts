@@ -40,11 +40,17 @@ export async function updateStakeholder(formData: FormData) {
   const tier = Number(formData.get("tier"));
   const risk = String(formData.get("risk") ?? "");
   const sentiment = String(formData.get("sentiment") ?? "");
+  const ownerId = String(formData.get("owner_id") ?? "").trim();
 
   const patch: Record<string, string | number> = {};
   if (tier === 1 || tier === 2) patch.tier = tier;
   if (RISKS.includes(risk)) patch.risk = risk;
   if (SENTIMENTS.includes(sentiment)) patch.sentiment = sentiment;
+  // Reassign a single stakeholder's owner (E10-3, per-stakeholder). Authorisation
+  // is enforced by RLS: the stakeholders_update WITH CHECK only lets a
+  // Head/Leadership/Admin set a new owner — a plain owner reassigning away is
+  // refused at the database, so we can pass it through safely.
+  if (ownerId) patch.owner_id = ownerId;
 
   if (Object.keys(patch).length > 0) {
     const supabase = createClient();
@@ -89,6 +95,46 @@ export async function requestStakeholder(formData: FormData) {
   for (const p of ["/home", "/dashboard", "/portfolio", "/governance"]) {
     revalidatePath(p);
   }
+}
+
+/**
+ * E4-3 (follow-up #122) — edit a still-pending stakeholder request. RLS
+ * (requests_owner_update) restricts this to the requester while status =
+ * 'pending'; once an admin decides it, the update is refused.
+ */
+export async function updateRequest(formData: FormData) {
+  const id = String(formData.get("id") ?? "");
+  const requested_name = String(formData.get("requested_name") ?? "").trim();
+  const category = String(formData.get("category") ?? "");
+  const reason = String(formData.get("reason") ?? "").trim();
+  if (!id) throw new Error("Missing request id.");
+  if (!requested_name || !category || !reason) {
+    throw new Error("Name, category and reason are required.");
+  }
+
+  const supabase = createClient();
+  const { error } = await supabase
+    .from("stakeholder_requests")
+    .update({ requested_name, category, reason })
+    .eq("id", id);
+  if (error) throw new Error("Sorry, that couldn't be saved. Please try again.");
+
+  for (const p of ["/home", "/dashboard", "/portfolio", "/governance"]) revalidatePath(p);
+}
+
+/**
+ * E4-3 (follow-up #122) — withdraw a still-pending stakeholder request. RLS
+ * (requests_owner_delete) restricts this to the requester while pending.
+ */
+export async function withdrawRequest(formData: FormData) {
+  const id = String(formData.get("id") ?? "");
+  if (!id) throw new Error("Missing request id.");
+
+  const supabase = createClient();
+  const { error } = await supabase.from("stakeholder_requests").delete().eq("id", id);
+  if (error) throw new Error("Sorry, that couldn't be withdrawn. Please try again.");
+
+  for (const p of ["/home", "/dashboard", "/portfolio", "/governance"]) revalidatePath(p);
 }
 
 /**
